@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getQuizById, saveQuiz, recordAttempt } from "@/lib/quiz/storage";
-import { PlayerAttempt, QuizData } from "@/lib/quiz/types";
-import { decodeQuizPayload, decryptPayload } from "@/lib/quiz/security";
+import { getQuizById, recordAttempt } from "@/lib/quiz/storage";
+import { PlayerAttempt } from "@/lib/quiz/types";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +16,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Invalid payload." }, { status: 400 });
     }
 
-    const { playerName, answers, data: backupToken } = body;
+    const { playerName, answers } = body;
 
     if (!playerName || typeof playerName !== "string" || !playerName.trim()) {
       return NextResponse.json(
@@ -34,66 +33,11 @@ export async function POST(
       );
     }
 
-    let quiz = await getQuizById(id);
-
-    // If quiz is not in Redis or local tmp (stateless lambda instance), hydrate from backup token
-    if (!quiz) {
-      const { searchParams } = new URL(req.url);
-      const token = backupToken || searchParams.get("data");
-      if (token && typeof token === "string") {
-        const decoded = decodeQuizPayload<{
-          id: string;
-          creatorName: string;
-          gender: QuizData["gender"];
-          sec?: string;
-          questions: QuizData["questions"];
-        }>(token);
-
-        if (decoded && decoded.id === id) {
-          let answersMap: Record<string, number> = {};
-          let pinHash = "";
-
-          if (decoded.sec) {
-            const decrypted = decryptPayload<{
-              id: string;
-              pinHash: string;
-              answers: Record<string, number>;
-            }>(decoded.sec);
-
-            if (decrypted && decrypted.id === id) {
-              answersMap = decrypted.answers || {};
-              pinHash = decrypted.pinHash || "";
-            }
-          }
-
-          quiz = {
-            id: decoded.id,
-            slug: decoded.id,
-            creatorName: decoded.creatorName || "Friend",
-            gender: decoded.gender || "male",
-            country: "PK",
-            theme: "dont_block_me",
-            pinHash: pinHash || "fallback_hash",
-            creatorToken: "adm_fallback",
-            createdAt: Date.now(),
-            questions: (decoded.questions || []).map((q) => ({
-              questionId: q.questionId,
-              question: q.question,
-              emoji: q.emoji,
-              options: q.options,
-              correctOptionId: answersMap[q.questionId] ?? 0,
-            })),
-          };
-
-          // Cache in local tmp for current lambda
-          await saveQuiz(quiz);
-        }
-      }
-    }
-
+    // Retrieve quiz strictly from verified durable storage
+    const quiz = await getQuizById(id);
     if (!quiz) {
       return NextResponse.json(
-        { success: false, error: "Quiz not found." },
+        { success: false, error: "Quiz not found or may have been deleted." },
         { status: 404 }
       );
     }
@@ -122,7 +66,6 @@ export async function POST(
 
       const targetQuestion = quiz.questions.find((q) => q.questionId === questionId);
       if (!targetQuestion) {
-        // Unknown question ID submitted
         return NextResponse.json(
           { success: false, error: `Invalid question submitted: ${questionId}` },
           { status: 400 }
@@ -165,7 +108,13 @@ export async function POST(
       createdAt: Date.now(),
     };
 
-    await recordAttempt(attempt);
+    const isRecorded = await recordAttempt(attempt);
+    if (!isRecorded) {
+      return NextResponse.json(
+        { success: false, error: "Failed to save attempt to storage. Please try again." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

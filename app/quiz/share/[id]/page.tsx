@@ -23,15 +23,7 @@ export default function QuizSharePage({
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    // Check if URL has ?data= query param to preserve it in share link
-    const searchParams = new URLSearchParams(window.location.search);
-    const dataToken = searchParams.get("data");
-
-    const endpoint = dataToken
-      ? `/api/quiz/${quizId}?data=${encodeURIComponent(dataToken)}`
-      : `/api/quiz/${quizId}`;
-
-    fetch(endpoint)
+    fetch(`/api/quiz/${quizId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.quiz) {
@@ -48,9 +40,9 @@ export default function QuizSharePage({
         setLoading(false);
       });
 
-    // Share URL points directly to play page with backup token if available
+    // Share URL points directly to play page
     const playBase = `${window.location.origin}/quiz/play/${quizId}`;
-    setShareUrl(dataToken ? `${playBase}?data=${encodeURIComponent(dataToken)}` : playBase);
+    setShareUrl(playBase);
   }, [quizId]);
 
   const handleCopyLink = () => {

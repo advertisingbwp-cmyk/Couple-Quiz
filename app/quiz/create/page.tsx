@@ -107,7 +107,6 @@ export default function QuizCreatePage() {
 
       const data = await res.json();
       if (data.success && data.quizId) {
-        localStorage.setItem(`quiz_admin_${data.quizId}`, trimmedPin);
         if (data.creatorToken) {
           localStorage.setItem(`creator_token_${data.quizId}`, data.creatorToken);
         }

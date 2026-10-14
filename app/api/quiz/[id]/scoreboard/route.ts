@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getScoreboard, getScoreboardDetails, getQuizById, deleteAttempt } from "@/lib/quiz/storage";
-import { verifyPin, checkPinRateLimit } from "@/lib/quiz/security";
+import { verifyPin, checkPinRateLimit, timingSafeEqualString } from "@/lib/quiz/security";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export async function GET(
 
     if (!quiz) {
       return NextResponse.json(
-        { success: false, error: "Quiz not found." },
+        { success: false, error: "Quiz not found or may have been deleted." },
         { status: 404 }
       );
     }
@@ -67,8 +67,10 @@ export async function POST(
       );
     }
 
-    const isTokenMatch = creatorToken && typeof creatorToken === "string" && creatorToken === quiz.creatorToken;
-    const isPinMatch = pin && typeof pin === "string" && verifyPin(pin, quiz.pinHash);
+    const isTokenMatch =
+      typeof creatorToken === "string" && timingSafeEqualString(creatorToken, quiz.creatorToken);
+    const isPinMatch =
+      typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
 
     if (!isTokenMatch && !isPinMatch) {
       return NextResponse.json(
@@ -103,6 +105,13 @@ export async function DELETE(
     const body = await req.json().catch(() => ({}));
     const { attemptId, pin, creatorToken } = body;
 
+    if (!attemptId || typeof attemptId !== "string") {
+      return NextResponse.json(
+        { success: false, error: "Missing attempt ID." },
+        { status: 400 }
+      );
+    }
+
     const quiz = await getQuizById(id);
     if (!quiz) {
       return NextResponse.json(
@@ -119,12 +128,14 @@ export async function DELETE(
       );
     }
 
-    const isTokenMatch = creatorToken && typeof creatorToken === "string" && creatorToken === quiz.creatorToken;
-    const isPinMatch = pin && typeof pin === "string" && verifyPin(pin, quiz.pinHash);
+    const isTokenMatch =
+      typeof creatorToken === "string" && timingSafeEqualString(creatorToken, quiz.creatorToken);
+    const isPinMatch =
+      typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
 
     if (!isTokenMatch && !isPinMatch) {
       return NextResponse.json(
-        { success: false, error: "Incorrect Secret PIN." },
+        { success: false, error: "Incorrect Secret PIN or authorization token." },
         { status: 403 }
       );
     }

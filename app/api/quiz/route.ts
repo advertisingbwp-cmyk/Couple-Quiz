@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { saveQuiz } from "@/lib/quiz/storage";
 import { QuizData, Gender } from "@/lib/quiz/types";
-import { hashPin, generateCreatorToken, encodeQuizPayload, encryptPayload } from "@/lib/quiz/security";
+import { hashPin, generateCreatorToken } from "@/lib/quiz/security";
 import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
 
 export const dynamic = "force-dynamic";
@@ -77,8 +77,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // 3. Secure Secret PIN & Creator Token
-    const pin = typeof secretPin === "string" && /^\d{4,6}$/.test(secretPin.trim()) ? secretPin.trim() : "1234";
+    // 3. Strict Secret PIN Validation (No default fallback allowed)
+    if (!secretPin || typeof secretPin !== "string" || !/^\d{4,6}$/.test(secretPin.trim())) {
+      return NextResponse.json(
+        { success: false, error: "Please enter a valid 4 to 6 digit secret PIN (numbers only)." },
+        { status: 400 }
+      );
+    }
+
+    const pin = secretPin.trim();
     const pinHash = hashPin(pin);
     const creatorToken = generateCreatorToken();
 
@@ -105,43 +112,22 @@ export async function POST(req: Request) {
       questions: validatedQuestions,
     };
 
-    // 5. Save in database
-    await saveQuiz(quiz);
-
-    // 6. Generate Self-Contained URL Payload (resilient backup to prevent any "Quiz Not Found")
-    const answersMap: Record<string, number> = {};
-    for (const q of quiz.questions) {
-      answersMap[q.questionId] = q.correctOptionId;
+    // 5. Save in durable database and verify storage success
+    const isSaved = await saveQuiz(quiz);
+    if (!isSaved) {
+      return NextResponse.json(
+        { success: false, error: "Failed to persist quiz to durable storage. Please try again." },
+        { status: 500 }
+      );
     }
-    const encryptedKey = encryptPayload({
-      id: quiz.id,
-      creatorName: quiz.creatorName,
-      gender: quiz.gender,
-      pinHash: quiz.pinHash,
-      answers: answersMap,
-    });
 
-    const publicPayload = {
-      id: quiz.id,
-      creatorName: quiz.creatorName,
-      gender: quiz.gender,
-      sec: encryptedKey,
-      questions: quiz.questions.map((q) => ({
-        questionId: q.questionId,
-        question: q.question,
-        emoji: q.emoji,
-        options: q.options,
-      })),
-    };
-    const backupToken = encodeQuizPayload(publicPayload);
-
+    // 6. Return response with clean share URL (no untrusted URL payload attached)
     return NextResponse.json({
       success: true,
       quizId: quiz.id,
       slug: quiz.slug,
       creatorToken: quiz.creatorToken,
-      backupToken,
-      shareUrl: `/quiz/share/${quiz.id}?data=${backupToken}`,
+      shareUrl: `/quiz/share/${quiz.id}`,
     });
   } catch (err) {
     console.error("[API Quiz POST Error]:", err);

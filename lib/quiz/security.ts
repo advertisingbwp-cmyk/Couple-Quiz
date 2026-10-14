@@ -1,41 +1,90 @@
 import crypto from "crypto";
 
-const PIN_SALT = process.env.QUIZ_PIN_SALT || "quiz_secure_salt_2026";
+const SCRYPT_KEYLEN = 64;
+const SCRYPT_COST = 16384;
+const SCRYPT_BLOCK_SIZE = 8;
+const SCRYPT_PARALLELISM = 1;
 
 /**
- * Creates a deterministic SHA-256 hash of the creator's PIN with salt.
+ * Creates an scrypt hash of the creator's PIN with a cryptographically secure
+ * random per-record salt (16 bytes). Format: scrypt:<saltHex>:<derivedHex>
  */
 export function hashPin(pin: string): string {
   const clean = pin.trim();
-  return crypto.createHash("sha256").update(`${PIN_SALT}:${clean}`).digest("hex");
+  if (!clean || !/^\d{4,6}$/.test(clean)) {
+    throw new Error("PIN must be 4 to 6 digits (numbers only).");
+  }
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derived = crypto.scryptSync(clean, salt, SCRYPT_KEYLEN, {
+    N: SCRYPT_COST,
+    r: SCRYPT_BLOCK_SIZE,
+    p: SCRYPT_PARALLELISM,
+  }).toString("hex");
+
+  return `scrypt:${salt}:${derived}`;
 }
 
 /**
- * Verifies if entered PIN matches stored hash.
+ * Verifies entered PIN against stored scrypt hash using constant-time comparison.
  */
 export function verifyPin(enteredPin: string, storedHash: string): boolean {
-  if (!enteredPin || !storedHash) return false;
-  const hash = hashPin(enteredPin);
-  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(storedHash));
+  if (!enteredPin || !storedHash || typeof enteredPin !== "string" || typeof storedHash !== "string") {
+    return false;
+  }
+  const clean = enteredPin.trim();
+  const parts = storedHash.split(":");
+  if (parts.length === 3 && parts[0] === "scrypt") {
+    const salt = parts[1];
+    const expectedKeyHex = parts[2];
+    const derived = crypto.scryptSync(clean, salt, SCRYPT_KEYLEN, {
+      N: SCRYPT_COST,
+      r: SCRYPT_BLOCK_SIZE,
+      p: SCRYPT_PARALLELISM,
+    }).toString("hex");
+
+    const bufA = Buffer.from(derived, "hex");
+    const bufB = Buffer.from(expectedKeyHex, "hex");
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  }
+  return false;
 }
 
 /**
- * Generates an unguessable 32-character hex secret token for the creator.
+ * Constant-time string comparison for secret tokens to prevent timing attacks.
+ */
+export function timingSafeEqualString(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    // Mitigate timing leakage on length mismatch
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Generates an unguessable 48-character hex secret token for the creator.
  */
 export function generateCreatorToken(): string {
-  return "adm_" + crypto.randomBytes(16).toString("hex");
+  return "adm_" + crypto.randomBytes(24).toString("hex");
 }
 
 /**
  * In-memory brute force rate limiter for PIN verification: max 5 attempts per IP per 10 minutes.
+ * Note: On serverless platforms, an in-memory Map is instance-scoped; Redis-backed rate limiting
+ * is recommended for production multi-instance deployments.
  */
 const pinAttempts = new Map<string, { count: number; resetAt: number }>();
 
 export function checkPinRateLimit(ip: string): boolean {
   const now = Date.now();
-  const entry = pinAttempts.get(ip);
+  const cleanIp = ip.trim() || "unknown";
+  const entry = pinAttempts.get(cleanIp);
   if (!entry || now > entry.resetAt) {
-    pinAttempts.set(ip, { count: 1, resetAt: now + 10 * 60 * 1000 });
+    pinAttempts.set(cleanIp, { count: 1, resetAt: now + 10 * 60 * 1000 });
     return true;
   }
   if (entry.count >= 5) {
@@ -46,51 +95,12 @@ export function checkPinRateLimit(ip: string): boolean {
 }
 
 /**
- * Compact URL-safe Base64 encoding for self-contained quiz payload fallback.
+ * Reset helper for rate limiter testing.
  */
-export function encodeQuizPayload(payload: unknown): string {
-  const json = JSON.stringify(payload);
-  return Buffer.from(json).toString("base64url");
-}
-
-export function decodeQuizPayload<T>(token: string): T | null {
-  try {
-    const json = Buffer.from(token, "base64url").toString("utf8");
-    return JSON.parse(json) as T;
-  } catch {
-    return null;
+export function _resetPinRateLimit(ip?: string): void {
+  if (ip) {
+    pinAttempts.delete(ip);
+  } else {
+    pinAttempts.clear();
   }
 }
-
-/**
- * AES-256-GCM authenticated encryption for private quiz answer validation.
- * Enables zero-dependency scoring on stateless serverless lambdas.
- */
-const QUIZ_ENCRYPTION_SECRET = process.env.QUIZ_SECRET_KEY || "quiz_aes_secret_key_32bytes_2026_safe";
-const DERIVED_KEY = crypto.createHash("sha256").update(QUIZ_ENCRYPTION_SECRET).digest();
-
-export function encryptPayload(data: unknown): string {
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", DERIVED_KEY, iv);
-  const json = JSON.stringify(data);
-  const encrypted = Buffer.concat([cipher.update(json, "utf8"), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  return Buffer.concat([iv, tag, encrypted]).toString("base64url");
-}
-
-export function decryptPayload<T>(ciphertext: string): T | null {
-  try {
-    const buf = Buffer.from(ciphertext, "base64url");
-    if (buf.length < 28) return null; // 12 bytes IV + 16 bytes auth tag
-    const iv = buf.subarray(0, 12);
-    const tag = buf.subarray(12, 28);
-    const encrypted = buf.subarray(28);
-    const decipher = crypto.createDecipheriv("aes-256-gcm", DERIVED_KEY, iv);
-    decipher.setAuthTag(tag);
-    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-    return JSON.parse(decrypted.toString("utf8")) as T;
-  } catch {
-    return null;
-  }
-}
-
