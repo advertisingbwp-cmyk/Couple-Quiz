@@ -1,0 +1,153 @@
+import { NextResponse } from "next/server";
+import { saveQuiz } from "@/lib/quiz/storage";
+import { QuizData, Gender } from "@/lib/quiz/types";
+import { hashPin, generateCreatorToken, encodeQuizPayload, encryptPayload } from "@/lib/quiz/security";
+import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { success: false, error: "Invalid request payload." },
+        { status: 400 }
+      );
+    }
+
+    const { creatorName, gender, country, secretPin, questions } = body;
+
+    // 1. Strict Name Validation
+    if (!creatorName || typeof creatorName !== "string" || !creatorName.trim()) {
+      return NextResponse.json(
+        { success: false, error: "Please enter your name." },
+        { status: 400 }
+      );
+    }
+
+    const cleanCreatorName = creatorName.trim();
+    if (cleanCreatorName.length > 40) {
+      return NextResponse.json(
+        { success: false, error: "Name must be 40 characters or less." },
+        { status: 400 }
+      );
+    }
+
+    // 2. Strict Questions Validation
+    if (!questions || !Array.isArray(questions) || questions.length < 5 || questions.length > 15) {
+      return NextResponse.json(
+        { success: false, error: "Quiz must have between 5 and 15 questions." },
+        { status: 400 }
+      );
+    }
+
+    const validQuestionIds = new Set(DEFAULT_QUIZ_QUESTIONS.map((q) => q.id));
+    const seenQuestionIds = new Set<string>();
+
+    const validatedQuestions: QuizData["questions"] = [];
+
+    for (const q of questions) {
+      if (!q || typeof q !== "object") {
+        return NextResponse.json({ success: false, error: "Malformed question data." }, { status: 400 });
+      }
+
+      if (!q.questionId || typeof q.questionId !== "string" || !validQuestionIds.has(q.questionId)) {
+        return NextResponse.json({ success: false, error: `Invalid question id: ${q.questionId}` }, { status: 400 });
+      }
+
+      if (seenQuestionIds.has(q.questionId)) {
+        return NextResponse.json({ success: false, error: `Duplicate question detected: ${q.questionId}` }, { status: 400 });
+      }
+      seenQuestionIds.add(q.questionId);
+
+      const correctOptionId = Number(q.correctOptionId);
+      if (!Number.isInteger(correctOptionId) || correctOptionId < 0 || correctOptionId > 3) {
+        return NextResponse.json({ success: false, error: "Invalid option selected." }, { status: 400 });
+      }
+
+      const originalQuestion = DEFAULT_QUIZ_QUESTIONS.find((def) => def.id === q.questionId)!;
+
+      validatedQuestions.push({
+        questionId: q.questionId,
+        question: originalQuestion.question,
+        emoji: originalQuestion.emoji,
+        options: originalQuestion.options,
+        correctOptionId,
+      });
+    }
+
+    // 3. Secure Secret PIN & Creator Token
+    const pin = typeof secretPin === "string" && /^\d{4,6}$/.test(secretPin.trim()) ? secretPin.trim() : "1234";
+    const pinHash = hashPin(pin);
+    const creatorToken = generateCreatorToken();
+
+    // 4. Generate Identifiers
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 7);
+    const cleanSlugName = cleanCreatorName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const slug = `${cleanSlugName || "quiz"}-${randomSuffix}`;
+    const id = `q_${timestamp}_${randomSuffix}`;
+
+    const quiz: QuizData = {
+      id,
+      slug,
+      creatorName: cleanCreatorName,
+      gender: (gender === "female" ? "female" : "male") as Gender,
+      country: country || "PK",
+      theme: "dont_block_me",
+      pinHash,
+      creatorToken,
+      createdAt: timestamp,
+      questions: validatedQuestions,
+    };
+
+    // 5. Save in database
+    await saveQuiz(quiz);
+
+    // 6. Generate Self-Contained URL Payload (resilient backup to prevent any "Quiz Not Found")
+    const answersMap: Record<string, number> = {};
+    for (const q of quiz.questions) {
+      answersMap[q.questionId] = q.correctOptionId;
+    }
+    const encryptedKey = encryptPayload({
+      id: quiz.id,
+      creatorName: quiz.creatorName,
+      gender: quiz.gender,
+      pinHash: quiz.pinHash,
+      answers: answersMap,
+    });
+
+    const publicPayload = {
+      id: quiz.id,
+      creatorName: quiz.creatorName,
+      gender: quiz.gender,
+      sec: encryptedKey,
+      questions: quiz.questions.map((q) => ({
+        questionId: q.questionId,
+        question: q.question,
+        emoji: q.emoji,
+        options: q.options,
+      })),
+    };
+    const backupToken = encodeQuizPayload(publicPayload);
+
+    return NextResponse.json({
+      success: true,
+      quizId: quiz.id,
+      slug: quiz.slug,
+      creatorToken: quiz.creatorToken,
+      backupToken,
+      shareUrl: `/quiz/share/${quiz.id}?data=${backupToken}`,
+    });
+  } catch (err) {
+    console.error("[API Quiz POST Error]:", err);
+    return NextResponse.json(
+      { success: false, error: "Failed to create quiz." },
+      { status: 500 }
+    );
+  }
+}

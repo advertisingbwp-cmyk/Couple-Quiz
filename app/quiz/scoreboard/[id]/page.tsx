@@ -1,0 +1,459 @@
+"use client";
+
+import React, { useEffect, useState, use } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Trophy, Share2, Trash2, Eye, X, RefreshCw, AlertCircle, MessageCircle, Lock } from "lucide-react";
+import { quizAudio } from "@/lib/quiz/audio";
+import { ScoreboardEntry, ScoreboardDetailEntry } from "@/lib/quiz/types";
+
+export default function QuizScoreboardPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = use(params);
+  const quizId = resolvedParams.id;
+
+  const [creatorName, setCreatorName] = useState("Friend");
+  const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEntry, setSelectedEntry] = useState<ScoreboardDetailEntry | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [targetDetailId, setTargetDetailId] = useState<string | null>(null);
+  const [enteredPin, setEnteredPin] = useState("");
+  const [pinPrompt, setPinPrompt] = useState<{ open: boolean; attemptId: string }>({ open: false, attemptId: "" });
+  const [deleting, setDeleting] = useState(false);
+  const [authError, setAuthError] = useState("");
+
+  const fetchPublicScoreboard = React.useCallback(() => {
+    setLoading(true);
+    fetch(`/api/quiz/${quizId}/scoreboard`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setCreatorName(data.creatorName || "Friend");
+          setScoreboard(data.scoreboard || []);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [quizId]);
+
+  useEffect(() => {
+    fetchPublicScoreboard();
+  }, [fetchPublicScoreboard]);
+
+  // Request detailed answers with authorization (creatorToken or PIN)
+  const handleOpenAnswers = async (entry: ScoreboardEntry) => {
+    const creatorToken = localStorage.getItem(`creator_token_${quizId}`);
+
+    // If local creatorToken exists, try automatic unlock
+    if (creatorToken) {
+      try {
+        const res = await fetch(`/api/quiz/${quizId}/scoreboard`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ creatorToken }),
+        });
+        const data = await res.json();
+        if (data.success && data.scoreboard) {
+          const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === entry.id);
+          if (detail) {
+            setSelectedEntry(detail);
+            quizAudio.playPop();
+            return;
+          }
+        }
+      } catch {
+        // Fall back to manual PIN modal
+      }
+    }
+
+    // Open PIN prompt
+    setTargetDetailId(entry.id);
+    setShowAuthModal(true);
+  };
+
+  const handleVerifyPinForAnswers = async () => {
+    if (!enteredPin.trim()) return;
+    setAuthError("");
+
+    try {
+      const res = await fetch(`/api/quiz/${quizId}/scoreboard`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: enteredPin.trim() }),
+      });
+      const data = await res.json();
+      if (data.success && data.scoreboard) {
+        const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === targetDetailId);
+        if (detail) {
+          setSelectedEntry(detail);
+          setShowAuthModal(false);
+          setEnteredPin("");
+          quizAudio.playCorrect();
+        } else {
+          setAuthError("Player record not found.");
+        }
+      } else {
+        setAuthError(data.error || "Incorrect Secret PIN.");
+        quizAudio.playWrong();
+      }
+    } catch {
+      setAuthError("Network error.");
+    }
+  };
+
+  const handleDeleteAttempt = async () => {
+    if (!pinPrompt.attemptId) return;
+    setDeleting(true);
+    const creatorToken = localStorage.getItem(`creator_token_${quizId}`);
+
+    try {
+      const res = await fetch(`/api/quiz/${quizId}/scoreboard`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          attemptId: pinPrompt.attemptId,
+          pin: enteredPin.trim(),
+          creatorToken: creatorToken || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScoreboard((prev) => prev.filter((item) => item.id !== pinPrompt.attemptId));
+        setPinPrompt({ open: false, attemptId: "" });
+        setEnteredPin("");
+        quizAudio.playPop();
+      } else {
+        alert(data.error || "Incorrect PIN.");
+      }
+    } catch {
+      alert("Network error.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleShareScoreboardWhatsApp = () => {
+    quizAudio.playPop();
+    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/quiz/play/${quizId}` : "";
+    let text = `👑 *${creatorName}'s Challenge Leaderboard*\n\n`;
+    if (scoreboard.length > 0) {
+      scoreboard.slice(0, 5).forEach((entry, idx) => {
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🔹";
+        text += `${medal} ${entry.playerName}: ${entry.score}/${entry.totalQuestions} points\n`;
+      });
+    } else {
+      text += "No one has played yet. Be the first!\n";
+    }
+    text += `\nCan you beat them? Try here 👇\n${shareUrl}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#8AC0EF]/30 via-sky-50 to-amber-50/40 text-slate-900 flex flex-col font-sans relative overflow-x-hidden">
+      {/* Background Clouds */}
+      <div className="absolute top-0 left-0 right-0 h-44 bg-[url('/quiz/assets/img/player/clouds-bg.webp')] bg-repeat-x bg-contain opacity-40 pointer-events-none" />
+
+      {/* Header */}
+      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-2 flex items-center justify-between">
+        <Link href="/quiz" className="flex items-center gap-2 group">
+          <div className="w-9 h-9 relative rounded-xl bg-white shadow-sm flex items-center justify-center p-1 border-2 border-slate-900">
+            <Image
+              src="/quiz/assets/img/logo-f.webp"
+              alt="Logo"
+              width={28}
+              height={28}
+              className="object-contain"
+            />
+          </div>
+          <span className="font-extrabold text-base tracking-tight text-slate-900">
+            Don&apos;t Block Me!
+          </span>
+        </Link>
+        <Link
+          href={`/quiz/share/${quizId}`}
+          className="text-xs font-black bg-emerald-400 text-slate-900 px-3.5 py-1.5 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a] flex items-center gap-1.5"
+        >
+          <Share2 size={13} />
+          <span>Share Quiz</span>
+        </Link>
+      </header>
+
+      {/* Main Container */}
+      <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-5 flex flex-col">
+        {/* Title Card */}
+        <div className="w-full bg-white rounded-3xl p-6 shadow-[0_12px_30px_rgba(56,189,248,0.18)] border-4 border-slate-900 text-center mb-5">
+          <div className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 font-black text-xs uppercase px-3 py-1 rounded-full border border-amber-300 mb-2">
+            <Trophy size={14} />
+            Official Scoreboard
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            {creatorName}&apos;s Friends Leaderboard
+          </h1>
+          <p className="text-xs text-slate-600 mt-1 font-medium">
+            Total {scoreboard.length} friend{scoreboard.length === 1 ? "" : "s"} took this challenge!
+          </p>
+
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={handleShareScoreboardWhatsApp}
+              className="py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+            >
+              <MessageCircle size={15} className="fill-white" />
+              <span>Share Leaderboard</span>
+            </button>
+            <button
+              type="button"
+              onClick={fetchPublicScoreboard}
+              className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all cursor-pointer"
+              title="Refresh"
+            >
+              <RefreshCw size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* Score List (Ranked Highest Score First) */}
+        <div className="w-full bg-white rounded-3xl p-5 border-4 border-slate-900 shadow-lg">
+          <h2 className="text-xs font-black uppercase text-slate-500 tracking-wider mb-3">
+            Ranked Players (Highest Score First)
+          </h2>
+
+          {loading ? (
+            <div className="py-8 text-center text-xs font-bold text-slate-500 animate-pulse">
+              Loading player scores...
+            </div>
+          ) : scoreboard.length === 0 ? (
+            <div className="py-8 text-center text-slate-600">
+              <span className="text-3xl block mb-2">🎯</span>
+              <p className="font-extrabold text-sm text-slate-900">Abhi tak kisi dost ne quiz nahi diya!</p>
+              <p className="text-xs text-slate-500 mt-1">Apne WhatsApp status par link lagayein taake scores yahan show hon!</p>
+              <Link
+                href={`/quiz/share/${quizId}`}
+                className="inline-block mt-4 py-2.5 px-5 bg-sky-400 text-slate-950 font-black text-xs uppercase rounded-xl border-2 border-slate-900"
+              >
+                Share Link Now
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {scoreboard.map((entry, idx) => {
+                const rankBadge = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+                const isBestie = entry.statusBadge === "bestie";
+                const isFake = entry.statusBadge === "fake";
+
+                return (
+                  <div
+                    key={entry.id}
+                    className={`p-3.5 rounded-2xl border-2 border-slate-900 flex items-center justify-between gap-2 transition-all ${
+                      idx === 0
+                        ? "bg-amber-100/90 shadow-[0_3px_0_#0f172a]"
+                        : idx === 1
+                        ? "bg-slate-100 shadow-[0_3px_0_#0f172a]"
+                        : idx === 2
+                        ? "bg-orange-50 shadow-[0_3px_0_#0f172a]"
+                        : "bg-white hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-black w-6 text-center">{rankBadge}</span>
+                      <div>
+                        <span className="font-black text-sm text-slate-900 block leading-tight">
+                          {entry.playerName}
+                        </span>
+                        <span
+                          className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded border inline-block mt-0.5 ${
+                            isBestie
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                              : isFake
+                              ? "bg-red-100 text-red-800 border-red-300"
+                              : "bg-sky-100 text-sky-800 border-sky-300"
+                          }`}
+                        >
+                          {isBestie ? "True Bestie ❤️" : isFake ? "Fake Friend 🚨 Block" : "Friend ✨"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="text-right pr-1">
+                        <span className="text-base font-black text-slate-900">
+                          {entry.score}
+                        </span>
+                        <span className="text-xs font-bold text-slate-400">/{entry.totalQuestions}</span>
+                      </div>
+
+                      {/* View answers button with auth protection */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAnswers(entry)}
+                        className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                        title="View Answers (Creator Only)"
+                      >
+                        <Eye size={16} />
+                      </button>
+
+                      {/* Delete attempt button */}
+                      <button
+                        type="button"
+                        onClick={() => setPinPrompt({ open: true, attemptId: entry.id })}
+                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Player"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Creator PIN Unlock Modal for Detailed Answers */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl text-center">
+            <Lock size={32} className="text-amber-500 mx-auto mb-2" />
+            <h3 className="font-black text-lg text-slate-900">Creator Verification</h3>
+            <p className="text-xs text-slate-600 mt-1 mb-4">
+              Enter your Creator Secret PIN to view {creatorName}&apos;s friends answers:
+            </p>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              value={enteredPin}
+              onChange={(e) => {
+                setEnteredPin(e.target.value);
+                if (authError) setAuthError("");
+              }}
+              placeholder="Enter PIN (e.g. 7890)"
+              className="w-full py-3 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-2xl mb-2 focus:outline-none"
+            />
+            {authError && <p className="text-xs font-bold text-red-600 mb-3">{authError}</p>}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setEnteredPin("");
+                  setAuthError("");
+                }}
+                className="flex-1 py-3 bg-slate-100 font-bold text-xs rounded-xl border border-slate-300 text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleVerifyPinForAnswers}
+                className="flex-1 py-3 bg-emerald-400 hover:bg-emerald-500 font-black text-xs rounded-xl text-slate-950 border-2 border-slate-900 uppercase tracking-wider"
+              >
+                Unlock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Answers Modal (Authorized) */}
+      {selectedEntry && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b-2 border-slate-100 mb-4">
+              <div>
+                <h3 className="font-black text-base text-slate-900">
+                  {selectedEntry.playerName}&apos;s Answers
+                </h3>
+                <span className="text-xs font-bold text-sky-600">
+                  Score: {selectedEntry.score} / {selectedEntry.totalQuestions}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedEntry(null)}
+                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {selectedEntry.answers && selectedEntry.answers.length > 0 ? (
+                selectedEntry.answers.map((ans, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-2xl border-2 text-xs font-medium ${
+                      ans.isCorrect
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-950"
+                        : "bg-red-50 border-red-300 text-red-950"
+                    }`}
+                  >
+                    <p className="font-black mb-1">
+                      {idx + 1}. {ans.question}
+                    </p>
+                    <p>
+                      <strong>Their choice:</strong> {ans.theirAnswer}{" "}
+                      {ans.isCorrect ? "✅" : "❌"}
+                    </p>
+                    {!ans.isCorrect && (
+                      <p className="text-slate-500 mt-0.5">
+                        <strong>Correct answer:</strong> {ans.correctAnswer}
+                      </p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-slate-500 text-center py-4">Detailed answers not available.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation PIN Modal */}
+      {pinPrompt.open && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-xs bg-white rounded-3xl p-5 border-4 border-slate-900 shadow-2xl text-center">
+            <AlertCircle size={32} className="text-red-500 mx-auto mb-2" />
+            <h3 className="font-black text-base text-slate-900">Delete this player?</h3>
+            <p className="text-xs text-slate-600 mt-1 mb-3">
+              Enter Creator PIN to confirm deletion:
+            </p>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              value={enteredPin}
+              onChange={(e) => setEnteredPin(e.target.value)}
+              placeholder="PIN (e.g. 7890)"
+              className="w-full py-2.5 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-xl mb-3 focus:outline-none"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPinPrompt({ open: false, attemptId: "" })}
+                className="flex-1 py-2.5 bg-slate-100 font-bold text-xs rounded-xl border border-slate-300 text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeleteAttempt}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
