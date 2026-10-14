@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/quiz.test.ts"
+    "test": "node --import ./tests/setup.mjs --import tsx --test \"tests/*.test.ts\"",
+    "test:redis": "node --import ./tests/setup.mjs --import tsx --test tests/redis.integration.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

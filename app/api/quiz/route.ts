@@ -1,3 +1,4 @@
+import { StorageUnavailableError } from "@/lib/quiz/storage";
 import { NextResponse } from "next/server";
 import { saveQuiz } from "@/lib/quiz/storage";
 import { QuizData, Gender } from "@/lib/quiz/types";
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
     if (!isSaved) {
       return NextResponse.json(
         { success: false, error: "Failed to persist quiz to durable storage. Please try again." },
-        { status: 500 }
+        { status: 503 }
       );
     }
 
@@ -124,6 +125,8 @@ export async function POST(req: Request) {
       shareUrl: `/quiz/share/${quiz.id}`,
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError)
+      return NextResponse.json({ success: false, error: "Storage temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz POST Error]:", err);
     return NextResponse.json(
       { success: false, error: "Failed to create quiz." },

@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_QUIZ_QUESTIONS } from "../lib/quiz/questions";
 import {
@@ -7,7 +7,6 @@ import {
   getQuizPublicData,
   recordAttempt,
   getScoreboard,
-  getScoreboardDetails,
   deleteAttempt,
   deleteQuiz,
   _setStorageWriteFailureSimulation,
@@ -15,11 +14,9 @@ import {
 import { QuizData, PlayerAttempt } from "../lib/quiz/types";
 import {
   hashPin,
-  verifyPin,
   checkPinRateLimit,
   recordFailedPinAttempt,
   clearPinRateLimit,
-  timingSafeEqualString,
   generateCreatorToken,
   generateQuizId,
   generateAttemptId,
@@ -35,7 +32,10 @@ import {
   isDeckComplete,
   getRemainingUnanswered,
 } from "../lib/quiz/deck";
-import { _enableMockRedis } from "../lib/quiz/redis";
+import { _enableMockRedis, _getMockRedisStore, isRedisConfigured } from "../lib/quiz/redis";
+
+beforeEach(() => { _enableMockRedis(true); });
+afterEach(() => { _setStorageWriteFailureSimulation(false); _enableMockRedis(false); });
 
 test("Task 1: Quiz Skip & Deck State Machine Progression", () => {
   // 1. Initial State
@@ -121,6 +121,7 @@ test("Task 2: Cryptographically Secure Unique Identifiers", () => {
 test("Task 3: Redis Concurrency & Atomic Operations", async () => {
   // Enable atomic Redis mock to verify atomic HSET, HVALS, HDEL, and DEL commands
   _enableMockRedis(true);
+  assert.equal(isRedisConfigured(), true);
 
   const quizId = generateQuizId();
   const mockQuiz: QuizData = {
@@ -168,6 +169,7 @@ test("Task 3: Redis Concurrency & Atomic Operations", async () => {
   // Fire all 30 submissions concurrently
   const results = await Promise.all(concurrentAttempts.map((att) => recordAttempt(att)));
   assert.ok(results.every((r) => r === true), "All concurrent attempts must succeed");
+  assert.equal(_getMockRedisStore()!.hashes.get(`quiz_attempts:${quizId}`)!.size, 30, "Must write the Redis hash, not local memory");
 
   // Verify all 30 attempts were recorded atomically with zero lost writes
   const scoreboard = await getScoreboard(quizId);
@@ -207,12 +209,12 @@ test("Task 4: Distributed Rate Limiting & Safe IP Extraction", async () => {
   const req1 = new Request("http://localhost:3000/api", {
     headers: { "x-vercel-forwarded-for": "203.0.113.195, 10.0.0.1" },
   });
-  assert.equal(extractClientIp(req1), "203.0.113.195", "Must extract verified Vercel IP header");
+  assert.equal(extractClientIp(req1), "unknown", "Untrusted deployment must ignore supplied proxy headers");
 
   const req2 = new Request("http://localhost:3000/api", {
     headers: { "cf-connecting-ip": "198.51.100.42" },
   });
-  assert.equal(extractClientIp(req2), "198.51.100.42", "Must extract Cloudflare connecting IP");
+  assert.equal(extractClientIp(req2), "unknown", "Untrusted deployment must ignore supplied proxy headers");
 
   const testIp = "192.0.2.177";
   _resetPinRateLimit(testIp);

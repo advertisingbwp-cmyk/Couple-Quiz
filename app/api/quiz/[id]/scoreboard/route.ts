@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import { getScoreboard, getScoreboardDetails, getQuizById, deleteAttempt } from "@/lib/quiz/storage";
-import {
-  verifyPin,
-  checkPinRateLimit,
-  timingSafeEqualString,
-  extractClientIp,
-  recordFailedPinAttempt,
-  clearPinRateLimit,
-} from "@/lib/quiz/security";
+import { creatorAuthResponse } from "@/lib/quiz/authResponse";
+import { RateLimitUnavailableError } from "@/lib/quiz/security";
+import { StorageUnavailableError } from "@/lib/quiz/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +35,8 @@ export async function GET(
       scoreboard: leaderboard,
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError || err instanceof RateLimitUnavailableError)
+      return NextResponse.json({ success: false, error: "Service temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz Scoreboard Error]:", err);
     return NextResponse.json(
       { success: false, error: "Failed to load scoreboard." },
@@ -66,30 +63,8 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Quiz not found." }, { status: 404 });
     }
 
-    const clientIp = extractClientIp(req);
-    const isAllowed = await checkPinRateLimit(clientIp);
-    if (!isAllowed) {
-      return NextResponse.json(
-        { success: false, error: "Too many attempts. Please try again in 10 minutes." },
-        { status: 429 }
-      );
-    }
-
-    const isTokenMatch =
-      typeof creatorToken === "string" && timingSafeEqualString(creatorToken, quiz.creatorToken);
-    const isPinMatch =
-      typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
-
-    if (!isTokenMatch && !isPinMatch) {
-      await recordFailedPinAttempt(clientIp);
-      return NextResponse.json(
-        { success: false, error: "Incorrect Secret PIN or authorization token." },
-        { status: 403 }
-      );
-    }
-
-    // Auth succeeded: clear failed attempts for this IP
-    await clearPinRateLimit(clientIp);
+    const authFailure = await creatorAuthResponse(req, quiz, { pin, creatorToken });
+    if (authFailure) return authFailure;
     const detailedLeaderboard = await getScoreboardDetails(id);
 
     return NextResponse.json({
@@ -99,6 +74,8 @@ export async function POST(
       scoreboard: detailedLeaderboard,
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError || err instanceof RateLimitUnavailableError)
+      return NextResponse.json({ success: false, error: "Service temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz Scoreboard Details Error]:", err);
     return NextResponse.json({ success: false, error: "Server error." }, { status: 500 });
   }
@@ -131,34 +108,13 @@ export async function DELETE(
       );
     }
 
-    const clientIp = extractClientIp(req);
-    const isAllowed = await checkPinRateLimit(clientIp);
-    if (!isAllowed) {
-      return NextResponse.json(
-        { success: false, error: "Too many attempts. Please wait." },
-        { status: 429 }
-      );
-    }
-
-    const isTokenMatch =
-      typeof creatorToken === "string" && timingSafeEqualString(creatorToken, quiz.creatorToken);
-    const isPinMatch =
-      typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
-
-    if (!isTokenMatch && !isPinMatch) {
-      await recordFailedPinAttempt(clientIp);
-      return NextResponse.json(
-        { success: false, error: "Incorrect Secret PIN or authorization token." },
-        { status: 403 }
-      );
-    }
-
-    await clearPinRateLimit(clientIp);
+    const authFailure = await creatorAuthResponse(req, quiz, { pin, creatorToken });
+    if (authFailure) return authFailure;
     const deleted = await deleteAttempt(id, attemptId);
     if (!deleted) {
       return NextResponse.json(
-        { success: false, error: "Failed to delete attempt from storage." },
-        { status: 500 }
+        { success: false, error: "Attempt not found." },
+        { status: 404 }
       );
     }
 
@@ -167,6 +123,8 @@ export async function DELETE(
       message: "Attempt removed.",
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError || err instanceof RateLimitUnavailableError)
+      return NextResponse.json({ success: false, error: "Service temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz Scoreboard DELETE Error]:", err);
     return NextResponse.json(
       { success: false, error: "Failed to delete attempt." },

@@ -1,3 +1,4 @@
+import { StorageUnavailableError } from "@/lib/quiz/storage";
 import { NextResponse } from "next/server";
 import { getQuizById, recordAttempt } from "@/lib/quiz/storage";
 import { PlayerAttempt } from "@/lib/quiz/types";
@@ -113,7 +114,7 @@ export async function POST(
     if (!isRecorded) {
       return NextResponse.json(
         { success: false, error: "Failed to save attempt to storage. Please try again." },
-        { status: 500 }
+        { status: 503 }
       );
     }
 
@@ -126,6 +127,8 @@ export async function POST(
       attemptId: attempt.id,
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError)
+      return NextResponse.json({ success: false, error: "Storage temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz Attempt Error]:", err);
     return NextResponse.json(
       { success: false, error: "Failed to record attempt." },

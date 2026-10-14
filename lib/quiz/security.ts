@@ -1,5 +1,8 @@
 import crypto from "crypto";
-import { executeRedisCommand, executeRedisPipeline, isRedisConfigured, isProductionServerlessEnvironment } from "./redis";
+import { isIP } from "node:net";
+import { AUTH_WINDOW_SCRIPT } from "./redisScripts";
+import type { QuizData } from "./types";
+import { executeRedisCommand, isRedisConfigured, isProductionServerlessEnvironment } from "./redis";
 
 const SCRYPT_KEYLEN = 64;
 const SCRYPT_COST = 16384;
@@ -104,125 +107,88 @@ export function generateQuizSlug(creatorName: string): string {
   return `${clean || "quiz"}-${entropy}`;
 }
 
-/**
- * Extracts client IP safely without trusting forged or arbitrary client-supplied headers.
+/** Only platform-attested headers are trusted. Custom Cloudflare mode requires
+ * an origin restricted to Cloudflare (documented deployment contract).
  */
+export function normalizeClientIp(value: string): string | null {
+  const ip = value.trim();
+  const family = isIP(ip);
+  if (family === 4) return ip;
+  if (family !== 6 || ip.includes("%")) return null;
+  const normalized = new URL(`http://[${ip}]`).hostname.slice(1, -1).toLowerCase();
+  const mapped = normalized.match(/^::ffff:([0-9a-f]+):([0-9a-f]+)$/);
+  if (mapped) {
+    const high = parseInt(mapped[1], 16), low = parseInt(mapped[2], 16);
+    return [high >> 8, high & 255, low >> 8, low & 255].join(".");
+  }
+  return normalized;
+}
 export function extractClientIp(req: Request): string {
-  // 1. Managed trusted reverse proxy headers (cannot be set by client when on Vercel/Cloudflare)
-  const vercelIp = req.headers.get("x-vercel-forwarded-for");
-  if (vercelIp && vercelIp.trim()) {
-    return vercelIp.split(",")[0].trim();
-  }
-
-  const cfIp = req.headers.get("cf-connecting-ip");
-  if (cfIp && cfIp.trim()) {
-    return cfIp.trim();
-  }
-
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp && realIp.trim()) {
-    return realIp.trim();
-  }
-
-  // 2. Standard proxy header (extract leftmost entry)
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor && forwardedFor.trim()) {
-    const parts = forwardedFor.split(",").map((p) => p.trim()).filter(Boolean);
-    if (parts.length > 0) {
-      return parts[0];
-    }
-  }
-
-  return "127.0.0.1";
+  const header = process.env.VERCEL === "1" ? "x-vercel-forwarded-for"
+    : process.env.QUIZ_TRUSTED_PROXY === "cloudflare" ? "cf-connecting-ip" : null;
+  // Unknown callers deliberately share a conservative bucket, never a spoofable
+  // header-derived identity. Lists, ports and invalid values are not accepted.
+  return (header && normalizeClientIp(req.headers.get(header) || "")) || "unknown";
 }
-
-// In-memory rate limiter for local development and unit tests
 const localPinAttempts = new Map<string, { count: number; resetAt: number }>();
-
-/**
- * Checks whether an IP has exceeded the maximum allowed failed PIN attempts (5 per 10 minutes).
- * Uses Redis in production; falls back to in-memory store in local dev/tests.
- * Fails closed in production if Redis is unavailable.
- */
+const rateKey = (ip: string) => `ratelimit:pin:${normalizeClientIp(ip) || "unknown"}`;
+export class RateLimitUnavailableError extends Error {
+  constructor() { super("Authentication temporarily unavailable"); this.name = "RateLimitUnavailableError"; }
+}
 export async function checkPinRateLimit(ip: string): Promise<boolean> {
-  const cleanIp = ip.trim() || "unknown";
-  const rateLimitKey = `ratelimit:pin:${cleanIp}`;
-  const isProd = isProductionServerlessEnvironment();
-
+  const key = rateKey(ip);
   if (isRedisConfigured()) {
-    const redisRes = await executeRedisCommand<string | null>(["GET", rateLimitKey]);
-    if (!redisRes.ok) {
-      if (isProd) {
-        console.error(`[Security Alert]: Rate limit storage unreachable in production for IP ${cleanIp}. Failing closed.`);
-        return false;
-      }
-    } else {
-      const count = parseInt(redisRes.result || "0", 10);
-      if (count >= 5) {
-        return false;
-      }
-      return true;
-    }
-  } else if (isProd) {
-    // Production without Redis must fail closed
-    console.error(`[Security Alert]: Distributed rate limiting is not configured in production. Failing closed.`);
-    return false;
+    const res = await executeRedisCommand<string>(["GET", key]);
+    if (!res.ok) throw new RateLimitUnavailableError();
+    const value = res.result === null ? 0 : Number(res.result);
+    if (!Number.isInteger(value) || value < 0) throw new RateLimitUnavailableError();
+    return value < 5;
   }
-
-  // Local dev / test fallback
-  const now = Date.now();
-  const entry = localPinAttempts.get(cleanIp);
-  if (!entry || now > entry.resetAt) {
-    return true;
-  }
-  return entry.count < 5;
+  if (isProductionServerlessEnvironment()) throw new RateLimitUnavailableError();
+  const entry = localPinAttempts.get(key);
+  return !entry || Date.now() >= entry.resetAt || entry.count < 5;
 }
 
-/**
- * Atomically records a failed PIN verification attempt for the given IP.
- * Increments attempt count and sets a 10-minute sliding expiry.
- */
-export async function recordFailedPinAttempt(ip: string): Promise<void> {
-  const cleanIp = ip.trim() || "unknown";
-  const rateLimitKey = `ratelimit:pin:${cleanIp}`;
-
+async function finishAuthentication(ip: string, valid: boolean): Promise<"allowed" | "invalid" | "limited"> {
+  const key = rateKey(ip);
   if (isRedisConfigured()) {
-    await executeRedisPipeline([
-      ["INCR", rateLimitKey],
-      ["EXPIRE", rateLimitKey, 600],
-    ]);
+    const res = await executeRedisCommand<number>(["EVAL", AUTH_WINDOW_SCRIPT, 1, key, valid ? "success" : "failure"]);
+    if (!res.ok || ![0, 1, -1].includes(res.result as number)) throw new RateLimitUnavailableError();
+    return res.result === 0 ? "limited" : res.result === 1 ? "allowed" : "invalid";
   }
-
-  // Also maintain local record for test/dev
+  if (isProductionServerlessEnvironment()) throw new RateLimitUnavailableError();
   const now = Date.now();
-  const entry = localPinAttempts.get(cleanIp);
-  if (!entry || now > entry.resetAt) {
-    localPinAttempts.set(cleanIp, { count: 1, resetAt: now + 10 * 60 * 1000 });
-  } else {
-    entry.count++;
-  }
+  let entry = localPinAttempts.get(key);
+  if (entry && now >= entry.resetAt) { localPinAttempts.delete(key); entry = undefined; }
+  if (entry && entry.count >= 5) return "limited";
+  if (valid) return "allowed";
+  if (!entry) localPinAttempts.set(key, { count: 1, resetAt: now + 600_000 });
+  else entry.count++;
+  return "invalid";
 }
-
-/**
- * Clears failed PIN attempts for an IP upon successful authentication.
- */
+export async function recordFailedPinAttempt(ip: string): Promise<boolean> {
+  return (await finishAuthentication(ip, false)) === "invalid";
+}
 export async function clearPinRateLimit(ip: string): Promise<void> {
-  const cleanIp = ip.trim() || "unknown";
-  const rateLimitKey = `ratelimit:pin:${cleanIp}`;
-
+  const key = rateKey(ip);
   if (isRedisConfigured()) {
-    await executeRedisCommand(["DEL", rateLimitKey]);
-  }
-  localPinAttempts.delete(cleanIp);
+    const res = await executeRedisCommand(["DEL", key]);
+    if (!res.ok || (res.result !== 0 && res.result !== 1)) throw new RateLimitUnavailableError();
+  } else if (isProductionServerlessEnvironment()) throw new RateLimitUnavailableError();
+  localPinAttempts.delete(key);
 }
-
-/**
- * Test helper to reset rate limits.
+/** All protected routes share this atomic final decision. Successful requests
+ * consume no allowance and do not erase concurrent failures in the fixed window.
  */
+export async function authenticateCreator(req: Request, quiz: QuizData, credentials: { pin?: unknown; creatorToken?: unknown }): Promise<200 | 403 | 429> {
+  const ip = extractClientIp(req);
+  if (!(await checkPinRateLimit(ip))) return 429;
+  const valid = (typeof credentials.creatorToken === "string" && timingSafeEqualString(credentials.creatorToken, quiz.creatorToken)) ||
+    (typeof credentials.pin === "string" && /^\d{4,6}$/.test(credentials.pin.trim()) && verifyPin(credentials.pin, quiz.pinHash));
+  const decision = await finishAuthentication(ip, valid);
+  return decision === "allowed" ? 200 : decision === "limited" ? 429 : 403;
+}
 export function _resetPinRateLimit(ip?: string): void {
-  if (ip) {
-    localPinAttempts.delete(ip);
-  } else {
-    localPinAttempts.clear();
-  }
+  if (process.env.NODE_ENV !== "test" || isProductionServerlessEnvironment()) throw new Error("Test mode required");
+  if (ip) localPinAttempts.delete(rateKey(ip)); else localPinAttempts.clear();
 }
