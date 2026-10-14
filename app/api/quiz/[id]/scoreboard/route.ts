@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { getScoreboard, getScoreboardDetails, getQuizById, deleteAttempt } from "@/lib/quiz/storage";
-import { verifyPin, checkPinRateLimit, timingSafeEqualString } from "@/lib/quiz/security";
+import {
+  verifyPin,
+  checkPinRateLimit,
+  timingSafeEqualString,
+  extractClientIp,
+  recordFailedPinAttempt,
+  clearPinRateLimit,
+} from "@/lib/quiz/security";
 
 export const dynamic = "force-dynamic";
 
@@ -59,8 +66,9 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Quiz not found." }, { status: 404 });
     }
 
-    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-    if (!checkPinRateLimit(clientIp)) {
+    const clientIp = extractClientIp(req);
+    const isAllowed = await checkPinRateLimit(clientIp);
+    if (!isAllowed) {
       return NextResponse.json(
         { success: false, error: "Too many attempts. Please try again in 10 minutes." },
         { status: 429 }
@@ -73,12 +81,15 @@ export async function POST(
       typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
 
     if (!isTokenMatch && !isPinMatch) {
+      await recordFailedPinAttempt(clientIp);
       return NextResponse.json(
         { success: false, error: "Incorrect Secret PIN or authorization token." },
         { status: 403 }
       );
     }
 
+    // Auth succeeded: clear failed attempts for this IP
+    await clearPinRateLimit(clientIp);
     const detailedLeaderboard = await getScoreboardDetails(id);
 
     return NextResponse.json({
@@ -120,8 +131,9 @@ export async function DELETE(
       );
     }
 
-    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-    if (!checkPinRateLimit(clientIp)) {
+    const clientIp = extractClientIp(req);
+    const isAllowed = await checkPinRateLimit(clientIp);
+    if (!isAllowed) {
       return NextResponse.json(
         { success: false, error: "Too many attempts. Please wait." },
         { status: 429 }
@@ -134,17 +146,25 @@ export async function DELETE(
       typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
 
     if (!isTokenMatch && !isPinMatch) {
+      await recordFailedPinAttempt(clientIp);
       return NextResponse.json(
         { success: false, error: "Incorrect Secret PIN or authorization token." },
         { status: 403 }
       );
     }
 
+    await clearPinRateLimit(clientIp);
     const deleted = await deleteAttempt(id, attemptId);
+    if (!deleted) {
+      return NextResponse.json(
+        { success: false, error: "Failed to delete attempt from storage." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
-      success: deleted,
-      message: deleted ? "Attempt removed." : "Attempt not found.",
+      success: true,
+      message: "Attempt removed.",
     });
   } catch (err) {
     console.error("[API Quiz Scoreboard DELETE Error]:", err);

@@ -2,6 +2,11 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { QuizData, PlayerAttempt, ScoreboardEntry, ScoreboardDetailEntry, QuizPublicData } from "./types";
+import {
+  executeRedisCommand,
+  isRedisConfigured,
+  isProductionServerlessEnvironment,
+} from "./redis";
 
 interface StorageSchema {
   quizzes: Record<string, QuizData>;
@@ -22,59 +27,10 @@ function getDbFilePath(): string {
 }
 
 let cache: StorageSchema | null = null;
-
-// Allow tests to simulate storage failures or override Redis config
 let forceFailNextWrite = false;
 
 export function _setStorageWriteFailureSimulation(fail: boolean): void {
   forceFailNextWrite = fail;
-}
-
-const upstashUrl = process.env.UPSTASH_REDIS_REST_URL?.replace(/\/+$/, "");
-const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-
-function isProductionServerlessEnvironment(): boolean {
-  return (
-    Boolean(process.env.VERCEL) ||
-    Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
-    process.env.QUIZ_REQUIRE_DURABLE_STORAGE === "true"
-  );
-}
-
-async function syncWithUpstashGet(key: string): Promise<unknown | null> {
-  if (!upstashUrl || !upstashToken) return null;
-  try {
-    const res = await fetch(`${upstashUrl}/get/${encodeURIComponent(key)}`, {
-      headers: { Authorization: `Bearer ${upstashToken}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (json.result) {
-      return typeof json.result === "string" ? JSON.parse(json.result) : json.result;
-    }
-  } catch (err) {
-    console.warn("[Quiz Storage Upstash GET Warning]:", err);
-  }
-  return null;
-}
-
-async function syncWithUpstashSet(key: string, value: unknown): Promise<boolean> {
-  if (!upstashUrl || !upstashToken) return false;
-  try {
-    const res = await fetch(`${upstashUrl}/set/${encodeURIComponent(key)}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${upstashToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(typeof value === "string" ? value : JSON.stringify(value)),
-    });
-    return res.ok;
-  } catch (err) {
-    console.warn("[Quiz Storage Upstash SET Warning]:", err);
-    return false;
-  }
 }
 
 function ensureDbLoaded(): StorageSchema {
@@ -133,18 +89,17 @@ export async function saveQuiz(quiz: QuizData): Promise<boolean> {
 
   const isProd = isProductionServerlessEnvironment();
 
-  // Production fail-closed check: serverless production must not silently use ephemeral local file
-  if (isProd && (!upstashUrl || !upstashToken)) {
+  if (isProd && !isRedisConfigured()) {
     console.error(
       "[Storage Security Error]: Durable cloud storage (Upstash Redis) is required in production but not configured."
     );
     return false;
   }
 
-  if (upstashUrl && upstashToken) {
-    const remoteSaved = await syncWithUpstashSet(`quiz:${quiz.id}`, quiz);
-    if (!remoteSaved) {
-      console.error(`[Storage Error]: Failed to persist quiz ${quiz.id} to Upstash Redis.`);
+  if (isRedisConfigured()) {
+    const res = await executeRedisCommand(["SET", `quiz:${quiz.id}`, JSON.stringify(quiz)]);
+    if (!res.ok) {
+      console.error(`[Storage Error]: Failed to persist quiz ${quiz.id} to Upstash Redis: ${res.error}`);
       return false;
     }
   }
@@ -156,7 +111,7 @@ export async function saveQuiz(quiz: QuizData): Promise<boolean> {
   }
 
   const localSaved = persistDb(db);
-  if (!upstashUrl && !localSaved) {
+  if (!isRedisConfigured() && !localSaved) {
     return false;
   }
 
@@ -169,11 +124,16 @@ export async function getQuizById(quizId: string): Promise<QuizData | null> {
     return db.quizzes[quizId];
   }
 
-  if (upstashUrl && upstashToken) {
-    const remoteQuiz = (await syncWithUpstashGet(`quiz:${quizId}`)) as QuizData | null;
-    if (remoteQuiz) {
-      db.quizzes[quizId] = remoteQuiz;
-      return remoteQuiz;
+  if (isRedisConfigured()) {
+    const res = await executeRedisCommand<string>(["GET", `quiz:${quizId}`]);
+    if (res.ok && res.result) {
+      try {
+        const remoteQuiz = typeof res.result === "string" ? JSON.parse(res.result) : res.result;
+        db.quizzes[quizId] = remoteQuiz;
+        return remoteQuiz;
+      } catch (err) {
+        console.error("[Storage Error]: Corrupt quiz JSON in Redis:", err);
+      }
     }
   }
 
@@ -203,12 +163,9 @@ export async function getQuizPublicData(quizId: string): Promise<QuizPublicData 
 }
 
 /**
- * Records a player attempt.
- *
- * NOTE ON RACE CONDITIONS:
- * In high-concurrency environments, fetching attempts, pushing in JS, and writing back
- * presents a classic read-modify-write race condition. In a future phase, this should
- * use atomic Redis list operations (LPUSH) or a relational database with row-level locks.
+ * Records a player attempt using atomic Redis HSET operations.
+ * Concurrent submissions write to unique field keys in the quiz_attempts hash,
+ * completely eliminating read-modify-write overwrite race conditions.
  */
 export async function recordAttempt(attempt: PlayerAttempt): Promise<boolean> {
   if (forceFailNextWrite) {
@@ -216,22 +173,23 @@ export async function recordAttempt(attempt: PlayerAttempt): Promise<boolean> {
   }
 
   const isProd = isProductionServerlessEnvironment();
-  if (isProd && (!upstashUrl || !upstashToken)) {
+  if (isProd && !isRedisConfigured()) {
     console.error(
       "[Storage Security Error]: Durable cloud storage (Upstash Redis) is required in production but not configured."
     );
     return false;
   }
 
-  if (upstashUrl && upstashToken) {
-    const remoteAttempts = (await syncWithUpstashGet(`quiz_attempts:${attempt.quizId}`)) as PlayerAttempt[] | null;
-    const list = Array.isArray(remoteAttempts) ? remoteAttempts : [];
-    const mergedMap = new Map<string, PlayerAttempt>();
-    for (const a of list) mergedMap.set(a.id, a);
-    mergedMap.set(attempt.id, attempt);
-    const remoteSaved = await syncWithUpstashSet(`quiz_attempts:${attempt.quizId}`, Array.from(mergedMap.values()));
-    if (!remoteSaved) {
-      console.error(`[Storage Error]: Failed to persist attempt ${attempt.id} to Upstash Redis.`);
+  if (isRedisConfigured()) {
+    // Atomic HSET: writes to field `attempt.id` within hash `quiz_attempts:${quizId}`
+    const res = await executeRedisCommand([
+      "HSET",
+      `quiz_attempts:${attempt.quizId}`,
+      attempt.id,
+      JSON.stringify(attempt),
+    ]);
+    if (!res.ok) {
+      console.error(`[Storage Error]: Failed atomic HSET attempt ${attempt.id} to Upstash Redis: ${res.error}`);
       return false;
     }
   }
@@ -240,14 +198,45 @@ export async function recordAttempt(attempt: PlayerAttempt): Promise<boolean> {
   if (!db.attempts[attempt.quizId]) {
     db.attempts[attempt.quizId] = [];
   }
-  db.attempts[attempt.quizId].unshift(attempt);
+
+  // Deduplicate in local store
+  db.attempts[attempt.quizId] = [
+    attempt,
+    ...db.attempts[attempt.quizId].filter((a) => a.id !== attempt.id),
+  ];
 
   const localSaved = persistDb(db);
-  if (!upstashUrl && !localSaved) {
+  if (!isRedisConfigured() && !localSaved) {
     return false;
   }
 
   return true;
+}
+
+/**
+ * Retrieves all attempts for a quiz from Redis Hash (HVALS) or local store.
+ */
+async function fetchAttemptsForQuiz(quizId: string): Promise<PlayerAttempt[]> {
+  if (isRedisConfigured()) {
+    const res = await executeRedisCommand<string[]>(["HVALS", `quiz_attempts:${quizId}`]);
+    if (res.ok && Array.isArray(res.result) && res.result.length > 0) {
+      const parsed: PlayerAttempt[] = [];
+      for (const item of res.result) {
+        try {
+          const obj = typeof item === "string" ? JSON.parse(item) : item;
+          if (obj && obj.id) {
+            parsed.push(obj);
+          }
+        } catch {
+          // Skip corrupt attempt
+        }
+      }
+      return parsed;
+    }
+  }
+
+  const db = ensureDbLoaded();
+  return db.attempts[quizId] || [];
 }
 
 function sortAttempts(attempts: PlayerAttempt[]): PlayerAttempt[] {
@@ -264,17 +253,7 @@ function sortAttempts(attempts: PlayerAttempt[]): PlayerAttempt[] {
  * NEVER returns raw answers or correct answers.
  */
 export async function getScoreboard(quizId: string): Promise<ScoreboardEntry[]> {
-  const db = ensureDbLoaded();
-  let rawAttempts = db.attempts[quizId] || [];
-
-  if (rawAttempts.length === 0 && upstashUrl && upstashToken) {
-    const remoteAttempts = (await syncWithUpstashGet(`quiz_attempts:${quizId}`)) as PlayerAttempt[] | null;
-    if (remoteAttempts && Array.isArray(remoteAttempts)) {
-      db.attempts[quizId] = remoteAttempts;
-      rawAttempts = remoteAttempts;
-    }
-  }
-
+  const rawAttempts = await fetchAttemptsForQuiz(quizId);
   const sorted = sortAttempts(rawAttempts);
 
   return sorted.map((att) => {
@@ -299,18 +278,8 @@ export async function getScoreboard(quizId: string): Promise<ScoreboardEntry[]> 
  * Accessible ONLY by creator with valid token or PIN.
  */
 export async function getScoreboardDetails(quizId: string): Promise<ScoreboardDetailEntry[]> {
-  const db = ensureDbLoaded();
   const quiz = await getQuizById(quizId);
-  let rawAttempts = db.attempts[quizId] || [];
-
-  if (rawAttempts.length === 0 && upstashUrl && upstashToken) {
-    const remoteAttempts = (await syncWithUpstashGet(`quiz_attempts:${quizId}`)) as PlayerAttempt[] | null;
-    if (remoteAttempts && Array.isArray(remoteAttempts)) {
-      db.attempts[quizId] = remoteAttempts;
-      rawAttempts = remoteAttempts;
-    }
-  }
-
+  const rawAttempts = await fetchAttemptsForQuiz(quizId);
   const sorted = sortAttempts(rawAttempts);
 
   return sorted.map((att) => {
@@ -346,35 +315,51 @@ export async function getScoreboardDetails(quizId: string): Promise<ScoreboardDe
   });
 }
 
+/**
+ * Atomically deletes a player attempt.
+ * Deleted attempts can never reappear.
+ */
 export async function deleteAttempt(quizId: string, attemptId: string): Promise<boolean> {
-  const db = ensureDbLoaded();
-  if (!db.attempts[quizId]) return false;
-
-  const initialLength = db.attempts[quizId].length;
-  db.attempts[quizId] = db.attempts[quizId].filter((a) => a.id !== attemptId);
-
-  if (db.attempts[quizId].length !== initialLength) {
-    const localSaved = persistDb(db);
-    if (upstashUrl && upstashToken) {
-      const remoteSaved = await syncWithUpstashSet(`quiz_attempts:${quizId}`, db.attempts[quizId]);
-      return remoteSaved;
+  const remoteDeleted = true;
+  if (isRedisConfigured()) {
+    const res = await executeRedisCommand(["HDEL", `quiz_attempts:${quizId}`, attemptId]);
+    if (!res.ok) {
+      console.error(`[Storage Error]: Failed to delete attempt ${attemptId} from Redis: ${res.error}`);
+      return false;
     }
-    return localSaved;
   }
-  return false;
+
+  const db = ensureDbLoaded();
+  if (db.attempts[quizId]) {
+    db.attempts[quizId] = db.attempts[quizId].filter((a) => a.id !== attemptId);
+    persistDb(db);
+  }
+
+  return remoteDeleted;
 }
 
+/**
+ * Reliably deletes a quiz and all associated attempts from Redis and local cache.
+ */
 export async function deleteQuiz(quizId: string): Promise<boolean> {
-  const db = ensureDbLoaded();
-  if (db.quizzes[quizId]) {
-    delete db.quizzes[quizId];
-    delete db.attempts[quizId];
-    const localSaved = persistDb(db);
-    if (upstashUrl && upstashToken) {
-      await syncWithUpstashSet(`quiz:${quizId}`, null);
-      await syncWithUpstashSet(`quiz_attempts:${quizId}`, null);
+  const remoteDeleted = true;
+  if (isRedisConfigured()) {
+    const res = await executeRedisCommand(["DEL", `quiz:${quizId}`, `quiz_attempts:${quizId}`]);
+    if (!res.ok) {
+      console.error(`[Storage Error]: Failed to delete quiz ${quizId} from Redis: ${res.error}`);
+      return false;
     }
-    return localSaved;
   }
-  return false;
+
+  const db = ensureDbLoaded();
+  delete db.quizzes[quizId];
+  delete db.attempts[quizId];
+
+  if (cache) {
+    delete cache.quizzes[quizId];
+    delete cache.attempts[quizId];
+  }
+
+  persistDb(db);
+  return remoteDeleted;
 }

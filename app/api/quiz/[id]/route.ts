@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { getQuizPublicData, getQuizById, deleteQuiz } from "@/lib/quiz/storage";
-import { verifyPin, checkPinRateLimit, timingSafeEqualString } from "@/lib/quiz/security";
+import {
+  verifyPin,
+  checkPinRateLimit,
+  timingSafeEqualString,
+  extractClientIp,
+  recordFailedPinAttempt,
+  clearPinRateLimit,
+} from "@/lib/quiz/security";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +56,10 @@ export async function DELETE(
       );
     }
 
-    // Rate limit brute-force attempts
-    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-    if (!checkPinRateLimit(clientIp)) {
+    // Rate limit brute-force attempts with distributed IP tracking
+    const clientIp = extractClientIp(req);
+    const isAllowed = await checkPinRateLimit(clientIp);
+    if (!isAllowed) {
       return NextResponse.json(
         { success: false, error: "Too many attempts. Please try again in 10 minutes." },
         { status: 429 }
@@ -65,12 +73,15 @@ export async function DELETE(
       typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
 
     if (!isTokenMatch && !isPinMatch) {
+      await recordFailedPinAttempt(clientIp);
       return NextResponse.json(
         { success: false, error: "Incorrect Secret PIN or authorization token." },
         { status: 403 }
       );
     }
 
+    // Authentication succeeded - clear failed attempts and execute reliable deletion
+    await clearPinRateLimit(clientIp);
     const isDeleted = await deleteQuiz(id);
     if (!isDeleted) {
       return NextResponse.json(

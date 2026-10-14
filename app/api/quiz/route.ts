@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { saveQuiz } from "@/lib/quiz/storage";
 import { QuizData, Gender } from "@/lib/quiz/types";
-import { hashPin, generateCreatorToken } from "@/lib/quiz/security";
+import { hashPin, generateCreatorToken, generateQuizId, generateQuizSlug } from "@/lib/quiz/security";
 import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
 
 export const dynamic = "force-dynamic";
@@ -89,15 +89,9 @@ export async function POST(req: Request) {
     const pinHash = hashPin(pin);
     const creatorToken = generateCreatorToken();
 
-    // 4. Generate Identifiers
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 7);
-    const cleanSlugName = cleanCreatorName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    const slug = `${cleanSlugName || "quiz"}-${randomSuffix}`;
-    const id = `q_${timestamp}_${randomSuffix}`;
+    // 4. Generate Cryptographically Secure Identifiers
+    const slug = generateQuizSlug(cleanCreatorName);
+    const id = generateQuizId();
 
     const quiz: QuizData = {
       id,
@@ -108,7 +102,7 @@ export async function POST(req: Request) {
       theme: "dont_block_me",
       pinHash,
       creatorToken,
-      createdAt: timestamp,
+      createdAt: Date.now(),
       questions: validatedQuestions,
     };
 

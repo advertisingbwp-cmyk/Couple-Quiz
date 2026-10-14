@@ -7,6 +7,14 @@ import Link from "next/link";
 import { Check, SkipForward, ArrowRight, Loader2, Sparkles, KeyRound } from "lucide-react";
 import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
 import { quizAudio } from "@/lib/quiz/audio";
+import {
+  initQuizDeck,
+  getCurrentQuestion,
+  skipQuestion,
+  selectQuestionOption,
+  isDeckComplete,
+  DeckState,
+} from "@/lib/quiz/deck";
 
 const TOTAL_QUESTIONS_TARGET = 10;
 
@@ -14,14 +22,9 @@ export default function QuizCreatePage() {
   const router = useRouter();
   const [creatorName, setCreatorName] = useState("");
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [currentPoolIndex, setCurrentPoolIndex] = useState(0);
-  const [answers, setAnswers] = useState<Array<{
-    questionId: string;
-    question: string;
-    emoji?: string;
-    options: Array<{ id: number; text: string }>;
-    correctOptionId: number;
-  }>>([]);
+  const [deck, setDeck] = useState<DeckState>(() =>
+    initQuizDeck(DEFAULT_QUIZ_QUESTIONS, TOTAL_QUESTIONS_TARGET)
+  );
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [secretPin, setSecretPin] = useState("");
   const [pinError, setPinError] = useState("");
@@ -39,12 +42,8 @@ export default function QuizCreatePage() {
     if (storedGender) setGender(storedGender);
   }, [router]);
 
-  // Use questions pool avoiding duplicate question IDs
-  const availableQuestions = DEFAULT_QUIZ_QUESTIONS.filter(
-    (q) => !answers.some((a) => a.questionId === q.id)
-  );
-  const currentQuestion = availableQuestions[currentPoolIndex % Math.max(1, availableQuestions.length)] || DEFAULT_QUIZ_QUESTIONS[0];
-  const progressPercent = Math.round((answers.length / TOTAL_QUESTIONS_TARGET) * 100);
+  const currentQuestion = getCurrentQuestion(deck) || DEFAULT_QUIZ_QUESTIONS[0];
+  const progressPercent = Math.round((deck.answers.length / deck.targetCount) * 100);
 
   const handleSelectOption = (optionId: number) => {
     quizAudio.playPop();
@@ -55,30 +54,19 @@ export default function QuizCreatePage() {
     if (selectedOptionId === null) return;
     quizAudio.playCorrect();
 
-    const newAnswers = [
-      ...answers,
-      {
-        questionId: currentQuestion.id,
-        question: currentQuestion.question,
-        emoji: currentQuestion.emoji,
-        options: currentQuestion.options,
-        correctOptionId: selectedOptionId,
-      },
-    ];
-    setAnswers(newAnswers);
+    const nextDeck = selectQuestionOption(deck, selectedOptionId);
+    setDeck(nextDeck);
     setSelectedOptionId(null);
 
-    if (newAnswers.length >= TOTAL_QUESTIONS_TARGET) {
+    if (isDeckComplete(nextDeck)) {
       setShowPinModal(true);
-    } else {
-      setCurrentPoolIndex((prev) => prev + 1);
     }
   };
 
   const handleSkip = () => {
     quizAudio.playPop();
     setSelectedOptionId(null);
-    setCurrentPoolIndex((prev) => prev + 1);
+    setDeck((prev) => skipQuestion(prev));
   };
 
   const handleFinalSubmit = async () => {
@@ -101,7 +89,7 @@ export default function QuizCreatePage() {
           gender,
           country: "PK",
           secretPin: trimmedPin,
-          questions: answers,
+          questions: deck.answers,
         }),
       });
 
@@ -143,7 +131,7 @@ export default function QuizCreatePage() {
           </span>
         </Link>
         <span className="text-xs font-black bg-amber-300 text-slate-900 px-3 py-1 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a]">
-          {Math.min(answers.length + 1, TOTAL_QUESTIONS_TARGET)} / {TOTAL_QUESTIONS_TARGET} Qs
+          {Math.min(deck.answers.length + 1, deck.targetCount)} / {deck.targetCount} Qs
         </span>
       </header>
 
@@ -157,12 +145,12 @@ export default function QuizCreatePage() {
           />
         </div>
 
-        {/* Question Card (Hidden once all 10 are completed) */}
+        {/* Question Card (Hidden once all completed) */}
         {!showPinModal && (
           <div className="w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_12px_30px_rgba(56,189,248,0.18)] border-4 border-slate-900 relative animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-black uppercase tracking-wider text-sky-600 bg-sky-50 px-3 py-1 rounded-lg border border-sky-200">
-                Question {answers.length + 1} of {TOTAL_QUESTIONS_TARGET}
+                Question {deck.answers.length + 1} of {deck.targetCount}
               </span>
               <span className="text-xl">{currentQuestion.emoji || "❓"}</span>
             </div>
@@ -216,7 +204,7 @@ export default function QuizCreatePage() {
                 onClick={handleNext}
                 className="flex-1 py-3.5 px-6 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 disabled:opacity-40 text-slate-950 font-black text-sm sm:text-base rounded-2xl border-2 border-slate-900 shadow-[0_5px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
               >
-                <span>{answers.length === TOTAL_QUESTIONS_TARGET - 1 ? "Finish Quiz" : "Next"}</span>
+                <span>{deck.answers.length === deck.targetCount - 1 ? "Finish Quiz" : "Next"}</span>
                 <ArrowRight size={18} className="stroke-[3]" />
               </button>
             </div>
@@ -224,7 +212,7 @@ export default function QuizCreatePage() {
         )}
       </main>
 
-      {/* Secret PIN Modal (Replaces question UI cleanly) */}
+      {/* Secret PIN Modal */}
       {showPinModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl animate-in zoom-in-95 duration-150">

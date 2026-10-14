@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getQuizById, recordAttempt } from "@/lib/quiz/storage";
 import { PlayerAttempt } from "@/lib/quiz/types";
+import { generateAttemptId } from "@/lib/quiz/security";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +98,7 @@ export async function POST(
     // Score can never exceed total questions
     const finalScore = Math.min(score, quiz.questions.length);
 
-    const attemptId = `att_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const attemptId = generateAttemptId();
     const attempt: PlayerAttempt = {
       id: attemptId,
       quizId: id,
