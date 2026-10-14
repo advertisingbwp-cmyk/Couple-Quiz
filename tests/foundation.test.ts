@@ -188,16 +188,46 @@ test("local persistence failure does not mutate cache or report a successful del
 test("proxy identity rejects spoofed headers and normalizes IPv4/IPv6", () => {
   const headers = { "x-forwarded-for": "192.0.2.1", "x-real-ip": "192.0.2.2",
     "x-vercel-forwarded-for": "192.0.2.3", "cf-connecting-ip": "192.0.2.4" };
-  assert.equal(extractClientIp(request("GET", undefined, headers)), "unknown");
-  process.env.VERCEL = "1";
-  assert.equal(extractClientIp(request("GET", undefined, headers)), "192.0.2.3");
-  assert.equal(extractClientIp(request("GET", undefined, { ...headers, "x-vercel-forwarded-for": "bad,192.0.2.9" })), "unknown");
-  delete process.env.VERCEL; process.env.QUIZ_TRUSTED_PROXY = "cloudflare";
-  assert.equal(extractClientIp(request("GET", undefined, headers)), "192.0.2.4");
-  assert.equal(normalizeClientIp("2001:0DB8:0000:0000:0000:0000:0000:0001"), "2001:db8::1");
-  assert.equal(normalizeClientIp("::ffff:192.0.2.1"), "192.0.2.1");
-  for (const ip of ["127.1", "1.2.3.4:80", "999.1.1.1", "fe80::1%eth0", "1.2.3.4,5.6.7.8"])
-    assert.equal(normalizeClientIp(ip), null);
+  try {
+    delete process.env.VERCEL;
+    delete process.env.QUIZ_TRUSTED_PROXY;
+    // Unconfigured environment rejects all client-supplied headers
+    assert.equal(extractClientIp(request("GET", undefined, headers)), "unknown");
+    assert.equal(extractClientIp(request("GET", undefined, { "x-forwarded-for": "198.51.100.1" })), "unknown");
+
+    // Vercel deployment strictly trusts only x-vercel-forwarded-for
+    process.env.VERCEL = "1";
+    assert.equal(extractClientIp(request("GET", undefined, headers)), "192.0.2.3");
+    // Attempting to spoof via cf-connecting-ip or x-forwarded-for on Vercel is ignored
+    assert.equal(extractClientIp(request("GET", undefined, {
+      "cf-connecting-ip": "198.51.100.99",
+      "x-forwarded-for": "198.51.100.88",
+      "x-vercel-forwarded-for": "192.0.2.3"
+    })), "192.0.2.3");
+    assert.equal(extractClientIp(request("GET", undefined, { ...headers, "x-vercel-forwarded-for": "bad,192.0.2.9" })), "unknown");
+    assert.equal(extractClientIp(request("GET", undefined, { "x-forwarded-for": "198.51.100.1" })), "unknown");
+
+    // Cloudflare deployment strictly trusts only cf-connecting-ip
+    delete process.env.VERCEL;
+    process.env.QUIZ_TRUSTED_PROXY = "cloudflare";
+    assert.equal(extractClientIp(request("GET", undefined, headers)), "192.0.2.4");
+    // Attempting to spoof via x-vercel-forwarded-for or x-forwarded-for on Cloudflare is ignored
+    assert.equal(extractClientIp(request("GET", undefined, {
+      "x-vercel-forwarded-for": "198.51.100.99",
+      "x-forwarded-for": "198.51.100.88",
+      "cf-connecting-ip": "192.0.2.4"
+    })), "192.0.2.4");
+    assert.equal(extractClientIp(request("GET", undefined, { "x-forwarded-for": "198.51.100.1" })), "unknown");
+
+    // IP canonicalization and validation
+    assert.equal(normalizeClientIp("2001:0DB8:0000:0000:0000:0000:0000:0001"), "2001:db8::1");
+    assert.equal(normalizeClientIp("::ffff:192.0.2.1"), "192.0.2.1");
+    for (const ip of ["127.1", "1.2.3.4:80", "999.1.1.1", "fe80::1%eth0", "1.2.3.4,5.6.7.8", "localhost", "evil.com"])
+      assert.equal(normalizeClientIp(ip), null);
+  } finally {
+    delete process.env.VERCEL;
+    delete process.env.QUIZ_TRUSTED_PROXY;
+  }
 });
 
 test("fixed Redis failure window blocks sixth failure and does not extend or charge successes", async () => {
