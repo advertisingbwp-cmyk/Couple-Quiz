@@ -1,0 +1,152 @@
+[
+  {
+    "buttons": [
+      {
+        "height": 44,
+        "text": "Create quiz ↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Create My Quiz↗"
+      },
+      {
+        "height": 56,
+        "text": "Start Friendship Quiz↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Let's find out↗"
+      }
+    ],
+    "clientWidth": 305,
+    "overflow": [],
+    "scrollWidth": 305,
+    "viewport": "width=device-width, initial-scale=1",
+    "width": 320
+  },
+  {
+    "buttons": [
+      {
+        "height": 44,
+        "text": "Create quiz ↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Create My Quiz↗"
+      },
+      {
+        "height": 56,
+        "text": "Start Friendship Quiz↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Let's find out↗"
+      }
+    ],
+    "clientWidth": 360,
+    "overflow": [],
+    "scrollWidth": 360,
+    "viewport": "width=device-width, initial-scale=1",
+    "width": 375
+  },
+  {
+    "buttons": [
+      {
+        "height": 44,
+        "text": "Create quiz ↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Create My Quiz↗"
+      },
+      {
+        "height": 56,
+        "text": "Start Friendship Quiz↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Let's find out↗"
+      }
+    ],
+    "clientWidth": 415,
+    "overflow": [],
+    "scrollWidth": 415,
+    "viewport": "width=device-width, initial-scale=1",
+    "width": 430
+  },
+  {
+    "buttons": [
+      {
+        "height": 46,
+        "text": "Create quiz ↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Create My Quiz↗"
+      },
+      {
+        "height": 56,
+        "text": "Start Friendship Quiz↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Let's find out↗"
+      }
+    ],
+    "clientWidth": 753,
+    "overflow": [],
+    "scrollWidth": 753,
+    "viewport": "width=device-width, initial-scale=1",
+    "width": 768
+  },
+  {
+    "buttons": [
+      {
+        "height": 46,
+        "text": "Create quiz ↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Create My Quiz↗"
+      },
+      {
+        "height": 56,
+        "text": "Start Friendship Quiz↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Let's find out↗"
+      }
+    ],
+    "clientWidth": 1009,
+    "overflow": [],
+    "scrollWidth": 1009,
+    "viewport": "width=device-width, initial-scale=1",
+    "width": 1024
+  },
+  {
+    "buttons": [
+      {
+        "height": 46,
+        "text": "Create quiz ↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Create My Quiz↗"
+      },
+      {
+        "height": 56,
+        "text": "Start Friendship Quiz↗"
+      },
+      {
+        "height": 56.66666793823242,
+        "text": "Let's find out↗"
+      }
+    ],
+    "clientWidth": 1425,
+    "overflow": [],
+    "scrollWidth": 1425,
+    "viewport": "width=device-width, initial-scale=1",
+    "width": 1440
+  }
+]
