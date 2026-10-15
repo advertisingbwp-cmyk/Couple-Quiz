@@ -57,10 +57,14 @@ export async function POST(
     let score = 0;
 
     for (const ans of answers) {
-      if (!ans || typeof ans !== "object") continue;
+      if (!ans || typeof ans !== "object" || typeof ans.questionId !== "string" || ans.selectedOptionId === undefined) {
+        return NextResponse.json(
+          { success: false, error: "Malformed answer entry detected." },
+          { status: 400 }
+        );
+      }
       const { questionId, selectedOptionId } = ans;
 
-      if (!questionId || typeof questionId !== "string") continue;
       if (processedQuestionIds.has(questionId)) {
         // Skip duplicate submissions for the same question
         continue;
@@ -95,6 +99,13 @@ export async function POST(
         selectedOptionId: optionIdNum,
         isCorrect,
       });
+    }
+
+    if (evaluatedAnswers.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Answers list must contain at least one valid question answer." },
+        { status: 400 }
+      );
     }
 
     // Score can never exceed total questions

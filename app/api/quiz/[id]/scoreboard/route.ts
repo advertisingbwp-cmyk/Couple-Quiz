@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getScoreboard, getScoreboardDetails, getQuizById, deleteAttempt } from "@/lib/quiz/storage";
 import { creatorAuthResponse } from "@/lib/quiz/authResponse";
-import { RateLimitUnavailableError } from "@/lib/quiz/security";
+import { RateLimitUnavailableError, generateCreatorSessionToken } from "@/lib/quiz/security";
 import { StorageUnavailableError } from "@/lib/quiz/storage";
 
 export const dynamic = "force-dynamic";
@@ -72,7 +72,10 @@ export async function POST(
       creatorName: quiz.creatorName,
       totalQuestions: quiz.questions.length,
       scoreboard: detailedLeaderboard,
-      creatorToken: quiz.creatorToken,
+      creatorToken:
+        typeof creatorToken === "string" && creatorToken.startsWith("adm_") && !creatorToken.startsWith("adm_cts_")
+          ? creatorToken
+          : generateCreatorSessionToken(quiz.id, quiz.pinHash),
     });
   } catch (err) {
     if (err instanceof StorageUnavailableError || err instanceof RateLimitUnavailableError)
