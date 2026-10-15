@@ -1,8 +1,7 @@
 import crypto from "crypto";
 import { isIP } from "node:net";
-import { AUTH_WINDOW_SCRIPT } from "./redisScripts";
 import type { QuizData } from "./types";
-import { executeRedisCommand, isRedisConfigured, isProductionServerlessEnvironment } from "./redis";
+import { dbRpc, isSupabaseConfigured, isProductionServerlessEnvironment } from "./supabase";
 
 const SCRYPT_KEYLEN = 64;
 const SCRYPT_COST = 16384;
@@ -69,6 +68,29 @@ export function timingSafeEqualString(a: string, b: string): boolean {
 }
 
 /**
+ * Computes a SHA-256 digest of the creator secret token for secure database storage.
+ */
+export function hashCreatorToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * Constant-time verification of creator secret token against raw token or SHA-256 hash.
+ */
+export function verifyCreatorToken(enteredToken: string, storedTokenOrHash: string): boolean {
+  if (typeof enteredToken !== "string" || typeof storedTokenOrHash !== "string") return false;
+  if (!enteredToken || !storedTokenOrHash) return false;
+
+  // If stored as 64-char hex, it is a SHA-256 digest
+  if (/^[0-9a-f]{64}$/i.test(storedTokenOrHash)) {
+    const enteredHash = hashCreatorToken(enteredToken);
+    return timingSafeEqualString(enteredHash, storedTokenOrHash);
+  }
+
+  return timingSafeEqualString(enteredToken, storedTokenOrHash);
+}
+
+/**
  * Generates an unguessable 48-character hex secret token for the creator.
  */
 export function generateCreatorToken(): string {
@@ -107,7 +129,8 @@ export function generateQuizSlug(creatorName: string): string {
   return `${clean || "quiz"}-${entropy}`;
 }
 
-/** Only platform-attested headers are trusted. Custom Cloudflare mode requires
+/**
+ * Only platform-attested headers are trusted. Custom Cloudflare mode requires
  * an origin restricted to Cloudflare (documented deployment contract).
  */
 export function normalizeClientIp(value: string): string | null {
@@ -123,6 +146,7 @@ export function normalizeClientIp(value: string): string | null {
   }
   return normalized;
 }
+
 export function extractClientIp(req: Request): string {
   const header = process.env.VERCEL === "1" ? "x-vercel-forwarded-for"
     : process.env.QUIZ_TRUSTED_PROXY === "cloudflare" ? "cf-connecting-ip" : null;
@@ -130,19 +154,28 @@ export function extractClientIp(req: Request): string {
   // header-derived identity. Lists, ports and invalid values are not accepted.
   return (header && normalizeClientIp(req.headers.get(header) || "")) || "unknown";
 }
+
 const localPinAttempts = new Map<string, { count: number; resetAt: number }>();
 const rateKey = (ip: string) => `ratelimit:pin:${normalizeClientIp(ip) || "unknown"}`;
+
 export class RateLimitUnavailableError extends Error {
-  constructor() { super("Authentication temporarily unavailable"); this.name = "RateLimitUnavailableError"; }
+  constructor() {
+    super("Authentication temporarily unavailable");
+    this.name = "RateLimitUnavailableError";
+  }
 }
+
 export async function checkPinRateLimit(ip: string): Promise<boolean> {
   const key = rateKey(ip);
-  if (isRedisConfigured()) {
-    const res = await executeRedisCommand<string>(["GET", key]);
-    if (!res.ok) throw new RateLimitUnavailableError();
-    const value = res.result === null ? 0 : Number(res.result);
-    if (!Number.isInteger(value) || value < 0) throw new RateLimitUnavailableError();
-    return value < 5;
+  if (isSupabaseConfigured()) {
+    const res = await dbRpc<boolean>("check_pin_rate_limit", {
+      p_rate_key: key,
+      p_max_attempts: 5,
+    });
+    if (res.error || typeof res.data !== "boolean") {
+      throw new RateLimitUnavailableError();
+    }
+    return res.data;
   }
   if (isProductionServerlessEnvironment()) throw new RateLimitUnavailableError();
   const entry = localPinAttempts.get(key);
@@ -151,10 +184,17 @@ export async function checkPinRateLimit(ip: string): Promise<boolean> {
 
 async function finishAuthentication(ip: string, valid: boolean): Promise<"allowed" | "invalid" | "limited"> {
   const key = rateKey(ip);
-  if (isRedisConfigured()) {
-    const res = await executeRedisCommand<number>(["EVAL", AUTH_WINDOW_SCRIPT, 1, key, valid ? "success" : "failure"]);
-    if (!res.ok || ![0, 1, -1].includes(res.result as number)) throw new RateLimitUnavailableError();
-    return res.result === 0 ? "limited" : res.result === 1 ? "allowed" : "invalid";
+  if (isSupabaseConfigured()) {
+    const res = await dbRpc<number>("record_pin_rate_limit_outcome", {
+      p_rate_key: key,
+      p_outcome: valid ? "success" : "failure",
+      p_max_attempts: 5,
+      p_window_seconds: 600,
+    });
+    if (res.error || ![0, 1, -1].includes(res.data as number)) {
+      throw new RateLimitUnavailableError();
+    }
+    return res.data === 0 ? "limited" : res.data === 1 ? "allowed" : "invalid";
   }
   if (isProductionServerlessEnvironment()) throw new RateLimitUnavailableError();
   const now = Date.now();
@@ -166,29 +206,50 @@ async function finishAuthentication(ip: string, valid: boolean): Promise<"allowe
   else entry.count++;
   return "invalid";
 }
+
 export async function recordFailedPinAttempt(ip: string): Promise<boolean> {
   return (await finishAuthentication(ip, false)) === "invalid";
 }
+
 export async function clearPinRateLimit(ip: string): Promise<void> {
   const key = rateKey(ip);
-  if (isRedisConfigured()) {
-    const res = await executeRedisCommand(["DEL", key]);
-    if (!res.ok || (res.result !== 0 && res.result !== 1)) throw new RateLimitUnavailableError();
+  if (isSupabaseConfigured()) {
+    const res = await dbRpc("clear_pin_rate_limit", { p_rate_key: key });
+    if (res.error) throw new RateLimitUnavailableError();
   } else if (isProductionServerlessEnvironment()) throw new RateLimitUnavailableError();
   localPinAttempts.delete(key);
 }
-/** All protected routes share this atomic final decision. Successful requests
+
+/**
+ * All protected routes share this atomic final decision. Successful requests
  * consume no allowance and do not erase concurrent failures in the fixed window.
  */
-export async function authenticateCreator(req: Request, quiz: QuizData, credentials: { pin?: unknown; creatorToken?: unknown }): Promise<200 | 403 | 429> {
+export async function authenticateCreator(
+  req: Request,
+  quiz: QuizData,
+  credentials: { pin?: unknown; creatorToken?: unknown }
+): Promise<200 | 403 | 429> {
   const ip = extractClientIp(req);
   if (!(await checkPinRateLimit(ip))) return 429;
-  const valid = (typeof credentials.creatorToken === "string" && timingSafeEqualString(credentials.creatorToken, quiz.creatorToken)) ||
+
+  const valid =
+    (typeof credentials.creatorToken === "string" && verifyCreatorToken(credentials.creatorToken, quiz.creatorToken)) ||
     (typeof credentials.pin === "string" && /^\d{4,6}$/.test(credentials.pin.trim()) && verifyPin(credentials.pin, quiz.pinHash));
+
   const decision = await finishAuthentication(ip, valid);
   return decision === "allowed" ? 200 : decision === "limited" ? 429 : 403;
 }
+
 export function _resetPinRateLimit(ip?: string): void {
-  if (process.env.NODE_ENV !== "test" || isProductionServerlessEnvironment()) throw new Error("Test mode required");
-  if (ip) localPinAttempts.delete(rateKey(ip)); else localPinAttempts.clear();
+  if (process.env.NODE_ENV !== "test" || isProductionServerlessEnvironment()) {
+    throw new Error("Test mode required");
+  }
+  if (ip) {
+    localPinAttempts.delete(rateKey(ip));
+    if (isSupabaseConfigured()) {
+      clearPinRateLimit(ip).catch(() => {});
+    }
+  } else {
+    localPinAttempts.clear();
+  }
 }

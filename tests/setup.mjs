@@ -4,5 +4,7 @@ if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || proce
 process.env.NODE_ENV = "test";
 delete process.env.UPSTASH_REDIS_REST_URL;
 delete process.env.UPSTASH_REDIS_REST_TOKEN;
+delete process.env.SUPABASE_URL;
+delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 delete process.env.QUIZ_REQUIRE_DURABLE_STORAGE;
 delete process.env.QUIZ_TRUSTED_PROXY;

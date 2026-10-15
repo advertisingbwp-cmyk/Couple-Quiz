@@ -32,10 +32,10 @@ import {
   isDeckComplete,
   getRemainingUnanswered,
 } from "../lib/quiz/deck";
-import { _enableMockRedis, _getMockRedisStore, isRedisConfigured } from "../lib/quiz/redis";
+import { _enableMockSupabase, _getMockSupabaseStore, isSupabaseConfigured } from "../lib/quiz/supabase";
 
-beforeEach(() => { _enableMockRedis(true); });
-afterEach(() => { _setStorageWriteFailureSimulation(false); _enableMockRedis(false); });
+beforeEach(() => { _enableMockSupabase(true); });
+afterEach(() => { _setStorageWriteFailureSimulation(false); _enableMockSupabase(false); });
 
 test("Task 1: Quiz Skip & Deck State Machine Progression", () => {
   // 1. Initial State
@@ -118,10 +118,10 @@ test("Task 2: Cryptographically Secure Unique Identifiers", () => {
   assert.match(slug, /^[a-z0-9-]+-[a-f0-9]{8}$/, "Slug must be clean URL-safe alphanumeric with hex entropy");
 });
 
-test("Task 3: Redis Concurrency & Atomic Operations", async () => {
-  // Enable atomic Redis mock to verify atomic HSET, HVALS, HDEL, and DEL commands
-  _enableMockRedis(true);
-  assert.equal(isRedisConfigured(), true);
+test("Task 3: Supabase Concurrency & Atomic Operations", async () => {
+  // Enable Supabase mock to verify atomic RPC execution and store updates
+  _enableMockSupabase(true);
+  assert.equal(isSupabaseConfigured(), true);
 
   const quizId = generateQuizId();
   const mockQuiz: QuizData = {
@@ -169,7 +169,7 @@ test("Task 3: Redis Concurrency & Atomic Operations", async () => {
   // Fire all 30 submissions concurrently
   const results = await Promise.all(concurrentAttempts.map((att) => recordAttempt(att)));
   assert.ok(results.every((r) => r === true), "All concurrent attempts must succeed");
-  assert.equal(_getMockRedisStore()!.hashes.get(`quiz_attempts:${quizId}`)!.size, 30, "Must write the Redis hash, not local memory");
+  assert.equal(_getMockSupabaseStore()!.attempts.size, 30, "Must write the Supabase store, not local memory");
 
   // Verify all 30 attempts were recorded atomically with zero lost writes
   const scoreboard = await getScoreboard(quizId);
@@ -199,11 +199,11 @@ test("Task 3: Redis Concurrency & Atomic Operations", async () => {
   assert.equal(deleteQuizRes, true, "Quiz deletion must succeed");
   assert.equal(await getQuizById(quizId), null, "Deleted quiz must return null");
 
-  _enableMockRedis(false);
+  _enableMockSupabase(false);
 });
 
 test("Task 4: Distributed Rate Limiting & Safe IP Extraction", async () => {
-  _enableMockRedis(true);
+  _enableMockSupabase(true);
 
   // Safe client IP extraction
   const req1 = new Request("http://localhost:3000/api", {
@@ -235,7 +235,7 @@ test("Task 4: Distributed Rate Limiting & Safe IP Extraction", async () => {
   await clearPinRateLimit(testIp);
   assert.equal(await checkPinRateLimit(testIp), true, "Successful authentication clears rate limit");
 
-  _enableMockRedis(false);
+  _enableMockSupabase(false);
 });
 
 test("Task 5: Quiz & Scoreboard Privacy & Storage Recovery", async () => {

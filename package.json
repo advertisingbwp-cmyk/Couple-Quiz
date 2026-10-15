@@ -9,9 +9,12 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --import ./tests/setup.mjs --import tsx --test \"tests/*.test.ts\"",
-    "test:redis": "node --import ./tests/setup.mjs --import tsx --test tests/redis.integration.test.ts"
+    "test:supabase": "node --import ./tests/setup.mjs --import tsx --test tests/supabase.integration.test.ts",
+    "test:redis": "node --import ./tests/setup.mjs --import tsx --test tests/redis.integration.test.ts",
+    "migrate:legacy": "tsx scripts/migrate-legacy-data.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "next": "^15.5.27",
