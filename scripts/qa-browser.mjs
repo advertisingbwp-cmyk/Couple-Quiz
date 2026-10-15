@@ -3,12 +3,72 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-const SCREENSHOT_DIR = "C:\\Users\\Fahad Saleem\\.gemini\\antigravity\\brain\\956a049b-93da-4862-8e45-b7f119df1ba8\\screenshots";
+// 1. Configurable project-relative screenshot directory
+const defaultScreenshotDir = path.resolve(process.cwd(), "screenshots");
+const SCREENSHOT_DIR = process.env.SCREENSHOT_DIR || defaultScreenshotDir;
 if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 }
 
-const EDGE_PATH = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+// Optional secondary directory for brain artifacts if available
+const BRAIN_SCREENSHOT_DIR = process.env.BRAIN_SCREENSHOT_DIR || (
+  process.env.USERPROFILE || process.env.HOME
+    ? path.join(
+        process.env.USERPROFILE || process.env.HOME || "",
+        ".gemini",
+        "antigravity",
+        "brain",
+        "956a049b-93da-4862-8e45-b7f119df1ba8",
+        "screenshots"
+      )
+    : null
+);
+
+// 2. Configurable browser executable path
+function getBrowserExecutable() {
+  if (process.env.BROWSER_PATH) return process.env.BROWSER_PATH;
+  if (process.env.EDGE_PATH) return process.env.EDGE_PATH;
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+
+  const platform = os.platform();
+  if (platform === "win32") {
+    const candidates = [
+      "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+      "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+      path.join(os.homedir(), "AppData", "Local", "Microsoft", "Edge", "Application", "msedge.exe"),
+      path.join(os.homedir(), "AppData", "Local", "Google", "Chrome", "Application", "chrome.exe"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return p;
+    }
+    return "msedge.exe";
+  } else if (platform === "darwin") {
+    const candidates = [
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return p;
+    }
+    return "google-chrome";
+  } else {
+    const candidates = [
+      "/usr/bin/google-chrome",
+      "/usr/bin/chromium-browser",
+      "/usr/bin/chromium",
+      "/usr/bin/microsoft-edge",
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return p;
+    }
+    return "google-chrome";
+  }
+}
+
+const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3005";
 const PORT = 9222;
 const userDataDir = path.join(os.tmpdir(), "edge-qa-profile-" + Date.now());
 
@@ -17,7 +77,10 @@ function sleep(ms) {
 }
 
 async function startBrowser() {
-  const proc = spawn(EDGE_PATH, [
+  const browserPath = getBrowserExecutable();
+  console.log(`Using browser executable: ${browserPath}`);
+
+  const proc = spawn(browserPath, [
     "--headless=new",
     `--remote-debugging-port=${PORT}`,
     `--user-data-dir=${userDataDir}`,
@@ -48,7 +111,7 @@ async function startBrowser() {
 
   if (!versionData) {
     proc.kill();
-    throw new Error("Edge browser did not start on port " + PORT);
+    throw new Error(`Browser did not start on port ${PORT} with path ${browserPath}`);
   }
 
   console.log("Browser started. Connecting to CDP WebSocket...");
@@ -119,7 +182,16 @@ class CDPClient {
     const buffer = Buffer.from(res.data, "base64");
     const outPath = path.join(SCREENSHOT_DIR, filename);
     fs.writeFileSync(outPath, buffer);
-    console.log(`Saved screenshot: ${filename} (${buffer.length} bytes)`);
+
+    if (BRAIN_SCREENSHOT_DIR && fs.existsSync(BRAIN_SCREENSHOT_DIR)) {
+      try {
+        fs.writeFileSync(path.join(BRAIN_SCREENSHOT_DIR, filename), buffer);
+      } catch {
+        // Non-blocking secondary sync
+      }
+    }
+
+    console.log(`Saved screenshot: ${filename} (${buffer.length} bytes) to ${outPath}`);
     return outPath;
   }
 
@@ -140,17 +212,19 @@ class CDPClient {
       await this.send("Input.dispatchKeyEvent", {
         type: "keyDown",
         text: ch,
-        unmodifiedText: ch,
-        key: ch,
       });
-      await this.send("Input.dispatchKeyEvent", { type: "keyUp", key: ch });
-      await sleep(50);
+      await this.send("Input.dispatchKeyEvent", {
+        type: "keyUp",
+      });
+      await sleep(40);
     }
   }
 }
 
 async function runQA() {
   const { proc } = await startBrowser();
+  let createdQuizId = null;
+  let creatorToken = null;
 
   try {
     const listRes = await fetch(`http://127.0.0.1:${PORT}/json/list`);
@@ -167,7 +241,7 @@ async function runQA() {
     console.log("==========================================");
 
     // Initial navigation
-    await client.navigate("http://localhost:3005/quiz/create");
+    await client.navigate(`${BASE_URL}/quiz/create`);
     await client.setViewport(375, 812);
 
     // Populate sessionStorage and reload to load full quiz deck as creator "Ayesha"
@@ -219,11 +293,10 @@ async function runQA() {
     await client.setViewport(375, 812);
     await client.eval(`document.querySelectorAll('[role="radio"]')[0].click()`);
     await sleep(400);
-    // Click Next
     await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Next') || b.querySelector('svg.lucide-arrow-right'))?.click()`);
     await sleep(800);
 
-    // Question 2: q2 (Chai time) has 4 OPTIONS!
+    // Question 2: q2 has 4 OPTIONS
     console.log("\nTesting 4-Option Question (q2)...");
     const q2Title = await client.eval(`document.querySelector('article h1')?.innerText`);
     const q2OptionsCount = await client.eval(`document.querySelectorAll('[role="radio"]')?.length`);
@@ -236,7 +309,7 @@ async function runQA() {
     await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Next') || b.querySelector('svg.lucide-arrow-right'))?.click()`);
     await sleep(800);
 
-    // Now skip until we find a 6-option question (e.g. q8, q13, q16, q20, q24, q45)
+    // Now skip until we find a 6-option question (e.g. q8 Dream Destinations)
     console.log("\nSearching for 6-Option Question using Skip...");
     let found6 = false;
     for (let i = 0; i < 25; i++) {
@@ -253,13 +326,12 @@ async function runQA() {
         await sleep(800);
         break;
       }
-      // Click Skip
       await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Skip'))?.click()`);
       await sleep(400);
     }
     if (!found6) console.warn("Could not find 6-option question via skip");
 
-    // Now skip until we find a 2-option question (e.g. q40 Biryani vs Pizza, q42, q43, q52, q62, q100)
+    // Now skip until we find a 2-option question
     console.log("\nSearching for 2-Option Question using Skip...");
     let found2 = false;
     for (let i = 0; i < 40; i++) {
@@ -269,34 +341,31 @@ async function runQA() {
         const title = await client.eval(`document.querySelector('article h1')?.innerText`);
         console.log(`Found 2-Option Question: "${title}" (count = 2)`);
         await client.screenshot("creator_04_2opt_375px.png");
-        // Select an option
         await client.eval(`document.querySelectorAll('[role="radio"]')[0].click()`);
         await sleep(400);
         await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Next') || b.querySelector('svg.lucide-arrow-right'))?.click()`);
         await sleep(800);
         break;
       }
-      // Click Skip
       await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Skip'))?.click()`);
       await sleep(400);
     }
     if (!found2) console.warn("Could not find 2-option question via skip");
 
-    // Test Back button
+    // Test Back button functionality
     console.log("\nTesting Back button functionality...");
-    const beforeBackCount = await client.eval(`document.querySelector('header span.bg-\\\\[\\\\#ffce71\\\\]')?.innerText`);
-    console.log(`Counter before back: "${beforeBackCount}"`);
-    await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.getAttribute('aria-label') === 'Previous question' || b.innerText.includes('Back'))?.click()`);
-    await sleep(500);
-    const afterBackCount = await client.eval(`document.querySelector('header span.bg-\\\\[\\\\#ffce71\\\\]')?.innerText`);
-    console.log(`Counter after back: "${afterBackCount}"`);
-    // Selected option must still be checked
-    const isSelectedRestored = await client.eval(`document.querySelector('[role="radio"][aria-checked="true"]') !== null`);
-    console.log("Is selection restored after stepping back:", isSelectedRestored);
-
-    // Re-click Next
-    await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Next') || b.querySelector('svg.lucide-arrow-right'))?.click()`);
+    const counterBeforeBack = await client.eval(`document.querySelector('header span.bg-\\\\[\\\\#ffce71\\\\]')?.innerText`);
+    console.log(`Counter before back: "${counterBeforeBack}"`);
+    await client.eval(`document.querySelector('button[aria-label="Previous question"]')?.click()`);
     await sleep(600);
+    const counterAfterBack = await client.eval(`document.querySelector('header span.bg-\\\\[\\\\#ffce71\\\\]')?.innerText`);
+    console.log(`Counter after back: "${counterAfterBack}"`);
+    const isSelectionRestored = await client.eval(`Boolean(document.querySelector('[role="radio"][aria-checked="true"]'))`);
+    console.log("Is selection restored after stepping back:", isSelectionRestored);
+
+    // Proceed forward again
+    await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Next') || b.querySelector('svg.lucide-arrow-right'))?.click()`);
+    await sleep(800);
 
     // Complete questions until 10 questions are answered
     console.log("\nAnswering remaining questions to reach exactly 10 questions...");
@@ -306,7 +375,6 @@ async function runQA() {
         console.log("Reached completed state & PIN modal!");
         break;
       }
-      // Select first option
       await client.eval(`document.querySelectorAll('[role="radio"]')[0]?.click()`);
       await sleep(300);
       await client.eval(`Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Next') || b.innerText.includes('Finish') || b.querySelector('svg.lucide-arrow-right'))?.click()`);
@@ -327,23 +395,16 @@ async function runQA() {
     await sleep(800);
 
     // Enter PIN and Publish Quiz
-    console.log("\nEntering PIN '8899' and publishing challenge...");
+    console.log("\nEntering secret PIN and publishing challenge...");
     await client.type("#secret-pin-input", "8899");
     await sleep(400);
-
-    const enteredPinValue = await client.eval(`document.getElementById('secret-pin-input')?.value`);
-    console.log("PIN entered in DOM:", enteredPinValue);
 
     // Click publish button: "Get My Share Link!"
     await client.eval(`
       const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase().includes('share link'));
-      console.log('Found share link button:', Boolean(btn));
       btn?.click();
     `);
     await sleep(4500); // Wait for publishing and redirection
-
-    const modalText = await client.eval(`document.querySelector('.fixed')?.innerText`);
-    if (modalText) console.log("Modal text after clicking submit:\n", modalText);
 
     let currentUrl = await client.eval(`window.location.href`);
     console.log("Redirected to:", currentUrl);
@@ -355,14 +416,25 @@ async function runQA() {
       throw new Error("Failed to get quizId from share page URL: " + currentUrl);
     }
     const quizId = quizIdMatch[1];
+    createdQuizId = quizId;
     console.log("Successfully created Quiz ID:", quizId);
+
+    // Extract creatorToken from localStorage for authorized cleanup
+    try {
+      creatorToken = await client.eval(`localStorage.getItem('creator_token_${quizId}')`);
+      if (creatorToken) {
+        console.log("Creator token present in localStorage: YES (masked)");
+      }
+    } catch {
+      // Ignore
+    }
 
     console.log("\n==========================================");
     console.log("STEP 2: PLAYER FLOW TESTING & SCREENSHOTS");
     console.log("==========================================");
 
     // Navigate to Player Page
-    await client.navigate(`http://localhost:3005/quiz/play/${quizId}`);
+    await client.navigate(`${BASE_URL}/quiz/play/${quizId}`);
     await client.setViewport(375, 812);
     await sleep(1000);
 
@@ -373,19 +445,13 @@ async function runQA() {
     console.log("Entering Player Name 'Zainab'...");
     await client.type("#player-name-input", "Zainab");
     await sleep(400);
-    const enteredName = await client.eval(`document.getElementById('player-name-input')?.value`);
-    console.log("Player name entered in DOM:", enteredName);
     await client.eval(`
       const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase().includes('accept challenge'));
-      console.log('Found accept challenge button:', Boolean(btn));
       btn?.click();
     `);
     await sleep(1500);
 
-    // Now in Player questions flow
     console.log("Player Challenge started!");
-
-    // Capture screenshots for each question type encountered in player flow
     let capturedPlayerTypes = { 2: false, 4: false, 6: false, 9: false };
 
     for (let qIdx = 0; qIdx < 10; qIdx++) {
@@ -395,7 +461,6 @@ async function runQA() {
 
       if (optCount === 9 && !capturedPlayerTypes[9]) {
         await client.screenshot("player_02_9opt_375px.png");
-        // Also capture 320px for 9-option in player mode
         await client.setViewport(320, 640);
         await client.screenshot("player_02_9opt_320px.png");
         await client.setViewport(375, 812);
@@ -411,33 +476,29 @@ async function runQA() {
         capturedPlayerTypes[2] = true;
       }
 
-      // Verify all images in this question are rendered and non-zero width
       const imgsValid = await client.eval(`
         Array.from(document.querySelectorAll('article img')).every(img => img.naturalWidth > 0)
       `);
       console.log(`  All images valid in Q${qIdx + 1}:`, imgsValid);
 
-      // Select an option (tap)
       await client.eval(`document.querySelectorAll('[role="radio"]')[0]?.click()`);
-      await sleep(1000); // Wait for transition
+      await sleep(1000);
     }
 
-    // Wait for submission and redirection to result page
     console.log("Waiting for score calculation and redirection to Result page...");
     await sleep(4500);
 
     const resultUrl = await client.eval(`window.location.href`);
     console.log("Result page URL:", resultUrl);
-    await sleep(4000); // Allow comic dialogue to finish and reveal score card
+    await sleep(4000);
     await client.screenshot("player_06_result_375px.png");
 
-    // Check result score text
     const resultScore = await client.eval(`document.querySelector('main span.text-5xl, main span.text-6xl')?.innerText`);
     console.log("Final Calculated Score:", resultScore);
 
     // Navigate to Scoreboard
     console.log("\nNavigating to Scoreboard page...");
-    await client.navigate(`http://localhost:3005/quiz/scoreboard/${quizId}`);
+    await client.navigate(`${BASE_URL}/quiz/scoreboard/${quizId}`);
     for (let i = 0; i < 20; i++) {
       const isLoading = await client.eval(`document.body.innerText.includes('Loading player scores')`);
       if (!isLoading) break;
@@ -445,6 +506,25 @@ async function runQA() {
     }
     await sleep(500);
     await client.screenshot("player_07_scoreboard_375px.png");
+
+    // Verify creator mode is unlocked on this device
+    const isCreatorBadgePresent = await client.eval(`document.body.innerText.includes('Creator Mode')`);
+    console.log("Scoreboard Creator Mode unlocked on creator device:", isCreatorBadgePresent);
+
+    // Test viewing answers
+    console.log("Testing detailed answers viewing...");
+    await client.eval(`document.querySelector('button[title*="View Answers"]')?.click()`);
+    let isModalOpen = false;
+    for (let i = 0; i < 15; i++) {
+      isModalOpen = await client.eval(`Boolean(document.querySelector('div.fixed h3'))`);
+      if (isModalOpen) break;
+      await sleep(300);
+    }
+    console.log("Answers breakdown modal opened successfully:", isModalOpen);
+    if (isModalOpen) {
+      await client.eval(`document.querySelector('div.fixed button svg.lucide-x')?.parentElement?.click()`);
+      await sleep(500);
+    }
 
     console.log("\n==========================================");
     console.log("STEP 3: CONSOLE LOGS & WARNINGS AUDIT");
@@ -458,6 +538,34 @@ async function runQA() {
 
     console.log("\nALL VISUAL QA AUTOMATION COMPLETED SUCCESSFULLY!");
   } finally {
+    // Automatic Test Data Cleanup
+    if (createdQuizId) {
+      console.log("\n==========================================");
+      console.log("CLEANUP: DELETING TEST QUIZ & ATTEMPTS");
+      console.log("==========================================");
+      try {
+        const deletePayload = creatorToken ? { creatorToken } : { pin: "8899" };
+        const res = await fetch(`${BASE_URL}/api/quiz/${createdQuizId}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(deletePayload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          console.log(`[QA Cleanup] PASS: Test quiz ${createdQuizId} and all associated attempts successfully deleted.`);
+          // Verify deletion
+          const verifyRes = await fetch(`${BASE_URL}/api/quiz/${createdQuizId}`);
+          if (verifyRes.status === 404) {
+            console.log(`[QA Cleanup] VERIFIED: Quiz ${createdQuizId} is confirmed deleted (HTTP 404).`);
+          }
+        } else {
+          console.warn(`[QA Cleanup] WARNING: Failed to delete test quiz ${createdQuizId} (Status ${res.status}):`, data.error || "Unknown error");
+        }
+      } catch (cleanupErr) {
+        console.error(`[QA Cleanup] ERROR: Exception while deleting test quiz ${createdQuizId}:`, cleanupErr.message);
+      }
+    }
+
     proc.kill();
   }
 }

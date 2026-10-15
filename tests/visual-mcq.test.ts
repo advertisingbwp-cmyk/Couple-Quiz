@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 import { DEFAULT_QUIZ_QUESTIONS } from "../lib/quiz/questions";
 import { getVisualOptionGridClasses } from "../components/quiz/VisualOptionCard";
 import { POST as createQuiz } from "../app/api/quiz/route";
-import { GET as getQuiz } from "../app/api/quiz/[id]/route";
+import { GET as getQuiz, DELETE as deleteQuizRoute } from "../app/api/quiz/[id]/route";
 import { POST as submitAttempt } from "../app/api/quiz/[id]/attempt/route";
 import {
   GET as getScoreboard,
@@ -382,4 +382,69 @@ test("Phase 4.1: Scoreboard authorization protects private answers and attempt d
   assert.equal(authDeleteRes.status, 200);
   const authDeleteData = await authDeleteRes.json();
   assert.ok(authDeleteData.success);
+});
+
+test("Phase 4.2: Creator authentication returns token on PIN login and allows complete quiz deletion", async () => {
+  const selectedQuestionConfigs = [
+    { questionId: "q40", correctOptionId: 0 },
+    { questionId: "q42", correctOptionId: 1 },
+    { questionId: "q2", correctOptionId: 2 },
+    { questionId: "q3", correctOptionId: 0 },
+    { questionId: "q4", correctOptionId: 3 },
+    { questionId: "q5", correctOptionId: 1 },
+    { questionId: "q7", correctOptionId: 2 },
+    { questionId: "q9", correctOptionId: 0 },
+    { questionId: "q10", correctOptionId: 1 },
+    { questionId: "q11", correctOptionId: 3 },
+  ];
+
+  const createReq = new NextRequest("http://localhost:3000/api/quiz", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      creatorName: "Cleanup Tester",
+      gender: "male",
+      country: "PK",
+      secretPin: "6789",
+      questions: selectedQuestionConfigs,
+    }),
+  });
+
+  const createRes = await createQuiz(createReq);
+  const { quizId } = await createRes.json();
+  assert.ok(quizId);
+
+  // 1. PIN verification via Scoreboard POST returns creatorToken without exposing plaintext PIN
+  const pinAuthReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/scoreboard`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin: "6789" }),
+  });
+  const pinAuthRes = await getScoreboardDetails(pinAuthReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(pinAuthRes.status, 200);
+  const pinAuthData = await pinAuthRes.json();
+  assert.ok(pinAuthData.success);
+  assert.ok(pinAuthData.creatorToken, "Server must return creatorToken upon valid PIN login");
+  assert.ok(pinAuthData.creatorToken.startsWith("adm_"));
+
+  // 2. Quiz exists before deletion
+  const getReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`);
+  const getRes = await getQuiz(getReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(getRes.status, 200);
+
+  // 3. Authorized deletion using creatorToken
+  const deleteReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ creatorToken: pinAuthData.creatorToken }),
+  });
+  const deleteRes = await deleteQuizRoute(deleteReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(deleteRes.status, 200);
+  const deleteData = await deleteRes.json();
+  assert.ok(deleteData.success);
+
+  // 4. Verification: Quiz is now completely removed (HTTP 404)
+  const verifyReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`);
+  const verifyRes = await getQuiz(verifyReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(verifyRes.status, 404);
 });

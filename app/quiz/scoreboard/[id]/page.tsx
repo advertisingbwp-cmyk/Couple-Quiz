@@ -22,7 +22,7 @@ export default function QuizScoreboardPage({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [targetDetailId, setTargetDetailId] = useState<string | null>(null);
   const [enteredPin, setEnteredPin] = useState("");
-  const [pinPrompt, setPinPrompt] = useState<{ open: boolean; attemptId: string }>({ open: false, attemptId: "" });
+  const [pinPrompt, setPinPrompt] = useState<{ open: boolean; attemptId: string; playerName?: string }>({ open: false, attemptId: "", playerName: "" });
   const [deleting, setDeleting] = useState(false);
   const [authError, setAuthError] = useState("");
   const [isCreator, setIsCreator] = useState(false);
@@ -54,7 +54,7 @@ export default function QuizScoreboardPage({
 
   // Request detailed answers with authorization (creatorToken or PIN)
   const handleOpenAnswers = async (entry: ScoreboardEntry) => {
-    const creatorToken = localStorage.getItem(`creator_token_${quizId}`);
+    const creatorToken = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
 
     // If local creatorToken exists, try automatic unlock
     if (creatorToken) {
@@ -64,6 +64,14 @@ export default function QuizScoreboardPage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ creatorToken }),
         });
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem(`creator_token_${quizId}`);
+          setIsCreator(false);
+          setAuthError("Creator session expired. Please enter your PIN.");
+          setTargetDetailId(entry.id);
+          setShowAuthModal(true);
+          return;
+        }
         const data = await res.json();
         if (data.success && data.scoreboard) {
           const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === entry.id);
@@ -96,6 +104,9 @@ export default function QuizScoreboardPage({
       const data = await res.json();
       if (data.success && data.scoreboard) {
         setIsCreator(true);
+        if (data.creatorToken) {
+          localStorage.setItem(`creator_token_${quizId}`, data.creatorToken);
+        }
         if (targetDetailId) {
           const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === targetDetailId);
           if (detail) {
@@ -118,7 +129,7 @@ export default function QuizScoreboardPage({
   const handleDeleteAttempt = async () => {
     if (!pinPrompt.attemptId) return;
     setDeleting(true);
-    const creatorToken = localStorage.getItem(`creator_token_${quizId}`);
+    const creatorToken = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
 
     try {
       const res = await fetch(`/api/quiz/${quizId}/scoreboard`, {
@@ -126,18 +137,26 @@ export default function QuizScoreboardPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           attemptId: pinPrompt.attemptId,
-          pin: enteredPin.trim(),
+          pin: enteredPin.trim() || undefined,
           creatorToken: creatorToken || undefined,
         }),
       });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem(`creator_token_${quizId}`);
+        setIsCreator(false);
+        setPinPrompt({ open: false, attemptId: "", playerName: "" });
+        setAuthError("Creator session expired or invalid PIN. Please log in again.");
+        setShowAuthModal(true);
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setScoreboard((prev) => prev.filter((item) => item.id !== pinPrompt.attemptId));
-        setPinPrompt({ open: false, attemptId: "" });
+        setPinPrompt({ open: false, attemptId: "", playerName: "" });
         setEnteredPin("");
         quizAudio.playPop();
       } else {
-        alert(data.error || "Incorrect PIN.");
+        alert(data.error || "Could not delete player attempt.");
       }
     } catch {
       alert("Network error.");
@@ -324,7 +343,7 @@ export default function QuizScoreboardPage({
 
                           <button
                             type="button"
-                            onClick={() => setPinPrompt({ open: true, attemptId: entry.id })}
+                            onClick={() => setPinPrompt({ open: true, attemptId: entry.id, playerName: entry.playerName })}
                             className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
                             title="Delete Player (Creator Only)"
                           >
@@ -442,29 +461,37 @@ export default function QuizScoreboardPage({
         </div>
       )}
 
-      {/* Delete Confirmation PIN Modal */}
+      {/* Delete Confirmation Modal */}
       {pinPrompt.open && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-xs bg-white rounded-3xl p-5 border-4 border-slate-900 shadow-2xl text-center">
             <AlertCircle size={32} className="text-red-500 mx-auto mb-2" />
-            <h3 className="font-black text-base text-slate-900">Delete this player?</h3>
+            <h3 className="font-black text-base text-slate-900">Remove Player?</h3>
             <p className="text-xs text-slate-600 mt-1 mb-3">
-              Enter Creator PIN to confirm deletion:
+              {typeof window !== "undefined" && localStorage.getItem(`creator_token_${quizId}`) ? (
+                <>
+                  Are you sure you want to remove <strong>{pinPrompt.playerName || "this player"}</strong> from {creatorName}&apos;s leaderboard?
+                </>
+              ) : (
+                <>Enter Creator PIN to confirm deletion of <strong>{pinPrompt.playerName || "this player"}</strong>:</>
+              )}
             </p>
-            <input
-              type="password"
-              inputMode="numeric"
-              maxLength={6}
-              value={enteredPin}
-              onChange={(e) => setEnteredPin(e.target.value)}
-              placeholder="PIN (e.g. 7890)"
-              className="w-full py-2.5 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-xl mb-3 focus:outline-none"
-            />
+            {!(typeof window !== "undefined" && localStorage.getItem(`creator_token_${quizId}`)) && (
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={6}
+                value={enteredPin}
+                onChange={(e) => setEnteredPin(e.target.value)}
+                placeholder="PIN (e.g. 7890)"
+                className="w-full py-2.5 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-xl mb-3 focus:outline-none"
+              />
+            )}
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setPinPrompt({ open: false, attemptId: "" })}
-                className="flex-1 py-2.5 bg-slate-100 font-bold text-xs rounded-xl border border-slate-300 text-slate-700"
+                onClick={() => setPinPrompt({ open: false, attemptId: "", playerName: "" })}
+                className="flex-1 py-2.5 bg-slate-100 font-bold text-xs rounded-xl border border-slate-300 text-slate-700 cursor-pointer"
               >
                 Cancel
               </button>
@@ -472,7 +499,7 @@ export default function QuizScoreboardPage({
                 type="button"
                 disabled={deleting}
                 onClick={handleDeleteAttempt}
-                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase"
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase cursor-pointer"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>
