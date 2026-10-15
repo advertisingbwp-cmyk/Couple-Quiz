@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Check,
@@ -30,13 +30,12 @@ const TOTAL_QUESTIONS_TARGET = 10;
 
 function QuizCreateContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [creatorName, setCreatorName] = useState("");
   const [gender, setGender] = useState<"male" | "female">("male");
   const [hasSetup, setHasSetup] = useState<boolean | null>(null);
 
-  // Fallback setup form state if both sessionStorage and query params are missing
+  // Fallback setup form state if sessionStorage is unavailable / blocked
   const [fallbackName, setFallbackName] = useState("");
   const [fallbackGender, setFallbackGender] = useState<"male" | "female">("male");
   const [fallbackError, setFallbackError] = useState("");
@@ -51,7 +50,7 @@ function QuizCreateContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  // Initialize creator info from sessionStorage or query parameters
+  // Initialize creator info from sessionStorage (zero PII in URL query strings)
   useEffect(() => {
     let name = "";
     let gen: "male" | "female" = "male";
@@ -69,17 +68,6 @@ function QuizCreateContent() {
       // Storage unavailable / blocked
     }
 
-    if (!name) {
-      const paramName = searchParams.get("name");
-      const paramGender = searchParams.get("gender");
-      if (paramName && paramName.trim()) {
-        name = paramName.trim().slice(0, 30);
-        if (paramGender === "female" || paramGender === "male") {
-          gen = paramGender;
-        }
-      }
-    }
-
     if (name) {
       setCreatorName(name);
       setGender(gen);
@@ -87,9 +75,9 @@ function QuizCreateContent() {
     } else {
       setHasSetup(false);
     }
-  }, [searchParams]);
+  }, []);
 
-  const currentQuestion = getCurrentQuestion(deck) || DEFAULT_QUIZ_QUESTIONS[0];
+  const currentQuestion = getCurrentQuestion(deck) || deck.availableQuestions[0] || DEFAULT_QUIZ_QUESTIONS[0];
   const answeredCount = deck.answers.length;
   const progressPercent = Math.min(100, Math.round((answeredCount / deck.targetCount) * 100));
 
@@ -109,7 +97,7 @@ function QuizCreateContent() {
       setSelectedOptionId(null);
       setShowPinModal(true);
     } else {
-      // Check if the next question was previously answered (e.g. if we went back)
+      // Check if the next question was previously answered (e.g. if we stepped back)
       const nextQ = getCurrentQuestion(nextDeck);
       const existing = nextDeck.answers.find((a) => a.questionId === nextQ?.id);
       setSelectedOptionId(existing !== undefined ? existing.correctOptionId : null);
@@ -125,6 +113,19 @@ function QuizCreateContent() {
     setSelectedOptionId(previousOptionId);
     setShowPinModal(false);
     setSubmitError("");
+  };
+
+  const handleEditCompleted = () => {
+    // When editing from the PIN modal or complete state, reopen the last answered question
+    // with its previous selection restored so the user is editing question 10 of 10.
+    if (deck.answers.length > 0) {
+      const { nextState, previousOptionId } = stepBackQuestion(deck);
+      setDeck(nextState);
+      setSelectedOptionId(previousOptionId);
+    }
+    setShowPinModal(false);
+    setSubmitError("");
+    setPinError("");
   };
 
   const handleSkip = () => {
@@ -163,6 +164,12 @@ function QuizCreateContent() {
 
   const handleFinalSubmit = async () => {
     if (isSubmitting) return;
+
+    if (deck.answers.length !== TOTAL_QUESTIONS_TARGET) {
+      setSubmitError(`Please select exactly ${TOTAL_QUESTIONS_TARGET} questions before publishing.`);
+      quizAudio.playWrong();
+      return;
+    }
 
     const trimmedPin = secretPin.trim();
     if (!trimmedPin || !/^\d{4,6}$/.test(trimmedPin)) {
@@ -341,7 +348,7 @@ function QuizCreateContent() {
         {/* Counter Badge */}
         <div className="flex items-center gap-2">
           <span className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63]">
-            {Math.min(answeredCount + 1, deck.targetCount)} of {deck.targetCount}
+            {answeredCount} of {deck.targetCount} selected
           </span>
         </div>
       </header>
@@ -525,7 +532,7 @@ function QuizCreateContent() {
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={() => setShowPinModal(false)}
+                onClick={handleEditCompleted}
                 className="w-full py-2.5 text-xs font-bold text-[#536079] hover:text-[#29324c] hover:underline cursor-pointer text-center"
               >
                 ← Edit questions before publishing

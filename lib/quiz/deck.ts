@@ -46,9 +46,10 @@ export function getRemainingUnanswered(state: DeckState): QuizQuestion[] {
  * Returns null if all questions have been answered.
  */
 export function getCurrentQuestion(state: DeckState): QuizQuestion | null {
+  if (state.answers.length >= state.targetCount) return null;
   const remaining = getRemainingUnanswered(state);
   if (remaining.length === 0) return null;
-  const safeIndex = state.currentPoolIndex % remaining.length;
+  const safeIndex = ((state.currentPoolIndex % remaining.length) + remaining.length) % remaining.length;
   return remaining[safeIndex];
 }
 
@@ -57,6 +58,7 @@ export function getCurrentQuestion(state: DeckState): QuizQuestion | null {
  * Wraps around safely without infinite loops or duplicate displays.
  */
 export function skipQuestion(state: DeckState): DeckState {
+  if (state.answers.length >= state.targetCount) return state;
   const remaining = getRemainingUnanswered(state);
   if (remaining.length <= 1) {
     return { ...state, currentPoolIndex: 0 };
@@ -69,13 +71,26 @@ export function skipQuestion(state: DeckState): DeckState {
 
 /**
  * Records the creator's answer for the current question and advances.
+ * Strictly prevents recording duplicate question IDs or exceeding targetCount.
  */
 export function selectQuestionOption(
   state: DeckState,
   optionId: number
 ): DeckState {
+  if (state.answers.length >= state.targetCount) {
+    return state;
+  }
+
   const current = getCurrentQuestion(state);
   if (!current) return state;
+
+  if (state.answers.some((a) => a.questionId === current.id)) {
+    return state;
+  }
+
+  if (!current.options.some((opt) => opt.id === optionId)) {
+    return state;
+  }
 
   const newAnswers: DeckAnswer[] = [
     ...state.answers,
