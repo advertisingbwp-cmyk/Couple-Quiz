@@ -18,6 +18,7 @@ import {
   getWhatsAppShareUrl,
   getFacebookShareUrl,
   buildQuizPlayMetadata,
+  detectEnvironment,
 } from "@/lib/quiz/sharing";
 
 beforeEach(() => {
@@ -261,22 +262,120 @@ test("Phase 7: SEO Strategy, Robots Rules & Sitemap Generation", () => {
   }
 });
 
-test("Phase 7: Domain Canonicalization and Preview Isolation", () => {
-  // Test isolation against protected Vercel preview domains
+test("Phase 7.2: detectEnvironment identifies local, preview, and production environments accurately", () => {
+  // Local development
+  assert.equal(detectEnvironment("http://localhost:3000").environment, "development");
+  assert.equal(detectEnvironment("http://127.0.0.1:3000").isLocal, true);
+  assert.equal(detectEnvironment("http://my-machine.localhost:3000").isLocal, true);
+  assert.equal(detectEnvironment("http://box.local:3000").isLocal, true);
+
+  // Vercel Preview deployments (git branch, preview hashes)
+  const previewGit = detectEnvironment("https://couple-quiz-git-feature-phase-7-social-sharing.vercel.app");
+  assert.equal(previewGit.environment, "preview");
+  assert.equal(previewGit.isPreview, true);
+  assert.equal(previewGit.isProduction, false);
+
+  const previewHash = detectEnvironment("https://couple-quiz-9ab12cd-advertisings-projects.vercel.app");
+  assert.equal(previewHash.environment, "preview");
+  assert.equal(previewHash.isPreview, true);
+
+  // Production deployments
+  const prodCanonical = detectEnvironment("https://couple-quiz-three.vercel.app");
+  assert.equal(prodCanonical.environment, "production");
+  assert.equal(prodCanonical.isProduction, true);
+  assert.equal(prodCanonical.isPreview, false);
+});
+
+test("Phase 7.2: Preview-created quizzes are NEVER silently redirected to unverified Production URLs", () => {
   const previewOrigin = "https://couple-quiz-git-feature-phase-7-social-sharing.vercel.app";
   const challengeFromPreview = getChallengeUrl("q_preview_test", previewOrigin);
+
+  // MUST keep the preview origin so testers stay in the preview environment
   assert.equal(
     challengeFromPreview,
+    "https://couple-quiz-git-feature-phase-7-social-sharing.vercel.app/quiz/play/q_preview_test",
+    "Must preserve preview URL for authorized testing"
+  );
+  assert.notEqual(
+    challengeFromPreview,
     "https://couple-quiz-three.vercel.app/quiz/play/q_preview_test",
-    "Must not leak protected Vercel preview URL into challenge link"
+    "Must NEVER silently redirect a preview quiz to unverified production"
   );
 
-  // Localhost origin preserved for local testing
+  // Only with explicit verifiedOnProduction: true can it target production
+  const verifiedProductionUrl = getChallengeUrl("q_preview_test", previewOrigin, {
+    verifiedOnProduction: true,
+  });
+  assert.equal(
+    verifiedProductionUrl,
+    "https://couple-quiz-three.vercel.app/quiz/play/q_preview_test",
+    "Target production ONLY when verifiedOnProduction is explicitly true"
+  );
+});
+
+test("Phase 7.2: Localhost and Production URL preservation", () => {
+  // Localhost origin preserved for local automation and dev
   const localOrigin = "http://localhost:3005";
   const challengeFromLocal = getChallengeUrl("q_local_test", localOrigin);
   assert.equal(
     challengeFromLocal,
     "http://localhost:3005/quiz/play/q_local_test",
     "Localhost origin preserved for local automation"
+  );
+
+  // Production URL preservation
+  const prodOrigin = "https://couple-quiz-three.vercel.app";
+  const challengeFromProd = getChallengeUrl("q_prod_test", prodOrigin);
+  assert.equal(
+    challengeFromProd,
+    "https://couple-quiz-three.vercel.app/quiz/play/q_prod_test",
+    "Production origin uses canonical public domain"
+  );
+
+  // Default fallback (no origin provided)
+  const defaultChallenge = getChallengeUrl("q_default_test");
+  assert.equal(
+    defaultChallenge,
+    "https://couple-quiz-three.vercel.app/quiz/play/q_default_test",
+    "Fallback without origin uses canonical base domain"
+  );
+});
+
+test("Phase 7.2: WhatsApp formatting adapts safely between preview and production", () => {
+  const previewOrigin = "https://couple-quiz-git-feature-phase-7-social-sharing.vercel.app";
+  const previewWa = formatWhatsAppQuizShare("Sara", "q_123", previewOrigin);
+
+  // Preview WhatsApp message must indicate testing status
+  assert.ok(
+    previewWa.includes("Preview / Testing Environment"),
+    "Preview share must declare Preview / Testing Environment"
+  );
+  assert.ok(
+    previewWa.includes("Authorized Testers Only"),
+    "Preview share must warn that access requires team credentials"
+  );
+  assert.ok(
+    previewWa.includes(previewOrigin),
+    "Preview share must link to the preview deployment"
+  );
+  assert.ok(
+    !previewWa.includes("couple-quiz-three.vercel.app"),
+    "Preview share must not leak unverified production domain"
+  );
+
+  // Production WhatsApp message contains clean social invite
+  const prodOrigin = "https://couple-quiz-three.vercel.app";
+  const prodWa = formatWhatsAppQuizShare("Sara", "q_123", prodOrigin);
+  assert.ok(
+    !prodWa.includes("Preview / Testing Environment"),
+    "Production share must not show preview warnings"
+  );
+  assert.ok(
+    prodWa.includes("✨ *Click & Clique Friendship Challenge* ✨"),
+    "Production share has standard invite copy"
+  );
+  assert.ok(
+    prodWa.includes("https://couple-quiz-three.vercel.app/quiz/play/q_123"),
+    "Production share links to canonical domain"
   );
 });

@@ -24,6 +24,8 @@ import {
   getWhatsAppShareUrl,
   getFacebookShareUrl,
   copyToClipboard,
+  detectEnvironment,
+  EnvironmentInfo,
 } from "@/lib/quiz/sharing";
 
 export default function QuizSharePage({
@@ -40,6 +42,7 @@ export default function QuizSharePage({
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const [shareUrl, setShareUrl] = useState("");
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [envInfo, setEnvInfo] = useState<EnvironmentInfo>(() => detectEnvironment());
 
   useEffect(() => {
     fetch(`/api/quiz/${quizId}`)
@@ -60,6 +63,8 @@ export default function QuizSharePage({
       });
 
     const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const currentEnv = detectEnvironment(origin);
+    setEnvInfo(currentEnv);
     setShareUrl(getChallengeUrl(quizId, origin));
 
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
@@ -183,11 +188,49 @@ export default function QuizSharePage({
             Apne doston ko challenge bhejein aur dekhein kon aapko sab se behtar janta hai!
           </p>
 
+          {/* Preview Testing Environment Notice */}
+          {envInfo.isPreview && (
+            <div
+              role="alert"
+              aria-label="Preview Testing Environment"
+              className="mt-4 p-4 bg-amber-50 border-2 border-amber-400 rounded-2xl text-left shadow-sm space-y-2.5"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-1.5 font-black text-amber-950 text-xs uppercase tracking-wide">
+                  <span className="flex h-2.5 w-2.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                  </span>
+                  Preview / Testing Environment
+                </div>
+                <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
+                  Internal Test
+                </span>
+              </div>
+
+              <p className="text-xs text-amber-900 leading-relaxed font-medium">
+                This quiz was created on a <strong>protected Vercel Preview deployment</strong>.
+                Public WhatsApp and Facebook rich link previews are <strong>not yet available</strong> because preview deployments require Vercel Authentication.
+              </p>
+
+              <div className="p-2.5 bg-white/90 rounded-xl border border-amber-200 text-xs text-amber-950 space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                  <span>🔒 Safe Internal Testing Links Active</span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-normal">
+                  The links below point directly to this preview deployment for authorized testers. We do <strong>not</strong> present unverified Production links to avoid broken experiences.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Social Link Preview Card */}
           <div className="mt-5 p-3.5 bg-sky-50/70 border-2 border-dashed border-sky-300 rounded-2xl text-left shadow-sm">
             <div className="text-[10px] font-black uppercase text-sky-800 mb-1.5 flex items-center justify-between">
               <span>Link Preview</span>
-              <span className="text-slate-400 font-normal">Social link card</span>
+              <span className={envInfo.isPreview ? "text-amber-800 font-bold" : "text-slate-400 font-normal"}>
+                {envInfo.isPreview ? "⚠️ Preview mode (crawlers blocked by Vercel SSO)" : "Social link card"}
+              </span>
             </div>
             <div className="bg-white rounded-xl border-2 border-slate-900 p-3 flex gap-3 items-center">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ffce71] to-[#bd4a66] border-2 border-slate-900 shrink-0 flex items-center justify-center text-xl shadow-sm">
@@ -205,6 +248,11 @@ export default function QuizSharePage({
                 </div>
               </div>
             </div>
+            {envInfo.isPreview && (
+              <div className="mt-2 text-[10px] text-amber-800 font-medium">
+                *Rich Open Graph preview images will be visible to external users once merged to the canonical Production domain.
+              </div>
+            )}
           </div>
 
           {/* Copy Box */}
@@ -218,7 +266,13 @@ export default function QuizSharePage({
             <button
               type="button"
               onClick={handleCopyLink}
-              aria-label={copyStatus === "copied" ? "Link copied" : "Copy challenge link"}
+              aria-label={
+                copyStatus === "copied"
+                  ? "Link copied"
+                  : envInfo.isPreview
+                  ? "Copy preview test link"
+                  : "Copy challenge link"
+              }
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl flex items-center gap-1.5 shrink-0 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
             >
               {copyStatus === "copied" ? (
@@ -234,7 +288,7 @@ export default function QuizSharePage({
               ) : (
                 <>
                   <Copy size={14} />
-                  <span>Copy</span>
+                  <span>{envInfo.isPreview ? "Copy Test Link" : "Copy"}</span>
                 </>
               )}
             </button>
@@ -253,12 +307,17 @@ export default function QuizSharePage({
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              aria-label="Share challenge on WhatsApp"
+              aria-label={envInfo.isPreview ? "Share test challenge on WhatsApp" : "Share challenge on WhatsApp"}
               className="w-full py-3.5 sm:py-4 px-6 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-base sm:text-lg rounded-2xl border-2 border-slate-900 shadow-[0_5px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-center gap-2.5 cursor-pointer uppercase tracking-wider focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
             >
               <MessageCircle size={22} className="fill-white" />
-              <span>Share on WhatsApp</span>
+              <span>{envInfo.isPreview ? "Share Preview Test Link" : "Share on WhatsApp"}</span>
             </button>
+            {envInfo.isPreview && (
+              <p className="text-[10px] text-amber-800 font-medium -mt-1">
+                *Recipients must have Vercel Preview team access to open this test challenge.
+              </p>
+            )}
 
             {/* Secondary Share Actions: Native Web Share & Facebook */}
             <div className="grid grid-cols-2 gap-2">
@@ -270,7 +329,7 @@ export default function QuizSharePage({
                   className="py-3 px-3 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black text-xs sm:text-sm rounded-xl border-2 border-slate-900 shadow-[0_3px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase"
                 >
                   <Share2 size={16} />
-                  <span>Share via App</span>
+                  <span>{envInfo.isPreview ? "Share App (Test)" : "Share via App"}</span>
                 </button>
               )}
 
@@ -285,7 +344,7 @@ export default function QuizSharePage({
                 <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
-                <span>Facebook</span>
+                <span>{envInfo.isPreview ? "Facebook (Test)" : "Facebook"}</span>
               </button>
             </div>
 
@@ -312,9 +371,17 @@ export default function QuizSharePage({
           </div>
         </div>
 
-        {/* Growth Pro-Tip */}
+        {/* Growth Pro-Tip / Testing Note */}
         <div className="w-full mt-4 sm:mt-6 bg-sky-100/80 rounded-2xl p-3.5 sm:p-4 border-2 border-sky-300 text-center text-xs font-medium text-sky-950 shadow-sm">
-          💡 <strong>Pro Tip:</strong> WhatsApp Status ya Instagram Story par yeh link lagayein taake sabhi dost test de sakein!
+          {envInfo.isPreview ? (
+            <>
+              🧪 <strong>Note for Testers:</strong> This challenge is running on a preview deployment. Merge to Production to enable public WhatsApp status and Instagram story sharing.
+            </>
+          ) : (
+            <>
+              💡 <strong>Pro Tip:</strong> WhatsApp Status ya Instagram Story par yeh link lagayein taake sabhi dost test de sakein!
+            </>
+          )}
         </div>
       </main>
     </div>

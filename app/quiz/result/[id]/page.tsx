@@ -12,6 +12,8 @@ import {
   getChallengeUrl,
   sanitizeCreatorName,
   copyToClipboard,
+  detectEnvironment,
+  EnvironmentInfo,
 } from "@/lib/quiz/sharing";
 
 export default function QuizResultPage({
@@ -33,8 +35,11 @@ export default function QuizResultPage({
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [envInfo, setEnvInfo] = useState<EnvironmentInfo>(() => detectEnvironment());
 
   useEffect(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    setEnvInfo(detectEnvironment(origin));
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       setCanNativeShare(true);
     }
@@ -191,6 +196,18 @@ export default function QuizResultPage({
 
       {/* Main Content */}
       <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-5 flex flex-col justify-center">
+        {/* Preview Testing Notice */}
+        {envInfo.isPreview && (
+          <div
+            role="alert"
+            aria-label="Preview Testing Environment"
+            className="mb-4 py-2 px-3.5 bg-amber-50 border-2 border-amber-400 rounded-2xl text-center text-xs font-bold text-amber-950 flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span className="p-0.5 bg-amber-200 rounded text-xs">⚠️</span>
+            <span>Preview / Testing Environment — Internal test link active</span>
+          </div>
+        )}
+
         {/* Comic Dialogue Stage */}
         <div className="w-full bg-slate-900 text-white rounded-3xl p-5 mb-4 shadow-xl border-4 border-slate-900">
           <span className="text-[10px] font-black tracking-widest text-amber-300 uppercase block mb-3">
