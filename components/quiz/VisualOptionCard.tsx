@@ -75,6 +75,33 @@ export function VisualOptionCard({
     ? "w-4 h-4 top-1.5 right-1.5"
     : "w-5 h-5 sm:w-6 sm:h-6 top-2 right-2";
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (role !== "radio") return;
+    const currentTarget = e.currentTarget;
+    const parent = currentTarget.parentElement;
+    if (!parent) return;
+
+    const buttons = Array.from(
+      parent.querySelectorAll<HTMLButtonElement>('button[role="radio"]:not([disabled])')
+    );
+    const index = buttons.indexOf(currentTarget);
+    if (index === -1) return;
+
+    let nextIndex: number | null = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = (index + 1) % buttons.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = (index - 1 + buttons.length) % buttons.length;
+    }
+
+    if (nextIndex !== null && buttons[nextIndex]) {
+      buttons[nextIndex].focus();
+      buttons[nextIndex].click();
+    }
+  };
+
   return (
     <button
       type="button"
@@ -83,6 +110,7 @@ export function VisualOptionCard({
       aria-label={option.text}
       disabled={disabled}
       onClick={() => onSelect(option.id)}
+      onKeyDown={handleKeyDown}
       className={`group relative w-full flex flex-col items-center justify-between text-center rounded-2xl border-2 border-[#29324c] transition-all cursor-pointer focus-visible:outline-3 focus-visible:outline-[#6650b7] disabled:opacity-40 disabled:cursor-not-allowed select-none ${cardPaddingClasses} ${
         isSelected
           ? "bg-[#ffce71] text-[#29324c] shadow-[0_4px_0_#d6ad63] -translate-y-0.5"
@@ -115,6 +143,9 @@ export function VisualOptionCard({
           <img
             src={option.imageUrl}
             alt={option.text}
+            width={96}
+            height={96}
+            decoding="async"
             onError={() => setImgError(true)}
             className="w-full h-full object-contain pointer-events-none"
             loading="lazy"

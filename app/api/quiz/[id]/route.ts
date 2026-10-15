@@ -3,6 +3,7 @@ import { getQuizPublicData, getQuizById, deleteQuiz } from "@/lib/quiz/storage";
 import { creatorAuthResponse } from "@/lib/quiz/authResponse";
 import { RateLimitUnavailableError } from "@/lib/quiz/security";
 import { StorageUnavailableError } from "@/lib/quiz/storage";
+import { readJsonWithLimit } from "@/lib/quiz/requestBody";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +42,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const parseResult = await readJsonWithLimit<{
+      pin?: unknown;
+      creatorToken?: unknown;
+    }>(req, 32 * 1024);
+
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { success: false, error: parseResult.error },
+        { status: parseResult.status }
+      );
+    }
+
     const { id } = await params;
-    const body = await req.json().catch(() => ({}));
-    const { pin, creatorToken } = body;
+    const { pin, creatorToken } = parseResult.data;
 
     const quiz = await getQuizById(id);
     if (!quiz) {

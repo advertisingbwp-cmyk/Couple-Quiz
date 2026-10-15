@@ -4,20 +4,28 @@ import { saveQuiz } from "@/lib/quiz/storage";
 import { QuizData, Gender } from "@/lib/quiz/types";
 import { hashPin, generateCreatorToken, generateQuizId, generateQuizSlug } from "@/lib/quiz/security";
 import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
+import { readJsonWithLimit } from "@/lib/quiz/requestBody";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => null);
-    if (!body || typeof body !== "object") {
+    const parseResult = await readJsonWithLimit<{
+      creatorName?: unknown;
+      gender?: unknown;
+      country?: unknown;
+      secretPin?: unknown;
+      questions?: unknown;
+    }>(req, 100 * 1024);
+
+    if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: "Invalid request payload." },
-        { status: 400 }
+        { success: false, error: parseResult.error },
+        { status: parseResult.status }
       );
     }
 
-    const { creatorName, gender, country, secretPin, questions } = body;
+    const { creatorName, gender, country, secretPin, questions } = parseResult.data;
 
     // 1. Strict Name Validation
     if (!creatorName || typeof creatorName !== "string" || !creatorName.trim()) {
@@ -102,7 +110,7 @@ export async function POST(req: Request) {
       slug,
       creatorName: cleanCreatorName,
       gender: (gender === "female" ? "female" : "male") as Gender,
-      country: country || "PK",
+      country: typeof country === "string" && country.trim() ? country.trim() : "PK",
       theme: "dont_block_me",
       pinHash,
       creatorToken,

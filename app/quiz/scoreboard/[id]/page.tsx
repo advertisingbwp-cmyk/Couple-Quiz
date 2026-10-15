@@ -93,6 +93,29 @@ export default function QuizScoreboardPage({
     fetchPublicScoreboard();
   }, [fetchPublicScoreboard]);
 
+  useEffect(() => {
+    if (!showAuthModal && !selectedEntry && !pinPrompt.open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (showAuthModal) {
+          setShowAuthModal(false);
+          setEnteredPin("");
+          setAuthError("");
+        }
+        if (selectedEntry) {
+          setSelectedEntry(null);
+        }
+        if (pinPrompt.open) {
+          setPinPrompt({ open: false, attemptId: "", playerName: "" });
+          setEnteredPin("");
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showAuthModal, selectedEntry, pinPrompt.open]);
+
   // Request detailed answers with authorization (creatorToken or PIN)
   const handleOpenAnswers = async (entry: ScoreboardEntry) => {
     const creatorToken = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
@@ -465,6 +488,7 @@ export default function QuizScoreboardPage({
                             onClick={() => handleOpenAnswers(entry)}
                             className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
                             title="View Answers (Creator Only)"
+                            aria-label={`View detailed answers for ${entry.playerName}`}
                           >
                             <Eye size={16} />
                           </button>
@@ -474,6 +498,7 @@ export default function QuizScoreboardPage({
                             onClick={() => setPinPrompt({ open: true, attemptId: entry.id, playerName: entry.playerName })}
                             className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
                             title="Delete Player (Creator Only)"
+                            aria-label={`Delete score attempt for ${entry.playerName}`}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -497,8 +522,13 @@ export default function QuizScoreboardPage({
             <p className="text-xs text-slate-600 mt-1 mb-4">
               Enter your Creator Secret PIN to view {creatorName}&apos;s friends answers:
             </p>
+            <label htmlFor="creator-pin-unlock-input" className="sr-only">
+              Creator Secret PIN
+            </label>
             <input
+              id="creator-pin-unlock-input"
               type="password"
+              aria-label="Creator Secret PIN"
               inputMode="numeric"
               maxLength={6}
               value={enteredPin}
@@ -606,15 +636,22 @@ export default function QuizScoreboardPage({
               )}
             </p>
             {!(typeof window !== "undefined" && localStorage.getItem(`creator_token_${quizId}`)) && (
-              <input
-                type="password"
-                inputMode="numeric"
-                maxLength={6}
-                value={enteredPin}
-                onChange={(e) => setEnteredPin(e.target.value)}
-                placeholder="PIN (e.g. 7890)"
-                className="w-full py-2.5 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-xl mb-3 focus:outline-none"
-              />
+              <>
+                <label htmlFor="creator-pin-delete-input" className="sr-only">
+                  Creator Secret PIN for deletion
+                </label>
+                <input
+                  id="creator-pin-delete-input"
+                  type="password"
+                  aria-label="Creator Secret PIN for deletion"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={enteredPin}
+                  onChange={(e) => setEnteredPin(e.target.value)}
+                  placeholder="PIN (e.g. 7890)"
+                  className="w-full py-2.5 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-xl mb-3 focus:outline-none"
+                />
+              </>
             )}
             <div className="flex items-center gap-2">
               <button
