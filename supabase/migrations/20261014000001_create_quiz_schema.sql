@@ -412,10 +412,14 @@ $$;
 -- 8. Least Privilege Permissions & RPC Access Control
 -- -----------------------------------------------------------------------------
 
--- Revoke all function execution privileges from PUBLIC, anon, and authenticated roles
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM anon;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM authenticated;
+-- Revoke execution privileges targeting explicitly this project's seven quiz RPC functions
+REVOKE EXECUTE ON FUNCTION public.save_quiz_with_questions(JSONB, JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.record_quiz_attempt(JSONB, JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.delete_quiz_atomic(TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.delete_attempt_atomic(TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.check_pin_rate_limit(TEXT, INTEGER) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.record_pin_rate_limit_outcome(TEXT, TEXT, INTEGER, INTEGER) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.clear_pin_rate_limit(TEXT) FROM PUBLIC, anon, authenticated;
 
 -- Grant EXECUTE only to service_role for privileged backend RPC functions
 GRANT EXECUTE ON FUNCTION public.save_quiz_with_questions(JSONB, JSONB) TO service_role;
