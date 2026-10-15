@@ -379,3 +379,53 @@ test("Phase 7.2: WhatsApp formatting adapts safely between preview and productio
     "Production share links to canonical domain"
   );
 });
+
+test("Phase 7.3: Custom-domain Preview deployments are NEVER silently classified as public Production", () => {
+  // 1. Custom preview/staging subdomains
+  const customPreview = detectEnvironment("https://preview.clickandclique.com");
+  assert.equal(customPreview.environment, "preview", "preview.* custom domain must be preview");
+  assert.equal(customPreview.isPreview, true);
+  assert.equal(customPreview.isProduction, false);
+
+  const customStaging = detectEnvironment("https://staging.cliquequiz.net");
+  assert.equal(customStaging.environment, "preview", "staging.* custom domain must be preview");
+  assert.equal(customStaging.isPreview, true);
+  assert.equal(customStaging.isProduction, false);
+
+  const customDev = detectEnvironment("https://dev-branch.cliquequiz.net");
+  assert.equal(customDev.environment, "preview", "dev-* custom domain must be preview");
+  assert.equal(customDev.isPreview, true);
+
+  // 2. Challenge URLs on custom preview domains preserve the custom preview origin
+  const customPreviewChallenge = getChallengeUrl("q_cust_prev", "https://preview.clickandclique.com");
+  assert.equal(
+    customPreviewChallenge,
+    "https://preview.clickandclique.com/quiz/play/q_cust_prev",
+    "Must preserve custom preview domain and NEVER redirect to production"
+  );
+  assert.notEqual(
+    customPreviewChallenge,
+    "https://couple-quiz-three.vercel.app/quiz/play/q_cust_prev",
+    "Must NEVER leak production domain for custom preview"
+  );
+
+  // 3. VERCEL_ENV=preview with arbitrary custom host
+  const originalVercelEnv = process.env.VERCEL_ENV;
+  try {
+    process.env.VERCEL_ENV = "preview";
+    const customBranchEnv = detectEnvironment("https://arbitrary-custom-host.org");
+    assert.equal(
+      customBranchEnv.environment,
+      "preview",
+      "VERCEL_ENV=preview must classify arbitrary custom host as preview"
+    );
+    assert.equal(customBranchEnv.isPreview, true);
+    assert.equal(customBranchEnv.isProduction, false);
+  } finally {
+    if (originalVercelEnv === undefined) {
+      delete process.env.VERCEL_ENV;
+    } else {
+      process.env.VERCEL_ENV = originalVercelEnv;
+    }
+  }
+});

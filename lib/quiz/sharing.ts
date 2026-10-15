@@ -86,23 +86,30 @@ export function detectEnvironment(originOrHost?: string): EnvironmentInfo {
     // fallback
   }
 
-  if (host && host === prodHost) {
-    return {
-      environment: "production",
-      isLocal: false,
-      isPreview: false,
-      isProduction: true,
-      host,
-    };
-  }
+  // 3. Explicit Preview environment flags (server and client exposed)
+  const isPreviewEnvVar =
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" ||
+    process.env.NEXT_PUBLIC_APP_ENV === "preview";
 
-  // 3. Vercel Preview check:
-  // If host is on vercel.app and does NOT match the canonical production host,
-  // or VERCEL_ENV is "preview"
+  // 4. Custom domain or Vercel preview host pattern check
   const isVercelPreviewHost = host.endsWith(".vercel.app") && host !== prodHost;
-  const isVercelEnvPreview = process.env.VERCEL_ENV === "preview";
+  const isCustomDomainPreviewHost = Boolean(
+    host &&
+      host !== prodHost &&
+      (host.startsWith("preview.") ||
+        host.startsWith("staging.") ||
+        host.startsWith("dev.") ||
+        host.startsWith("test.") ||
+        host.includes("-preview") ||
+        host.includes("-staging") ||
+        host.includes("-dev"))
+  );
 
-  if (isVercelPreviewHost || (!host && isVercelEnvPreview)) {
+  // If running in preview or using an unrecognized non-canonical host, NEVER classify as Production
+  const isNonProdHost = Boolean(host && host !== prodHost);
+
+  if (isPreviewEnvVar || isVercelPreviewHost || isCustomDomainPreviewHost || (isNonProdHost && !process.env.VERCEL_ENV)) {
     return {
       environment: "preview",
       isLocal: false,
@@ -112,7 +119,7 @@ export function detectEnvironment(originOrHost?: string): EnvironmentInfo {
     };
   }
 
-  // 4. Default: Production
+  // 5. Default: Production (strictly matching canonical prodHost without preview flags)
   return {
     environment: "production",
     isLocal: false,
