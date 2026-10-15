@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Check,
   SkipForward,
   ArrowRight,
   ArrowLeft,
@@ -25,6 +24,10 @@ import {
   DeckState,
 } from "@/lib/quiz/deck";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
+import {
+  VisualOptionCard,
+  getVisualOptionGridClasses,
+} from "@/components/quiz/VisualOptionCard";
 
 const TOTAL_QUESTIONS_TARGET = 10;
 
@@ -389,34 +392,21 @@ function QuizCreateContent() {
             Select the answer that describes <span className="text-[#6650b7] font-black">{creatorName}</span> best:
           </p>
 
-          {/* Options List */}
-          <div className="space-y-3" role="radiogroup" aria-label={currentQuestion.question}>
-            {currentQuestion.options.map((option) => {
-              const isSelected = selectedOptionId === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  onClick={() => handleSelectOption(option.id)}
-                  className={`w-full text-left p-4 rounded-2xl border-2 border-[#29324c] font-black text-sm sm:text-base transition-all flex items-center justify-between cursor-pointer focus-visible:outline-3 focus-visible:outline-[#6650b7] ${
-                    isSelected
-                      ? "bg-[#ffce71] text-[#29324c] shadow-[0_4px_0_#d6ad63] -translate-y-0.5"
-                      : "bg-[#fffefa] hover:bg-[#edf7ff] text-[#29324c] shadow-[0_2px_0_#d7e1e8]"
-                  }`}
-                >
-                  <span className="flex-1 pr-3">{option.text}</span>
-                  <div
-                    className={`w-6 h-6 rounded-full border-2 border-[#29324c] flex items-center justify-center shrink-0 transition-colors ${
-                      isSelected ? "bg-[#29324c] text-white" : "bg-white"
-                    }`}
-                  >
-                    {isSelected && <Check size={14} className="stroke-[3]" />}
-                  </div>
-                </button>
-              );
-            })}
+          {/* Options Grid */}
+          <div
+            className={getVisualOptionGridClasses(currentQuestion.options.length)}
+            role="radiogroup"
+            aria-label={currentQuestion.question}
+          >
+            {currentQuestion.options.map((option) => (
+              <VisualOptionCard
+                key={option.id}
+                option={option}
+                isSelected={selectedOptionId === option.id}
+                onSelect={handleSelectOption}
+                totalOptions={currentQuestion.options.length}
+              />
+            ))}
           </div>
 
           {/* Action Row */}

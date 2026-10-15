@@ -23,19 +23,57 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Bathroom Singer 🎤"
+        "text": "Bathroom Singer 🎤",
+        "emoji": "🎤",
+        "imageUrl": "/quiz/options/q1_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Biryani Expert 🍲"
+        "text": "Biryani Expert 🍲",
+        "emoji": "🍲",
+        "imageUrl": "/quiz/options/q1_opt1.svg"
       },
       {
         "id": 2,
-        "text": "14 Ghante Sona 😴"
+        "text": "14 Ghante Sona 😴",
+        "emoji": "😴",
+        "imageUrl": "/quiz/options/q1_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Pro Gamer 🎮"
+        "text": "Pro Gamer 🎮",
+        "emoji": "🎮",
+        "imageUrl": "/quiz/options/q1_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Speed Texter ⚡",
+        "emoji": "⚡",
+        "imageUrl": "/quiz/options/q1_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Master Negotiator / Bargainer 🤝",
+        "emoji": "🤝",
+        "imageUrl": "/quiz/options/q1_opt5.svg"
+      },
+      {
+        "id": 6,
+        "text": "Mimicry & Accents 🎭",
+        "emoji": "🎭",
+        "imageUrl": "/quiz/options/q1_opt6.svg"
+      },
+      {
+        "id": 7,
+        "text": "Photographer Eye 📸",
+        "emoji": "📸",
+        "imageUrl": "/quiz/options/q1_opt7.svg"
+      },
+      {
+        "id": 8,
+        "text": "Memory Master 🧠",
+        "emoji": "🧠",
+        "imageUrl": "/quiz/options/q1_opt8.svg"
       }
     ]
   },
@@ -47,19 +85,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "World Tour par nikal jaunga ✈️"
+        "text": "World Tour par nikal jaunga ✈️",
+        "imageUrl": "/quiz/options/q2_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Dream Car khareedunga 🏎️"
+        "text": "Dream Car khareedunga 🏎️",
+        "imageUrl": "/quiz/options/q2_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Bank mein safe rakhunga 🏦"
+        "text": "Bank mein safe rakhunga 🏦",
+        "imageUrl": "/quiz/options/q2_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Doston ko shandaar party 🥳"
+        "text": "Doston ko shandaar party 🥳",
+        "imageUrl": "/quiz/options/q2_opt3.svg"
       }
     ]
   },
@@ -71,19 +113,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Bhook lagne par 🍔"
+        "text": "Bhook lagne par 🍔",
+        "imageUrl": "/quiz/options/q3_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Internet slow hone par 📶"
+        "text": "Internet slow hone par 📶",
+        "imageUrl": "/quiz/options/q3_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Jab koi call na uthaye 📵"
+        "text": "Jab koi call na uthaye 📵",
+        "imageUrl": "/quiz/options/q3_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Jhoot bolne par 🤥"
+        "text": "Jhoot bolne par 🤥",
+        "imageUrl": "/quiz/options/q3_opt3.svg"
       }
     ]
   },
@@ -95,19 +141,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Reels / TikTok scroll karna 📱"
+        "text": "Reels / TikTok scroll karna 📱",
+        "imageUrl": "/quiz/options/q4_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Ghor neend sona 🛌"
+        "text": "Ghor neend sona 🛌",
+        "imageUrl": "/quiz/options/q4_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Online Gaming 🎯"
+        "text": "Online Gaming 🎯",
+        "imageUrl": "/quiz/options/q4_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Doston se lambi baatein 🗣️"
+        "text": "Doston se lambi baatein 🗣️",
+        "imageUrl": "/quiz/options/q4_opt3.svg"
       }
     ]
   },
@@ -119,19 +169,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Har waqt phone use karna 📲"
+        "text": "Har waqt phone use karna 📲",
+        "imageUrl": "/quiz/options/q5_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Dopehar tak sona ⏰"
+        "text": "Dopehar tak sona ⏰",
+        "imageUrl": "/quiz/options/q5_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Overthinking karna 🧠"
+        "text": "Overthinking karna 🧠",
+        "imageUrl": "/quiz/options/q5_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Har baat par hasna 😂"
+        "text": "Har baat par hasna 😂",
+        "imageUrl": "/quiz/options/q5_opt3.svg"
       }
     ]
   },
@@ -143,19 +197,57 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Garma Garam Biryani 🍛"
+        "text": "Garma Garam Biryani 🍛",
+        "emoji": "🍛",
+        "imageUrl": "/quiz/options/q6_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Cheesy Pizza / Burger 🍔"
+        "text": "Cheesy Pizza / Burger 🍔",
+        "emoji": "🍔",
+        "imageUrl": "/quiz/options/q6_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Chai & Paratha ☕"
+        "text": "Chai & Paratha ☕",
+        "emoji": "☕",
+        "imageUrl": "/quiz/options/q6_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Gol Gappay / Chaat 🥣"
+        "text": "Crispy Gol Gappay 🥣",
+        "emoji": "🥣",
+        "imageUrl": "/quiz/options/q6_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Shawarma Roll 🌯",
+        "emoji": "🌯",
+        "imageUrl": "/quiz/options/q6_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Dahi Bhallay / Chaat 🥗",
+        "emoji": "🥗",
+        "imageUrl": "/quiz/options/q6_opt5.svg"
+      },
+      {
+        "id": 6,
+        "text": "Crispy Samosay 🥟",
+        "emoji": "🥟",
+        "imageUrl": "/quiz/options/q6_opt6.svg"
+      },
+      {
+        "id": 7,
+        "text": "French Fries with Mayo 🍟",
+        "emoji": "🍟",
+        "imageUrl": "/quiz/options/q6_opt7.svg"
+      },
+      {
+        "id": 8,
+        "text": "Desi Bun Kabab 🥙",
+        "emoji": "🥙",
+        "imageUrl": "/quiz/options/q6_opt8.svg"
       }
     ]
   },
@@ -167,19 +259,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Chipkali ya Keeray 🦎"
+        "text": "Chipkali ya Keeray 🦎",
+        "imageUrl": "/quiz/options/q7_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Exams / Fail hone se 📝"
+        "text": "Exams / Fail hone se 📝",
+        "imageUrl": "/quiz/options/q7_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Bhoot aur andheray se 👻"
+        "text": "Bhoot aur andheray se 👻",
+        "imageUrl": "/quiz/options/q7_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Phone ki battery 1% hona 🪫"
+        "text": "Phone ki battery 1% hona 🪫",
+        "imageUrl": "/quiz/options/q7_opt3.svg"
       }
     ]
   },
@@ -191,19 +287,39 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Switzerland / Mountains 🏔️"
+        "text": "Switzerland / Mountains 🏔️",
+        "emoji": "🏔️",
+        "imageUrl": "/quiz/options/q8_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Dubai / Shopping 🏙️"
+        "text": "Dubai / Shopping 🏙️",
+        "emoji": "🏙️",
+        "imageUrl": "/quiz/options/q8_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Turkey / Historic 🇹🇷"
+        "text": "Turkey / Historic 🇹🇷",
+        "emoji": "🇹🇷",
+        "imageUrl": "/quiz/options/q8_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Ghar ka bistar 🛋️"
+        "text": "Maldives / Beach 🏖️",
+        "emoji": "🏖️",
+        "imageUrl": "/quiz/options/q8_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Japan / Tech & Anime 🌸",
+        "emoji": "🌸",
+        "imageUrl": "/quiz/options/q8_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Paris / Romance 🗼",
+        "emoji": "🗼",
+        "imageUrl": "/quiz/options/q8_opt5.svg"
       }
     ]
   },
@@ -215,19 +331,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Meri pasand ka khana 🍕"
+        "text": "Meri pasand ka khana 🍕",
+        "imageUrl": "/quiz/options/q9_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Karak Chai ya Coffee ☕"
+        "text": "Karak Chai ya Coffee ☕",
+        "imageUrl": "/quiz/options/q9_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Mujhe akela chhor do 🤫"
+        "text": "Mujhe akela chhor do 🤫",
+        "imageUrl": "/quiz/options/q9_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Lambi Drive ya Walk 🚗"
+        "text": "Lambi Drive ya Walk 🚗",
+        "imageUrl": "/quiz/options/q9_opt3.svg"
       }
     ]
   },
@@ -239,19 +359,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Haan, kabar tak sath le jaunga 🔒"
+        "text": "Haan, kabar tak sath le jaunga 🔒",
+        "imageUrl": "/quiz/options/q10_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sirf 5 minute tak ⏳"
+        "text": "Sirf 5 minute tak ⏳",
+        "imageUrl": "/quiz/options/q10_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Pet mein dard hota hai bataye bina 😅"
+        "text": "Pet mein dard hota hai bataye bina 😅",
+        "imageUrl": "/quiz/options/q10_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf best friend ko bataunga 🤫"
+        "text": "Sirf best friend ko bataunga 🤫",
+        "imageUrl": "/quiz/options/q10_opt3.svg"
       }
     ]
   },
@@ -263,19 +387,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Mein sab se pehle bhaag jaunga 🏃"
+        "text": "Mein sab se pehle bhaag jaunga 🏃",
+        "imageUrl": "/quiz/options/q11_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Himmat se rasta dhoondenge 🧭"
+        "text": "Himmat se rasta dhoondenge 🧭",
+        "imageUrl": "/quiz/options/q11_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sher humein kha jayega 🦁"
+        "text": "Sher humein kha jayega 🦁",
+        "imageUrl": "/quiz/options/q11_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Ek doosre par cheekhenge 😱"
+        "text": "Ek doosre par cheekhenge 😱",
+        "imageUrl": "/quiz/options/q11_opt3.svg"
       }
     ]
   },
@@ -287,19 +415,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Raat ka Ullu (Night Owl) 🦉"
+        "text": "Raat ka Ullu (Night Owl) 🦉",
+        "imageUrl": "/quiz/options/q12_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Subah ka Parinda (Early Bird) 🌅"
+        "text": "Subah ka Parinda (Early Bird) 🌅",
+        "imageUrl": "/quiz/options/q12_opt1.svg"
       },
       {
         "id": 2,
-        "text": "24 Ghante Sona Pasand Hai 🛌"
+        "text": "24 Ghante Sona Pasand Hai 🛌",
+        "imageUrl": "/quiz/options/q12_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Routine ka koi pata nahi 🌀"
+        "text": "Routine ka koi pata nahi 🌀",
+        "imageUrl": "/quiz/options/q12_opt3.svg"
       }
     ]
   },
@@ -311,19 +443,39 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "WhatsApp 🟢"
+        "text": "WhatsApp 🟢",
+        "emoji": "🟢",
+        "imageUrl": "/quiz/options/q13_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Instagram 📸"
+        "text": "Instagram 📸",
+        "emoji": "📸",
+        "imageUrl": "/quiz/options/q13_opt1.svg"
       },
       {
         "id": 2,
-        "text": "YouTube 🔴"
+        "text": "YouTube 🔴",
+        "emoji": "🔴",
+        "imageUrl": "/quiz/options/q13_opt2.svg"
       },
       {
         "id": 3,
-        "text": "TikTok 🎵"
+        "text": "TikTok 🎵",
+        "emoji": "🎵",
+        "imageUrl": "/quiz/options/q13_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Spotify / Music 🎧",
+        "emoji": "🎧",
+        "imageUrl": "/quiz/options/q13_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Netflix / Movies 🍿",
+        "emoji": "🍿",
+        "imageUrl": "/quiz/options/q13_opt5.svg"
       }
     ]
   },
@@ -335,19 +487,57 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Invisibility (Ghayab hona) 👻"
+        "text": "Invisibility (Ghayab hona) 👻",
+        "emoji": "👻",
+        "imageUrl": "/quiz/options/q14_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Mind Reading (Dimagh parhna) 🧠"
+        "text": "Mind Reading (Dimagh parhna) 🧠",
+        "emoji": "🧠",
+        "imageUrl": "/quiz/options/q14_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Time Travel ⏳"
+        "text": "Time Travel ⏳",
+        "emoji": "⏳",
+        "imageUrl": "/quiz/options/q14_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Udne ki taqat (Flying) 🦅"
+        "text": "Udne ki taqat (Flying) 🦅",
+        "emoji": "🦅",
+        "imageUrl": "/quiz/options/q14_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Teleportation (Kahin bhi pohnchna) ⚡",
+        "emoji": "⚡",
+        "imageUrl": "/quiz/options/q14_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Super Strength (Taqat) 💪",
+        "emoji": "💪",
+        "imageUrl": "/quiz/options/q14_opt5.svg"
+      },
+      {
+        "id": 6,
+        "text": "Healing Power (Bimari door karna) ❤️",
+        "emoji": "❤️",
+        "imageUrl": "/quiz/options/q14_opt6.svg"
+      },
+      {
+        "id": 7,
+        "text": "Unlimited Wealth Creation 💰",
+        "emoji": "💰",
+        "imageUrl": "/quiz/options/q14_opt7.svg"
+      },
+      {
+        "id": 8,
+        "text": "Shape Shifting 🦎",
+        "emoji": "🦎",
+        "imageUrl": "/quiz/options/q14_opt8.svg"
       }
     ]
   },
@@ -359,19 +549,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Haste haste video banayenge 😂"
+        "text": "Haste haste video banayenge 😂",
+        "imageUrl": "/quiz/options/q15_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Thane aakar chhurwayenge 🤝"
+        "text": "Thane aakar chhurwayenge 🤝",
+        "imageUrl": "/quiz/options/q15_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Pehchanne se inkar kar denge 🏃"
+        "text": "Pehchanne se inkar kar denge 🏃",
+        "imageUrl": "/quiz/options/q15_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Ghar walon ko shikayat lagayenge 📞"
+        "text": "Ghar walon ko shikayat lagayenge 📞",
+        "imageUrl": "/quiz/options/q15_opt3.svg"
       }
     ]
   },
@@ -383,19 +577,39 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Arijit / Sad Melodies 💔"
+        "text": "Arijit / Sad Melodies 💔",
+        "emoji": "💔",
+        "imageUrl": "/quiz/options/q16_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Atif Aslam / Romantic Hits 🎸"
+        "text": "Atif Aslam / Romantic Hits 🎸",
+        "emoji": "🎸",
+        "imageUrl": "/quiz/options/q16_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sidhu / Punjabi Beats 🏎️"
+        "text": "Sidhu / Punjabi Beats 🏎️",
+        "emoji": "🏎️",
+        "imageUrl": "/quiz/options/q16_opt2.svg"
       },
       {
         "id": 3,
-        "text": "EDM / English Pop 🎧"
+        "text": "EDM / English Pop 🎧",
+        "emoji": "🎧",
+        "imageUrl": "/quiz/options/q16_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Classic Ghazals & Sufi 📜",
+        "emoji": "📜",
+        "imageUrl": "/quiz/options/q16_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Heavy Rock & Metal ⚡",
+        "emoji": "⚡",
+        "imageUrl": "/quiz/options/q16_opt5.svg"
       }
     ]
   },
@@ -407,19 +621,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Sardi (Chilly Winter) ❄️"
+        "text": "Sardi (Chilly Winter) ❄️",
+        "imageUrl": "/quiz/options/q17_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Barish (Rainy Monsoon) 🌧️"
+        "text": "Barish (Rainy Monsoon) 🌧️",
+        "imageUrl": "/quiz/options/q17_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Khushgawar Spring (Bahar) 🌸"
+        "text": "Khushgawar Spring (Bahar) 🌸",
+        "imageUrl": "/quiz/options/q17_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Garmi (AC Lover) ☀️"
+        "text": "Garmi (AC Lover) ☀️",
+        "imageUrl": "/quiz/options/q17_opt3.svg"
       }
     ]
   },
@@ -431,19 +649,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Action & Thriller 💥"
+        "text": "Action & Thriller 💥",
+        "imageUrl": "/quiz/options/q18_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Romantic Comedy ❤️"
+        "text": "Romantic Comedy ❤️",
+        "imageUrl": "/quiz/options/q18_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Horror & Mystery 👻"
+        "text": "Horror & Mystery 👻",
+        "imageUrl": "/quiz/options/q18_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sci-Fi / Marvel Universe 🚀"
+        "text": "Sci-Fi / Marvel Universe 🚀",
+        "imageUrl": "/quiz/options/q18_opt3.svg"
       }
     ]
   },
@@ -455,19 +677,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Classic Black / Dark 🖤"
+        "text": "Classic Black / Dark 🖤",
+        "imageUrl": "/quiz/options/q19_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Calm Blue / Sky 💙"
+        "text": "Calm Blue / Sky 💙",
+        "imageUrl": "/quiz/options/q19_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Vibrant Yellow / Red 💛"
+        "text": "Vibrant Yellow / Red 💛",
+        "imageUrl": "/quiz/options/q19_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Pastel & Minimalist 🤍"
+        "text": "Pastel & Minimalist 🤍",
+        "imageUrl": "/quiz/options/q19_opt3.svg"
       }
     ]
   },
@@ -479,19 +705,39 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Chocolate Brownie 🍫"
+        "text": "Chocolate Brownie 🍫",
+        "emoji": "🍫",
+        "imageUrl": "/quiz/options/q20_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Vanilla / Caramel 🍨"
+        "text": "Vanilla / Caramel 🍨",
+        "emoji": "🍨",
+        "imageUrl": "/quiz/options/q20_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Mango / Fruity 🥭"
+        "text": "Mango / Fruity 🥭",
+        "emoji": "🥭",
+        "imageUrl": "/quiz/options/q20_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Pistachio / Kulfa 🍧"
+        "text": "Pistachio / Kulfa 🍧",
+        "emoji": "🍧",
+        "imageUrl": "/quiz/options/q20_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Strawberry Swirl 🍓",
+        "emoji": "🍓",
+        "imageUrl": "/quiz/options/q20_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Cookies & Cream 🍪",
+        "emoji": "🍪",
+        "imageUrl": "/quiz/options/q20_opt5.svg"
       }
     ]
   },
@@ -503,19 +749,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Bistar mein Netflix & Chill 🍿"
+        "text": "Bistar mein Netflix & Chill 🍿",
+        "imageUrl": "/quiz/options/q21_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Doston ke sath chai & gup-shup ☕"
+        "text": "Doston ke sath chai & gup-shup ☕",
+        "imageUrl": "/quiz/options/q21_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Outdoor shopping ya sports ⚽"
+        "text": "Outdoor shopping ya sports ⚽",
+        "imageUrl": "/quiz/options/q21_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Nayi jagah explore karna 🚗"
+        "text": "Nayi jagah explore karna 🚗",
+        "imageUrl": "/quiz/options/q21_opt3.svg"
       }
     ]
   },
@@ -527,19 +777,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Eid / Family gatherings 🌙"
+        "text": "Eid / Family gatherings 🌙",
+        "imageUrl": "/quiz/options/q22_opt0.svg"
       },
       {
         "id": 1,
-        "text": "New Year Eve bash 🎆"
+        "text": "New Year Eve bash 🎆",
+        "imageUrl": "/quiz/options/q22_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Apna Birthday party 🎂"
+        "text": "Apna Birthday party 🎂",
+        "imageUrl": "/quiz/options/q22_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Shaadi functions 💃"
+        "text": "Shaadi functions 💃",
+        "imageUrl": "/quiz/options/q22_opt3.svg"
       }
     ]
   },
@@ -551,19 +805,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Maths / Science 🔬"
+        "text": "Maths / Science 🔬",
+        "imageUrl": "/quiz/options/q23_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Literature & Arts 🎨"
+        "text": "Literature & Arts 🎨",
+        "imageUrl": "/quiz/options/q23_opt1.svg"
       },
       {
         "id": 2,
-        "text": "History & Stories 🏛️"
+        "text": "History & Stories 🏛️",
+        "imageUrl": "/quiz/options/q23_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sports & Break Period 🏃"
+        "text": "Sports & Break Period 🏃",
+        "imageUrl": "/quiz/options/q23_opt3.svg"
       }
     ]
   },
@@ -575,19 +833,39 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Karak Doodh Patti Chai ☕"
+        "text": "Karak Doodh Patti Chai ☕",
+        "emoji": "☕",
+        "imageUrl": "/quiz/options/q24_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Iced Cold Coffee 🧋"
+        "text": "Iced Cold Coffee 🧋",
+        "emoji": "🧋",
+        "imageUrl": "/quiz/options/q24_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Fresh Juice / Smoothie 🥤"
+        "text": "Fresh Juice / Smoothie 🥤",
+        "emoji": "🥤",
+        "imageUrl": "/quiz/options/q24_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Chilled Soda / Cold Drink 🧊"
+        "text": "Chilled Soda / Cold Drink 🧊",
+        "emoji": "🧊",
+        "imageUrl": "/quiz/options/q24_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Green Tea / Detox 🍵",
+        "emoji": "🍵",
+        "imageUrl": "/quiz/options/q24_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Mint Lemonade / Refreshing 🍋",
+        "emoji": "🍋",
+        "imageUrl": "/quiz/options/q24_opt5.svg"
       }
     ]
   },
@@ -599,19 +877,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Kapray aur Outfits 👗"
+        "text": "Kapray aur Outfits 👗",
+        "imageUrl": "/quiz/options/q25_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sneakers aur Jootay 👟"
+        "text": "Sneakers aur Jootay 👟",
+        "imageUrl": "/quiz/options/q25_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Tech gadgets & accessories 📱"
+        "text": "Tech gadgets & accessories 📱",
+        "imageUrl": "/quiz/options/q25_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Khane peene ki cheezein 🍕"
+        "text": "Khane peene ki cheezein 🍕",
+        "imageUrl": "/quiz/options/q25_opt3.svg"
       }
     ]
   },
@@ -623,19 +905,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Ludo Star 🎲"
+        "text": "Ludo Star 🎲",
+        "imageUrl": "/quiz/options/q26_opt0.svg"
       },
       {
         "id": 1,
-        "text": "PUBG / COD Mobile 🔫"
+        "text": "PUBG / COD Mobile 🔫",
+        "imageUrl": "/quiz/options/q26_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Chess / Mind games ♟️"
+        "text": "Chess / Mind games ♟️",
+        "imageUrl": "/quiz/options/q26_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Subway Surfers / Casual games 🏃"
+        "text": "Subway Surfers / Casual games 🏃",
+        "imageUrl": "/quiz/options/q26_opt3.svg"
       }
     ]
   },
@@ -647,19 +933,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Early morning freshness 🌅"
+        "text": "Early morning freshness 🌅",
+        "imageUrl": "/quiz/options/q27_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Golden sunset evening 🌇"
+        "text": "Golden sunset evening 🌇",
+        "imageUrl": "/quiz/options/q27_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Late midnight peace 🌌"
+        "text": "Late midnight peace 🌌",
+        "imageUrl": "/quiz/options/q27_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Dopehar ki neend 😴"
+        "text": "Dopehar ki neend 😴",
+        "imageUrl": "/quiz/options/q27_opt3.svg"
       }
     ]
   },
@@ -671,19 +961,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Soch samajh kar budget mein 💡"
+        "text": "Soch samajh kar budget mein 💡",
+        "imageUrl": "/quiz/options/q28_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Impulsive buyer (jo dikhe khareed lo) 💸"
+        "text": "Impulsive buyer (jo dikhe khareed lo) 💸",
+        "imageUrl": "/quiz/options/q28_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Window shopping only 👀"
+        "text": "Window shopping only 👀",
+        "imageUrl": "/quiz/options/q28_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf sale ya discounts par 🏷️"
+        "text": "Sirf sale ya discounts par 🏷️",
+        "imageUrl": "/quiz/options/q28_opt3.svg"
       }
     ]
   },
@@ -695,19 +989,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Hamesha waqt se 10 minute pehle 🕒"
+        "text": "Hamesha waqt se 10 minute pehle 🕒",
+        "imageUrl": "/quiz/options/q29_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Bilkul exact time par 🎯"
+        "text": "Bilkul exact time par 🎯",
+        "imageUrl": "/quiz/options/q29_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Hamesha 'bas 5 minute' late 🐢"
+        "text": "Hamesha 'bas 5 minute' late 🐢",
+        "imageUrl": "/quiz/options/q29_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Aakhri minute par plan cancel 🙈"
+        "text": "Aakhri minute par plan cancel 🙈",
+        "imageUrl": "/quiz/options/q29_opt3.svg"
       }
     ]
   },
@@ -719,19 +1017,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Super neat aur organized ✨"
+        "text": "Super neat aur organized ✨",
+        "imageUrl": "/quiz/options/q30_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Organized chaos (mujhe sab pata hai) 📁"
+        "text": "Organized chaos (mujhe sab pata hai) 📁",
+        "imageUrl": "/quiz/options/q30_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Har taraf saman bikhra hua 🌀"
+        "text": "Har taraf saman bikhra hua 🌀",
+        "imageUrl": "/quiz/options/q30_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Jab mehman ayen tab hi saaf 🛋️"
+        "text": "Jab mehman ayen tab hi saaf 🛋️",
+        "imageUrl": "/quiz/options/q30_opt3.svg"
       }
     ]
   },
@@ -743,19 +1045,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "1 second mein (Phone hamesha hath mein) ⚡"
+        "text": "1 second mein (Phone hamesha hath mein) ⚡",
+        "imageUrl": "/quiz/options/q31_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Kuch ghanton baad ⏳"
+        "text": "Kuch ghanton baad ⏳",
+        "imageUrl": "/quiz/options/q31_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Seen karke bhool jana 👻"
+        "text": "Seen karke bhool jana 👻",
+        "imageUrl": "/quiz/options/q31_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf voice notes se 🎙️"
+        "text": "Sirf voice notes se 🎙️",
+        "imageUrl": "/quiz/options/q31_opt3.svg"
       }
     ]
   },
@@ -767,19 +1073,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Start hone se pehle popcorn khatam 🍿"
+        "text": "Start hone se pehle popcorn khatam 🍿",
+        "imageUrl": "/quiz/options/q32_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Darmiyan mein spoiler maangna 🗣️"
+        "text": "Darmiyan mein spoiler maangna 🗣️",
+        "imageUrl": "/quiz/options/q32_opt1.svg"
       },
       {
         "id": 2,
-        "text": "15 minute mein so jana 😴"
+        "text": "15 minute mein so jana 😴",
+        "imageUrl": "/quiz/options/q32_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Puri movie concentrate karna 🤫"
+        "text": "Puri movie concentrate karna 🤫",
+        "imageUrl": "/quiz/options/q32_opt3.svg"
       }
     ]
   },
@@ -791,19 +1101,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Pehle alarm par foran uthna 🏃"
+        "text": "Pehle alarm par foran uthna 🏃",
+        "imageUrl": "/quiz/options/q33_opt0.svg"
       },
       {
         "id": 1,
-        "text": "5 baar snooze dabana 💤"
+        "text": "5 baar snooze dabana 💤",
+        "imageUrl": "/quiz/options/q33_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Alarm band karke dobara sona 🛌"
+        "text": "Alarm band karke dobara sona 🛌",
+        "imageUrl": "/quiz/options/q33_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Alarm sune bina sote rehna 🔕"
+        "text": "Alarm sune bina sote rehna 🔕",
+        "imageUrl": "/quiz/options/q33_opt3.svg"
       }
     ]
   },
@@ -815,19 +1129,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Pocket check (Phone, Wallet, Keys) 🔍"
+        "text": "Pocket check (Phone, Wallet, Keys) 🔍",
+        "imageUrl": "/quiz/options/q34_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Hamesha koi cheez bhool jana 🤦"
+        "text": "Hamesha koi cheez bhool jana 🤦",
+        "imageUrl": "/quiz/options/q34_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Aaine mein 10 baar dekhna 🪞"
+        "text": "Aaine mein 10 baar dekhna 🪞",
+        "imageUrl": "/quiz/options/q34_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Late ho kar bhaagte hue nikalna ⚡"
+        "text": "Late ho kar bhaagte hue nikalna ⚡",
+        "imageUrl": "/quiz/options/q34_opt3.svg"
       }
     ]
   },
@@ -839,19 +1157,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Foran maan kar maafi mangna 🤝"
+        "text": "Foran maan kar maafi mangna 🤝",
+        "imageUrl": "/quiz/options/q35_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Kisi doosre par ilzam lagana 😂"
+        "text": "Kisi doosre par ilzam lagana 😂",
+        "imageUrl": "/quiz/options/q35_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Haste hue baat taal dena 😅"
+        "text": "Haste hue baat taal dena 😅",
+        "imageUrl": "/quiz/options/q35_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Deep overthinking mein chale jana 🧠"
+        "text": "Deep overthinking mein chale jana 🧠",
+        "imageUrl": "/quiz/options/q35_opt3.svg"
       }
     ]
   },
@@ -863,19 +1185,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Din mein 3-4 cup lazmi ☕"
+        "text": "Din mein 3-4 cup lazmi ☕",
+        "imageUrl": "/quiz/options/q36_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sirf nashte ke waqt 🍞"
+        "text": "Sirf nashte ke waqt 🍞",
+        "imageUrl": "/quiz/options/q36_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Kabhi kabhi jab mood ho 🥤"
+        "text": "Kabhi kabhi jab mood ho 🥤",
+        "imageUrl": "/quiz/options/q36_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Chai bilkul pasand nahi 🚫"
+        "text": "Chai bilkul pasand nahi 🚫",
+        "imageUrl": "/quiz/options/q36_opt3.svg"
       }
     ]
   },
@@ -887,19 +1213,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Foran dost ban jana (Extrovert) 🤗"
+        "text": "Foran dost ban jana (Extrovert) 🤗",
+        "imageUrl": "/quiz/options/q37_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Thoda sharmila aur reserved (Introvert) 😶"
+        "text": "Thoda sharmila aur reserved (Introvert) 😶",
+        "imageUrl": "/quiz/options/q37_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Observe karna phir baat karna 🧐"
+        "text": "Observe karna phir baat karna 🧐",
+        "imageUrl": "/quiz/options/q37_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf formality wali baatein 👔"
+        "text": "Sirf formality wali baatein 👔",
+        "imageUrl": "/quiz/options/q37_opt3.svg"
       }
     ]
   },
@@ -911,19 +1241,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Daily stories aur posts 🌟"
+        "text": "Daily stories aur posts 🌟",
+        "imageUrl": "/quiz/options/q38_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Mahine mein ek adhi photo 🖼️"
+        "text": "Mahine mein ek adhi photo 🖼️",
+        "imageUrl": "/quiz/options/q38_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sirf doosron ki posts dekhna (Lurker) 👀"
+        "text": "Sirf doosron ki posts dekhna (Lurker) 👀",
+        "imageUrl": "/quiz/options/q38_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf memes share karna 🤣"
+        "text": "Sirf memes share karna 🤣",
+        "imageUrl": "/quiz/options/q38_opt3.svg"
       }
     ]
   },
@@ -935,19 +1269,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Chup chaap dawa le kar aaram 💊"
+        "text": "Chup chaap dawa le kar aaram 💊",
+        "imageUrl": "/quiz/options/q39_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Thoda sa bimaar ho kar dramay karna 🎭"
+        "text": "Thoda sa bimaar ho kar dramay karna 🎭",
+        "imageUrl": "/quiz/options/q39_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Bimari ko ignore karke kaam karna 💼"
+        "text": "Bimari ko ignore karke kaam karna 💼",
+        "imageUrl": "/quiz/options/q39_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Doctor ke paas jaane se darna 🏥"
+        "text": "Doctor ke paas jaane se darna 🏥",
+        "imageUrl": "/quiz/options/q39_opt3.svg"
       }
     ]
   },
@@ -959,19 +1297,15 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Desi Dum Biryani hamesha! 🍛"
+        "text": "Desi Dum Biryani hamesha! 🍛",
+        "emoji": "🍛",
+        "imageUrl": "/quiz/options/q40_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Cheesy Loaded Pizza! 🍕"
-      },
-      {
-        "id": 2,
-        "text": "Dono 50-50 ⚖️"
-      },
-      {
-        "id": 3,
-        "text": "Burger aur Fries 🍔"
+        "text": "Cheesy Loaded Pizza! 🍕",
+        "emoji": "🍕",
+        "imageUrl": "/quiz/options/q40_opt1.svg"
       }
     ]
   },
@@ -983,19 +1317,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Masterchef level khana banana 👨‍🍳"
+        "text": "Masterchef level khana banana 👨‍🍳",
+        "imageUrl": "/quiz/options/q41_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Maggi aur Anda banana bas 🍜"
+        "text": "Maggi aur Anda banana bas 🍜",
+        "imageUrl": "/quiz/options/q41_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Chai aur toast tak limited ☕"
+        "text": "Chai aur toast tak limited ☕",
+        "imageUrl": "/quiz/options/q41_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Kitchen mein aag lag sakti hai 🔥"
+        "text": "Kitchen mein aag lag sakti hai 🔥",
+        "imageUrl": "/quiz/options/q41_opt3.svg"
       }
     ]
   },
@@ -1007,19 +1345,15 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Teekha aur Chatpata Spicy 🌶️"
+        "text": "Teekha aur Chatpata Spicy 🌶️",
+        "emoji": "🌶️",
+        "imageUrl": "/quiz/options/q42_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Meethi Desserts & Chocolates 🍰"
-      },
-      {
-        "id": 2,
-        "text": "Pehle Spicy phir Meetha 😋"
-      },
-      {
-        "id": 3,
-        "text": "Simple sada khana 🥗"
+        "text": "Meethi Desserts & Chocolates 🍰",
+        "emoji": "🍰",
+        "imageUrl": "/quiz/options/q42_opt1.svg"
       }
     ]
   },
@@ -1031,19 +1365,15 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Zulm hai pizza par! Bilkul nahi ❌"
+        "text": "Zulm hai pizza par! Bilkul nahi ❌",
+        "emoji": "❌",
+        "imageUrl": "/quiz/options/q43_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Delicious combo hai! Pasandeeda 🍍"
-      },
-      {
-        "id": 2,
-        "text": "Kha leta hoon koi issue nahi 🤷"
-      },
-      {
-        "id": 3,
-        "text": "Kabhi try nahi kiya 🤔"
+        "text": "Delicious combo hai! Pasandeeda 🍍",
+        "emoji": "🍍",
+        "imageUrl": "/quiz/options/q43_opt1.svg"
       }
     ]
   },
@@ -1055,19 +1385,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Instant 2-Minute Noodles 🍜"
+        "text": "Instant 2-Minute Noodles 🍜",
+        "imageUrl": "/quiz/options/q44_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Lays chips ya biscuits 🍪"
+        "text": "Lays chips ya biscuits 🍪",
+        "imageUrl": "/quiz/options/q44_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Fridge mein bacha hua salan 🍲"
+        "text": "Fridge mein bacha hua salan 🍲",
+        "imageUrl": "/quiz/options/q44_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Late night food delivery order 🛵"
+        "text": "Late night food delivery order 🛵",
+        "imageUrl": "/quiz/options/q44_opt3.svg"
       }
     ]
   },
@@ -1079,19 +1413,39 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Crispy Zinger Burger 🍗"
+        "text": "Crispy Zinger Burger 🍗",
+        "emoji": "🍗",
+        "imageUrl": "/quiz/options/q45_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Juicy Beef Burger 🥩"
+        "text": "Juicy Beef Burger 🥩",
+        "emoji": "🥩",
+        "imageUrl": "/quiz/options/q45_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Desi Bun Kabab 🥙"
+        "text": "Desi Bun Kabab 🥙",
+        "emoji": "🥙",
+        "imageUrl": "/quiz/options/q45_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Grilled Chicken Burger 🥪"
+        "text": "Grilled Chicken Burger 🥪",
+        "emoji": "🥪",
+        "imageUrl": "/quiz/options/q45_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Cheesy Loaded Fries 🍟",
+        "emoji": "🍟",
+        "imageUrl": "/quiz/options/q45_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Crispy Fried Chicken Wings 🍗",
+        "emoji": "🍗",
+        "imageUrl": "/quiz/options/q45_opt5.svg"
       }
     ]
   },
@@ -1103,19 +1457,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Crispy Samosa ya Pakoray 🥟"
+        "text": "Crispy Samosa ya Pakoray 🥟",
+        "imageUrl": "/quiz/options/q46_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Bakery Cake Rusk ya Biscuit 🍪"
+        "text": "Bakery Cake Rusk ya Biscuit 🍪",
+        "imageUrl": "/quiz/options/q46_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Namak Paray ya Nimko 🥨"
+        "text": "Namak Paray ya Nimko 🥨",
+        "imageUrl": "/quiz/options/q46_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf sada chai kafi hai ☕"
+        "text": "Sirf sada chai kafi hai ☕",
+        "imageUrl": "/quiz/options/q46_opt3.svg"
       }
     ]
   },
@@ -1127,19 +1485,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Crispy Gol Gappay 🥣"
+        "text": "Crispy Gol Gappay 🥣",
+        "imageUrl": "/quiz/options/q47_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Dahi Bhallay ya Chaat 🥗"
+        "text": "Dahi Bhallay ya Chaat 🥗",
+        "imageUrl": "/quiz/options/q47_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Shawarma Roll 🌯"
+        "text": "Shawarma Roll 🌯",
+        "imageUrl": "/quiz/options/q47_opt2.svg"
       },
       {
         "id": 3,
-        "text": "French Fries with Mayo 🍟"
+        "text": "French Fries with Mayo 🍟",
+        "imageUrl": "/quiz/options/q47_opt3.svg"
       }
     ]
   },
@@ -1151,19 +1513,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Kitna bhi mirch ho, aaram se khata hoon 💪"
+        "text": "Kitna bhi mirch ho, aaram se khata hoon 💪",
+        "imageUrl": "/quiz/options/q48_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Aankhon se ansoo aur naak behna 😭"
+        "text": "Aankhon se ansoo aur naak behna 😭",
+        "imageUrl": "/quiz/options/q48_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Pani ki botal gatak jana 🚰"
+        "text": "Pani ki botal gatak jana 🚰",
+        "imageUrl": "/quiz/options/q48_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Spicy khane se door rehta hoon 🥛"
+        "text": "Spicy khane se door rehta hoon 🥛",
+        "imageUrl": "/quiz/options/q48_opt3.svg"
       }
     ]
   },
@@ -1175,19 +1541,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Halwa Puri ya Nihari 🥞"
+        "text": "Halwa Puri ya Nihari 🥞",
+        "imageUrl": "/quiz/options/q49_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Anda Paratha with Karak Chai 🍳"
+        "text": "Anda Paratha with Karak Chai 🍳",
+        "imageUrl": "/quiz/options/q49_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Cereal ya Bread Butter 🥣"
+        "text": "Cereal ya Bread Butter 🥣",
+        "imageUrl": "/quiz/options/q49_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Subah ka nashta skip karna ⏩"
+        "text": "Subah ka nashta skip karna ⏩",
+        "imageUrl": "/quiz/options/q49_opt3.svg"
       }
     ]
   },
@@ -1199,19 +1569,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Hamesha purani safe pasand order karna 🎯"
+        "text": "Hamesha purani safe pasand order karna 🎯",
+        "imageUrl": "/quiz/options/q50_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Har dafa naya dish experiment karna 🧪"
+        "text": "Har dafa naya dish experiment karna 🧪",
+        "imageUrl": "/quiz/options/q50_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Jo sath wale order karein wahi 👥"
+        "text": "Jo sath wale order karein wahi 👥",
+        "imageUrl": "/quiz/options/q50_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Waiter se recommendation maangna 🤵"
+        "text": "Waiter se recommendation maangna 🤵",
+        "imageUrl": "/quiz/options/q50_opt3.svg"
       }
     ]
   },
@@ -1223,19 +1597,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Strict gym diet aur protein 🥑"
+        "text": "Strict gym diet aur protein 🥑",
+        "imageUrl": "/quiz/options/q51_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Monday ko start, Tuesday ko khatam 🍔"
+        "text": "Monday ko start, Tuesday ko khatam 🍔",
+        "imageUrl": "/quiz/options/q51_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Dieting mere bas ki baat nahi 🤤"
+        "text": "Dieting mere bas ki baat nahi 🤤",
+        "imageUrl": "/quiz/options/q51_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Balance eating (har cheez thodi thodi) ⚖️"
+        "text": "Balance eating (har cheez thodi thodi) ⚖️",
+        "imageUrl": "/quiz/options/q51_opt3.svg"
       }
     ]
   },
@@ -1247,19 +1625,15 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Barfani Pahar aur Thandi Hawa 🏔️"
+        "text": "Barfani Pahar aur Thandi Hawa 🏔️",
+        "emoji": "🏔️",
+        "imageUrl": "/quiz/options/q52_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Samandar ka Kinara aur Sunset 🏖️"
-      },
-      {
-        "id": 2,
-        "text": "Dono jagah bari pasand hain 🌍"
-      },
-      {
-        "id": 3,
-        "text": "Ghar ka sakoon best hai 🛋️"
+        "text": "Samandar ka Kinara aur Sunset 🏖️",
+        "emoji": "🏖️",
+        "imageUrl": "/quiz/options/q52_opt1.svg"
       }
     ]
   },
@@ -1271,19 +1645,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "1 hafte pehle checklist bana kar 📝"
+        "text": "1 hafte pehle checklist bana kar 📝",
+        "imageUrl": "/quiz/options/q53_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Travel se 1 ghanta pehle jald bazi mein ⚡"
+        "text": "Travel se 1 ghanta pehle jald bazi mein ⚡",
+        "imageUrl": "/quiz/options/q53_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Poora ghar bag mein daal lena 🎒"
+        "text": "Poora ghar bag mein daal lena 🎒",
+        "imageUrl": "/quiz/options/q53_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf 2 joray aur charger le jana 🧳"
+        "text": "Sirf 2 joray aur charger le jana 🧳",
+        "imageUrl": "/quiz/options/q53_opt3.svg"
       }
     ]
   },
@@ -1295,19 +1673,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Driver aur Navigator 🗺️"
+        "text": "Driver aur Navigator 🗺️",
+        "imageUrl": "/quiz/options/q54_opt0.svg"
       },
       {
         "id": 1,
-        "text": "DJ (Music controller) 🎶"
+        "text": "DJ (Music controller) 🎶",
+        "imageUrl": "/quiz/options/q54_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Snack khane wala aur baatein karne wala 🍟"
+        "text": "Snack khane wala aur baatein karne wala 🍟",
+        "imageUrl": "/quiz/options/q54_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Puri drive sote hue guzarna 😴"
+        "text": "Puri drive sote hue guzarna 😴",
+        "imageUrl": "/quiz/options/q54_opt3.svg"
       }
     ]
   },
@@ -1319,19 +1701,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Window seat (View dekhne ke liye) 🪟"
+        "text": "Window seat (View dekhne ke liye) 🪟",
+        "imageUrl": "/quiz/options/q55_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Aisle seat (Aana jana aasan) 🚶"
+        "text": "Aisle seat (Aana jana aasan) 🚶",
+        "imageUrl": "/quiz/options/q55_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Koi bhi chalegi 🤷"
+        "text": "Koi bhi chalegi 🤷",
+        "imageUrl": "/quiz/options/q55_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Flight se thoda dar lagta hai 🛫"
+        "text": "Flight se thoda dar lagta hai 🛫",
+        "imageUrl": "/quiz/options/q55_opt3.svg"
       }
     ]
   },
@@ -1343,19 +1729,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Luxury 5-Star Hotel 🏨"
+        "text": "Luxury 5-Star Hotel 🏨",
+        "imageUrl": "/quiz/options/q56_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Paharon mein Cozy Wooden Cottage 🪵"
+        "text": "Paharon mein Cozy Wooden Cottage 🪵",
+        "imageUrl": "/quiz/options/q56_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Adventure Camping Tent under Stars ⛺"
+        "text": "Adventure Camping Tent under Stars ⛺",
+        "imageUrl": "/quiz/options/q56_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Budget friendly hostel 🎒"
+        "text": "Budget friendly hostel 🎒",
+        "imageUrl": "/quiz/options/q56_opt3.svg"
       }
     ]
   },
@@ -1367,19 +1757,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Subah se shaam sab tourist spots dekhna 📸"
+        "text": "Subah se shaam sab tourist spots dekhna 📸",
+        "imageUrl": "/quiz/options/q57_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Local food aur cafes explore karna ☕"
+        "text": "Local food aur cafes explore karna ☕",
+        "imageUrl": "/quiz/options/q57_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Bina kisi plan ke awara gardi karna 🚶"
+        "text": "Bina kisi plan ke awara gardi karna 🚶",
+        "imageUrl": "/quiz/options/q57_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Hotel mein aaram karna aur relax 🛋️"
+        "text": "Hotel mein aaram karna aur relax 🛋️",
+        "imageUrl": "/quiz/options/q57_opt3.svg"
       }
     ]
   },
@@ -1391,19 +1785,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Google Maps nikal kar rasta dhoondna 📱"
+        "text": "Google Maps nikal kar rasta dhoondna 📱",
+        "imageUrl": "/quiz/options/q58_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Kisi local se address poochna 🗣️"
+        "text": "Kisi local se address poochna 🗣️",
+        "imageUrl": "/quiz/options/q58_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Ghabra kar panic karna 😱"
+        "text": "Ghabra kar panic karna 😱",
+        "imageUrl": "/quiz/options/q58_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Nayi jagah dekhne ka maza lena 🧭"
+        "text": "Nayi jagah dekhne ka maza lena 🧭",
+        "imageUrl": "/quiz/options/q58_opt3.svg"
       }
     ]
   },
@@ -1415,19 +1813,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Chill aur bina nakhre wala dost 🤝"
+        "text": "Chill aur bina nakhre wala dost 🤝",
+        "imageUrl": "/quiz/options/q59_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Har cheez plan karne wala planner 📋"
+        "text": "Har cheez plan karne wala planner 📋",
+        "imageUrl": "/quiz/options/q59_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Photographer dost jo achi photos le 📸"
+        "text": "Photographer dost jo achi photos le 📸",
+        "imageUrl": "/quiz/options/q59_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Solo travel (Akela safar) 🧘"
+        "text": "Solo travel (Akela safar) 🧘",
+        "imageUrl": "/quiz/options/q59_opt3.svg"
       }
     ]
   },
@@ -1439,19 +1841,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Souvenirs aur gifts se bag bhar dena 🎁"
+        "text": "Souvenirs aur gifts se bag bhar dena 🎁",
+        "imageUrl": "/quiz/options/q60_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sirf local khane pe kharch karna 🍜"
+        "text": "Sirf local khane pe kharch karna 🍜",
+        "imageUrl": "/quiz/options/q60_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Budget control mein rakhna 📉"
+        "text": "Budget control mein rakhna 📉",
+        "imageUrl": "/quiz/options/q60_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Har dukan par bargaining karna 🗣️"
+        "text": "Har dukan par bargaining karna 🗣️",
+        "imageUrl": "/quiz/options/q60_opt3.svg"
       }
     ]
   },
@@ -1463,19 +1869,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Bungee jumping & Skydiving ready! 🪂"
+        "text": "Bungee jumping & Skydiving ready! 🪂",
+        "imageUrl": "/quiz/options/q61_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Water sports aur boating 🚤"
+        "text": "Water sports aur boating 🚤",
+        "imageUrl": "/quiz/options/q61_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Zameen par reh kar video banana 📱"
+        "text": "Zameen par reh kar video banana 📱",
+        "imageUrl": "/quiz/options/q61_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Door se dekh kar hi tauba karna 🙈"
+        "text": "Door se dekh kar hi tauba karna 🙈",
+        "imageUrl": "/quiz/options/q61_opt3.svg"
       }
     ]
   },
@@ -1487,19 +1897,15 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Purani tareekhi imaratein aur museums 🏛️"
+        "text": "Purani tareekhi imaratein aur museums 🏛️",
+        "emoji": "🏛️",
+        "imageUrl": "/quiz/options/q62_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Rollercoasters aur theme parks 🎢"
-      },
-      {
-        "id": 2,
-        "text": "Khuli qudrat aur jungles 🌲"
-      },
-      {
-        "id": 3,
-        "text": "Shopping malls 🛍️"
+        "text": "Rollercoasters aur modern theme parks 🎢",
+        "emoji": "🎢",
+        "imageUrl": "/quiz/options/q62_opt1.svg"
       }
     ]
   },
@@ -1511,19 +1917,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Khirki se scenery dekhna bohot pasand hai 🚂"
+        "text": "Khirki se scenery dekhna bohot pasand hai 🚂",
+        "imageUrl": "/quiz/options/q63_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Lambi aur thaka dene wali lagti hai 🥱"
+        "text": "Lambi aur thaka dene wali lagti hai 🥱",
+        "imageUrl": "/quiz/options/q63_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Chai aur doston ke sath maza aata hai ☕"
+        "text": "Chai aur doston ke sath maza aata hai ☕",
+        "imageUrl": "/quiz/options/q63_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Bus ya gaari zyada behtar hai 🚌"
+        "text": "Bus ya gaari zyada behtar hai 🚌",
+        "imageUrl": "/quiz/options/q63_opt3.svg"
       }
     ]
   },
@@ -1535,19 +1945,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Front bencher (Teacher ka favourite) 🤓"
+        "text": "Front bencher (Teacher ka favourite) 🤓",
+        "imageUrl": "/quiz/options/q64_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Backbencher (Masti aur hansi mazak) 😎"
+        "text": "Backbencher (Masti aur hansi mazak) 😎",
+        "imageUrl": "/quiz/options/q64_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Middle bencher (Khamosh student) 🎒"
+        "text": "Middle bencher (Khamosh student) 🎒",
+        "imageUrl": "/quiz/options/q64_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Medical room mein aaram 🩺"
+        "text": "Medical room mein aaram 🩺",
+        "imageUrl": "/quiz/options/q64_opt3.svg"
       }
     ]
   },
@@ -1559,19 +1973,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Pilot ya Astronaut 👨‍🚀"
+        "text": "Pilot ya Astronaut 👨‍🚀",
+        "imageUrl": "/quiz/options/q65_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Doctor ya Engineer 🩺"
+        "text": "Doctor ya Engineer 🩺",
+        "imageUrl": "/quiz/options/q65_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Cricketer ya Sports Star 🏏"
+        "text": "Cricketer ya Sports Star 🏏",
+        "imageUrl": "/quiz/options/q65_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Actor ya Rockstar 🎸"
+        "text": "Actor ya Rockstar 🎸",
+        "imageUrl": "/quiz/options/q65_opt3.svg"
       }
     ]
   },
@@ -1583,19 +2001,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Chupan Chupai (Hide & Seek) 🙈"
+        "text": "Chupan Chupai (Hide & Seek) 🙈",
+        "imageUrl": "/quiz/options/q66_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Galli Cricket 🏏"
+        "text": "Galli Cricket 🏏",
+        "imageUrl": "/quiz/options/q66_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Video Games / Mario 🎮"
+        "text": "Video Games / Mario 🎮",
+        "imageUrl": "/quiz/options/q66_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Baraf Pani / Pakram Pakrai 🏃"
+        "text": "Baraf Pani / Pakram Pakrai 🏃",
+        "imageUrl": "/quiz/options/q66_opt3.svg"
       }
     ]
   },
@@ -1607,19 +2029,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Proudly ghar walon ko dikhana 🏅"
+        "text": "Proudly ghar walon ko dikhana 🏅",
+        "imageUrl": "/quiz/options/q67_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sign khud karne ki koshish karna ✍️"
+        "text": "Sign khud karne ki koshish karna ✍️",
+        "imageUrl": "/quiz/options/q67_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Pehle ammi ko dikhana taake bach sakoon 🛡️"
+        "text": "Pehle ammi ko dikhana taake bach sakoon 🛡️",
+        "imageUrl": "/quiz/options/q67_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Dil ki dharkan tez ho jana 💓"
+        "text": "Dil ki dharkan tez ho jana 💓",
+        "imageUrl": "/quiz/options/q67_opt3.svg"
       }
     ]
   },
@@ -1631,19 +2057,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Der tak bahar khelne par ⚽"
+        "text": "Der tak bahar khelne par ⚽",
+        "imageUrl": "/quiz/options/q68_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Parrhai na karne aur TV dekhne par 📺"
+        "text": "Parrhai na karne aur TV dekhne par 📺",
+        "imageUrl": "/quiz/options/q68_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Bhai behno se larrai karne par 🥊"
+        "text": "Bhai behno se larrai karne par 🥊",
+        "imageUrl": "/quiz/options/q68_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Cheezein tornay ya khonay par 💥"
+        "text": "Cheezein tornay ya khonay par 💥",
+        "imageUrl": "/quiz/options/q68_opt3.svg"
       }
     ]
   },
@@ -1655,19 +2085,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Tom and Jerry 🐱🐭"
+        "text": "Tom and Jerry 🐱🐭",
+        "imageUrl": "/quiz/options/q69_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Ben 10 / Dragon Ball ⚡"
+        "text": "Ben 10 / Dragon Ball ⚡",
+        "imageUrl": "/quiz/options/q69_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Doraemon / Shinchan 🚪"
+        "text": "Doraemon / Shinchan 🚪",
+        "imageUrl": "/quiz/options/q69_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Scooby Doo / Courage 🐕"
+        "text": "Scooby Doo / Courage 🐕",
+        "imageUrl": "/quiz/options/q69_opt3.svg"
       }
     ]
   },
@@ -1679,19 +2113,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Gullak mein save karta tha 🐖"
+        "text": "Gullak mein save karta tha 🐖",
+        "imageUrl": "/quiz/options/q70_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Canteen se chips aur toffees 🍬"
+        "text": "Canteen se chips aur toffees 🍬",
+        "imageUrl": "/quiz/options/q70_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Toys aur stickers khareedna 🧸"
+        "text": "Toys aur stickers khareedna 🧸",
+        "imageUrl": "/quiz/options/q70_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Ek hi din mein ura dena 💸"
+        "text": "Ek hi din mein ura dena 💸",
+        "imageUrl": "/quiz/options/q70_opt3.svg"
       }
     ]
   },
@@ -1703,19 +2141,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Bohot zyada, light on rakh kar sona 💡"
+        "text": "Bohot zyada, light on rakh kar sona 💡",
+        "imageUrl": "/quiz/options/q71_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Darr nahi lagta tha, bahadur tha 🦁"
+        "text": "Darr nahi lagta tha, bahadur tha 🦁",
+        "imageUrl": "/quiz/options/q71_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Bhoot ki kahani sun kar dar lagta tha 📖"
+        "text": "Bhoot ki kahani sun kar dar lagta tha 📖",
+        "imageUrl": "/quiz/options/q71_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sirf akele hone par 🙈"
+        "text": "Sirf akele hone par 🙈",
+        "imageUrl": "/quiz/options/q71_opt3.svg"
       }
     ]
   },
@@ -1727,19 +2169,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Pehli baar mein hi ijazat mil jati thi 👍"
+        "text": "Pehli baar mein hi ijazat mil jati thi 👍",
+        "imageUrl": "/quiz/options/q72_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Achay marks lane ka wada kar ke 🤝"
+        "text": "Achay marks lane ka wada kar ke 🤝",
+        "imageUrl": "/quiz/options/q72_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Ro dho kar manana parta tha 😭"
+        "text": "Ro dho kar manana parta tha 😭",
+        "imageUrl": "/quiz/options/q72_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Doston ke ghar walon se call karwana 📞"
+        "text": "Doston ke ghar walon se call karwana 📞",
+        "imageUrl": "/quiz/options/q72_opt3.svg"
       }
     ]
   },
@@ -1751,19 +2197,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "WWE ke moves try karna 🤼"
+        "text": "WWE ke moves try karna 🤼",
+        "imageUrl": "/quiz/options/q73_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Foran ammi ko shikayat lagana 🏃"
+        "text": "Foran ammi ko shikayat lagana 🏃",
+        "imageUrl": "/quiz/options/q73_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Room se bahar nikaal dena 🚪"
+        "text": "Room se bahar nikaal dena 🚪",
+        "imageUrl": "/quiz/options/q73_opt2.svg"
       },
       {
         "id": 3,
-        "text": "5 minute baad wapis dost ban jana 🤝"
+        "text": "5 minute baad wapis dost ban jana 🤝",
+        "imageUrl": "/quiz/options/q73_opt3.svg"
       }
     ]
   },
@@ -1775,19 +2225,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Emergency button baar baar dabana 🚨"
+        "text": "Emergency button baar baar dabana 🚨",
+        "imageUrl": "/quiz/options/q74_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Ghabraye bina phone par meme dekhna 📱"
+        "text": "Ghabraye bina phone par meme dekhna 📱",
+        "imageUrl": "/quiz/options/q74_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sab ko tasalli dena ke kuch nahi hoga 🦸"
+        "text": "Sab ko tasalli dena ke kuch nahi hoga 🦸",
+        "imageUrl": "/quiz/options/q74_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Oxygen khatam hone ki overthinking 😰"
+        "text": "Oxygen khatam hone ki overthinking 😰",
+        "imageUrl": "/quiz/options/q74_opt3.svg"
       }
     ]
   },
@@ -1799,19 +2253,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Aise act karna jaise hawa ko awaz di thi 💨"
+        "text": "Aise act karna jaise hawa ko awaz di thi 💨",
+        "imageUrl": "/quiz/options/q75_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sorry bol kar sharminda hona 🙈"
+        "text": "Sorry bol kar sharminda hona 🙈",
+        "imageUrl": "/quiz/options/q75_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Foran apna rasta badal lena 🏃"
+        "text": "Foran apna rasta badal lena 🏃",
+        "imageUrl": "/quiz/options/q75_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Hans kar baat ko mazak bana dena 😂"
+        "text": "Hans kar baat ko mazak bana dena 😂",
+        "imageUrl": "/quiz/options/q75_opt3.svg"
       }
     ]
   },
@@ -1823,19 +2281,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Sab se pehle zombie banne wala 🧟"
+        "text": "Sab se pehle zombie banne wala 🧟",
+        "imageUrl": "/quiz/options/q76_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Leader ban kar group ko bachane wala 🛡️"
+        "text": "Leader ban kar group ko bachane wala 🛡️",
+        "imageUrl": "/quiz/options/q76_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Kahin safe hideout dhoond kar chupne wala 🏚️"
+        "text": "Kahin safe hideout dhoond kar chupne wala 🏚️",
+        "imageUrl": "/quiz/options/q76_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Zombies ke sath friendship karne ki koshish 🤝"
+        "text": "Zombies ke sath friendship karne ki koshish 🤝",
+        "imageUrl": "/quiz/options/q76_opt3.svg"
       }
     ]
   },
@@ -1847,19 +2309,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Aise uthna jaise yeh mera dance step tha 🕺"
+        "text": "Aise uthna jaise yeh mera dance step tha 🕺",
+        "imageUrl": "/quiz/options/q77_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Zameen ko ghoor kar dekhna 🪨"
+        "text": "Zameen ko ghoor kar dekhna 🪨",
+        "imageUrl": "/quiz/options/q77_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Foran idhar udhar dekhna kis kis ne dekha 👀"
+        "text": "Foran idhar udhar dekhna kis kis ne dekha 👀",
+        "imageUrl": "/quiz/options/q77_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Khud par sab se uncha hasna 🤣"
+        "text": "Khud par sab se uncha hasna 🤣",
+        "imageUrl": "/quiz/options/q77_opt3.svg"
       }
     ]
   },
@@ -1871,19 +2337,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Apna private island khareedunga 🏝️"
+        "text": "Apna private island khareedunga 🏝️",
+        "imageUrl": "/quiz/options/q78_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Saray doston ko luxury cars tohfe mein 🏎️"
+        "text": "Saray doston ko luxury cars tohfe mein 🏎️",
+        "imageUrl": "/quiz/options/q78_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Kisi ko bataye bina gaayab ho jaunga 🤫"
+        "text": "Kisi ko bataye bina gaayab ho jaunga 🤫",
+        "imageUrl": "/quiz/options/q78_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Charity aur business shuru karunga 🏢"
+        "text": "Charity aur business shuru karunga 🏢",
+        "imageUrl": "/quiz/options/q78_opt3.svg"
       }
     ]
   },
@@ -1895,19 +2365,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Full rockstar feeling ke sath besura gana 🎸"
+        "text": "Full rockstar feeling ke sath besura gana 🎸",
+        "imageUrl": "/quiz/options/q79_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sharmate hue mic doosre ko pakra dena 🙈"
+        "text": "Sharmate hue mic doosre ko pakra dena 🙈",
+        "imageUrl": "/quiz/options/q79_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Emotional sad song gana 🥺"
+        "text": "Emotional sad song gana 🥺",
+        "imageUrl": "/quiz/options/q79_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Sur-taal ke sath perfect gana 🎶"
+        "text": "Sur-taal ke sath perfect gana 🎶",
+        "imageUrl": "/quiz/options/q79_opt3.svg"
       }
     ]
   },
@@ -1919,19 +2393,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "'Ghar se emergency call aayi hai' 📱"
+        "text": "'Ghar se emergency call aayi hai' 📱",
+        "imageUrl": "/quiz/options/q80_opt0.svg"
       },
       {
         "id": 1,
-        "text": "'Tabiyat achanak kharab ho gayi hai' 🤒"
+        "text": "'Tabiyat achanak kharab ho gayi hai' 🤒",
+        "imageUrl": "/quiz/options/q80_opt1.svg"
       },
       {
         "id": 2,
-        "text": "'Subah bohot jaldi meeting hai' ⏰"
+        "text": "'Subah bohot jaldi meeting hai' ⏰",
+        "imageUrl": "/quiz/options/q80_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Bina bataye chupke se nikal jana (Ghost) 👻"
+        "text": "Bina bataye chupke se nikal jana (Ghost) 👻",
+        "imageUrl": "/quiz/options/q80_opt3.svg"
       }
     ]
   },
@@ -1943,19 +2421,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Doston ke secrets aur baatein sununga 👂"
+        "text": "Doston ke secrets aur baatein sununga 👂",
+        "imageUrl": "/quiz/options/q81_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Mazaahiya prank kar ke logon ko daraunga 🎃"
+        "text": "Mazaahiya prank kar ke logon ko daraunga 🎃",
+        "imageUrl": "/quiz/options/q81_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Shopping malls mein aish karunga 🛍️"
+        "text": "Shopping malls mein aish karunga 🛍️",
+        "imageUrl": "/quiz/options/q81_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Pura din aaram se bhatkunga 🚶"
+        "text": "Pura din aaram se bhatkunga 🚶",
+        "imageUrl": "/quiz/options/q81_opt3.svg"
       }
     ]
   },
@@ -1967,19 +2449,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Fake excitement: 'Yeh to bohot acha hai!' 🤩"
+        "text": "Fake excitement: 'Yeh to bohot acha hai!' 🤩",
+        "imageUrl": "/quiz/options/q82_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Chehre se sachai zahir ho jana 😐"
+        "text": "Chehre se sachai zahir ho jana 😐",
+        "imageUrl": "/quiz/options/q82_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Agli dafa kisi aur ko re-gift kar dena 🔄"
+        "text": "Agli dafa kisi aur ko re-gift kar dena 🔄",
+        "imageUrl": "/quiz/options/q82_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Saaf bol dena ke pasand nahi aya 😅"
+        "text": "Saaf bol dena ke pasand nahi aya 😅",
+        "imageUrl": "/quiz/options/q82_opt3.svg"
       }
     ]
   },
@@ -1991,19 +2477,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "'Janab maine kya kiya hai?' 😇"
+        "text": "'Janab maine kya kiya hai?' 😇",
+        "imageUrl": "/quiz/options/q83_opt0.svg"
       },
       {
         "id": 1,
-        "text": "'Aap jante hain mera chacha kaun hai?' 😂"
+        "text": "'Aap jante hain mera chacha kaun hai?' 😂",
+        "imageUrl": "/quiz/options/q83_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Ghabra kar saray documents nikal lena 📄"
+        "text": "Ghabra kar saray documents nikal lena 📄",
+        "imageUrl": "/quiz/options/q83_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Khamosh reh kar maskeen ban jana 🥺"
+        "text": "Khamosh reh kar maskeen ban jana 🥺",
+        "imageUrl": "/quiz/options/q83_opt3.svg"
       }
     ]
   },
@@ -2015,19 +2505,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Foran hath rakh kar camera band karna ✋"
+        "text": "Foran hath rakh kar camera band karna ✋",
+        "imageUrl": "/quiz/options/q84_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Hair style theek karna 💁"
+        "text": "Hair style theek karna 💁",
+        "imageUrl": "/quiz/options/q84_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Background hide karna 🛋️"
+        "text": "Background hide karna 🛋️",
+        "imageUrl": "/quiz/options/q84_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Confidence se smile karna 😄"
+        "text": "Confidence se smile karna 😄",
+        "imageUrl": "/quiz/options/q84_opt3.svg"
       }
     ]
   },
@@ -2039,19 +2533,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Cheekh maar kar sath wale ko pakar lena 😱"
+        "text": "Cheekh maar kar sath wale ko pakar lena 😱",
+        "imageUrl": "/quiz/options/q85_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Phone ki torch foran on karna 🔦"
+        "text": "Phone ki torch foran on karna 🔦",
+        "imageUrl": "/quiz/options/q85_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Mazak mein bhoot ban kar daraana 👻"
+        "text": "Mazak mein bhoot ban kar daraana 👻",
+        "imageUrl": "/quiz/options/q85_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Khamoshi se blanket mein chup jana 🛌"
+        "text": "Khamoshi se blanket mein chup jana 🛌",
+        "imageUrl": "/quiz/options/q85_opt3.svg"
       }
     ]
   },
@@ -2063,19 +2561,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Paharon ke beech wooden villa 🏔️"
+        "text": "Paharon ke beech wooden villa 🏔️",
+        "imageUrl": "/quiz/options/q86_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Samandar ke samne modern beach house 🏖️"
+        "text": "Samandar ke samne modern beach house 🏖️",
+        "imageUrl": "/quiz/options/q86_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sheher ke markaz mein luxury penthouse 🏙️"
+        "text": "Sheher ke markaz mein luxury penthouse 🏙️",
+        "imageUrl": "/quiz/options/q86_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Khula farm house garden ke sath 🌳"
+        "text": "Khula farm house garden ke sath 🌳",
+        "imageUrl": "/quiz/options/q86_opt3.svg"
       }
     ]
   },
@@ -2087,19 +2589,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Super fast sports car (Ferrari / Porsche) 🏎️"
+        "text": "Super fast sports car (Ferrari / Porsche) 🏎️",
+        "imageUrl": "/quiz/options/q87_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Heavy off-road 4x4 (Defender / Land Cruiser) 🚙"
+        "text": "Heavy off-road 4x4 (Defender / Land Cruiser) 🚙",
+        "imageUrl": "/quiz/options/q87_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Luxury smooth drive (Mercedes / Rolls Royce) 🚘"
+        "text": "Luxury smooth drive (Mercedes / Rolls Royce) 🚘",
+        "imageUrl": "/quiz/options/q87_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Eco-friendly Tesla electric car ⚡"
+        "text": "Eco-friendly Tesla electric car ⚡",
+        "imageUrl": "/quiz/options/q87_opt3.svg"
       }
     ]
   },
@@ -2111,19 +2617,57 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Poori dunya ghoomna aur vlogs banana ✈️"
+        "text": "World Travel Vlogger ✈️",
+        "emoji": "✈️",
+        "imageUrl": "/quiz/options/q88_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Apna cozy cafe ya restaurant kholna ☕"
+        "text": "Cozy Cafe Owner ☕",
+        "emoji": "☕",
+        "imageUrl": "/quiz/options/q88_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Animals shelter aur NGO chalana 🐾"
+        "text": "Animal Shelter / Rescue NGO 🐾",
+        "emoji": "🐾",
+        "imageUrl": "/quiz/options/q88_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Music, art ya gaming studio banana 🎮"
+        "text": "Music / Gaming Studio Creator 🎮",
+        "emoji": "🎮",
+        "imageUrl": "/quiz/options/q88_opt3.svg"
+      },
+      {
+        "id": 4,
+        "text": "Wildlife Photographer 📸",
+        "emoji": "📸",
+        "imageUrl": "/quiz/options/q88_opt4.svg"
+      },
+      {
+        "id": 5,
+        "text": "Famous Fiction Book Author 📖",
+        "emoji": "📖",
+        "imageUrl": "/quiz/options/q88_opt5.svg"
+      },
+      {
+        "id": 6,
+        "text": "Pilot & Flight Explorer 👨‍✈️",
+        "emoji": "👨‍✈️",
+        "imageUrl": "/quiz/options/q88_opt6.svg"
+      },
+      {
+        "id": 7,
+        "text": "Luxury Resort Island Owner 🏝️",
+        "emoji": "🏝️",
+        "imageUrl": "/quiz/options/q88_opt7.svg"
+      },
+      {
+        "id": 8,
+        "text": "Space Astronaut 🚀",
+        "emoji": "🚀",
+        "imageUrl": "/quiz/options/q88_opt8.svg"
       }
     ]
   },
@@ -2135,19 +2679,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Financial freedom aur be-hisaab daulat 💰"
+        "text": "Financial freedom aur be-hisaab daulat 💰",
+        "imageUrl": "/quiz/options/q89_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Maa baap ko dunya ki har khushi dena ❤️"
+        "text": "Maa baap ko dunya ki har khushi dena ❤️",
+        "imageUrl": "/quiz/options/q89_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Apne field mein mashhoor aur kamyab hona 🌟"
+        "text": "Apne field mein mashhoor aur kamyab hona 🌟",
+        "imageUrl": "/quiz/options/q89_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Dunya bhar mein sukoon aur peace of mind 🧘"
+        "text": "Dunya bhar mein sukoon aur peace of mind 🧘",
+        "imageUrl": "/quiz/options/q89_opt3.svg"
       }
     ]
   },
@@ -2159,19 +2707,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Pehle rocket mein baith kar nikal jaunga 🚀"
+        "text": "Pehle rocket mein baith kar nikal jaunga 🚀",
+        "imageUrl": "/quiz/options/q90_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Zameen hi meri jaan hai, hargiz nahi 🌍"
+        "text": "Zameen hi meri jaan hai, hargiz nahi 🌍",
+        "imageUrl": "/quiz/options/q90_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sirf chutti manane jaunga phir wapis 🪐"
+        "text": "Sirf chutti manane jaunga phir wapis 🪐",
+        "imageUrl": "/quiz/options/q90_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Agar dost sath hon to zaroor 🤝"
+        "text": "Agar dost sath hon to zaroor 🤝",
+        "imageUrl": "/quiz/options/q90_opt3.svg"
       }
     ]
   },
@@ -2183,19 +2735,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "'The Legend of Overthinking' 🧠"
+        "text": "'The Legend of Overthinking' 🧠",
+        "imageUrl": "/quiz/options/q91_opt0.svg"
       },
       {
         "id": 1,
-        "text": "'Haste Haste Kat Jayein Raste' 😂"
+        "text": "'Haste Haste Kat Jayein Raste' 😂",
+        "imageUrl": "/quiz/options/q91_opt1.svg"
       },
       {
         "id": 2,
-        "text": "'A Masterpiece in Progress' ✨"
+        "text": "'A Masterpiece in Progress' ✨",
+        "imageUrl": "/quiz/options/q91_opt2.svg"
       },
       {
         "id": 3,
-        "text": "'Bhook, Neend aur Sukoon' 🍕"
+        "text": "'Bhook, Neend aur Sukoon' 🍕",
+        "imageUrl": "/quiz/options/q91_opt3.svg"
       }
     ]
   },
@@ -2207,19 +2763,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Paharon mein baaghbaani aur chai ☕"
+        "text": "Paharon mein baaghbaani aur chai ☕",
+        "imageUrl": "/quiz/options/q92_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Dunya bhar ke mulkon ka safar 🗺️"
+        "text": "Dunya bhar ke mulkon ka safar 🗺️",
+        "imageUrl": "/quiz/options/q92_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Grandchildren ko jawani ki kahaniyan sunana 📖"
+        "text": "Grandchildren ko jawani ki kahaniyan sunana 📖",
+        "imageUrl": "/quiz/options/q92_opt2.svg"
       },
       {
         "id": 3,
-        "text": "30 saal ki umar mein hi retire ho jana 🏖️"
+        "text": "30 saal ki umar mein hi retire ho jana 🏖️",
+        "imageUrl": "/quiz/options/q92_opt3.svg"
       }
     ]
   },
@@ -2231,19 +2791,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Quaid-e-Azam / National Leader 🇵🇰"
+        "text": "Quaid-e-Azam / National Leader 🇵🇰",
+        "imageUrl": "/quiz/options/q93_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Albert Einstein / Big Scientist 🔬"
+        "text": "Albert Einstein / Big Scientist 🔬",
+        "imageUrl": "/quiz/options/q93_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Rumi / Great Philosopher 📜"
+        "text": "Rumi / Great Philosopher 📜",
+        "imageUrl": "/quiz/options/q93_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Classic King ya Queen 👑"
+        "text": "Classic King ya Queen 👑",
+        "imageUrl": "/quiz/options/q93_opt3.svg"
       }
     ]
   },
@@ -2255,19 +2819,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Unlimited wishes mangna 💡"
+        "text": "Unlimited wishes mangna 💡",
+        "imageUrl": "/quiz/options/q94_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Hamesha sehat aur khushiyan ❤️"
+        "text": "Hamesha sehat aur khushiyan ❤️",
+        "imageUrl": "/quiz/options/q94_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Har language bolne ki ability 🗣️"
+        "text": "Har language bolne ki ability 🗣️",
+        "imageUrl": "/quiz/options/q94_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Time machine ⏳"
+        "text": "Time machine ⏳",
+        "imageUrl": "/quiz/options/q94_opt3.svg"
       }
     ]
   },
@@ -2279,19 +2847,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Designer suits aur formal elegance 🤵"
+        "text": "Designer suits aur formal elegance 🤵",
+        "imageUrl": "/quiz/options/q95_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Streetwear, hoodies aur sneakers 👟"
+        "text": "Streetwear, hoodies aur sneakers 👟",
+        "imageUrl": "/quiz/options/q95_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Traditional fancy eastern outfits 🥻"
+        "text": "Traditional fancy eastern outfits 🥻",
+        "imageUrl": "/quiz/options/q95_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Comfortable casual T-shirts only 👕"
+        "text": "Comfortable casual T-shirts only 👕",
+        "imageUrl": "/quiz/options/q95_opt3.svg"
       }
     ]
   },
@@ -2303,19 +2875,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Photography aur editing 📸"
+        "text": "Photography aur editing 📸",
+        "imageUrl": "/quiz/options/q96_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sketching, drawing ya craft 🎨"
+        "text": "Sketching, drawing ya craft 🎨",
+        "imageUrl": "/quiz/options/q96_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Music sunna ya instrument bajana 🎸"
+        "text": "Music sunna ya instrument bajana 🎸",
+        "imageUrl": "/quiz/options/q96_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Writing ya journaling ✍️"
+        "text": "Writing ya journaling ✍️",
+        "imageUrl": "/quiz/options/q96_opt3.svg"
       }
     ]
   },
@@ -2327,19 +2903,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Regular gym aur workout 💪"
+        "text": "Regular gym aur workout 💪",
+        "imageUrl": "/quiz/options/q97_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Cricket ya football match ⚽"
+        "text": "Cricket ya football match ⚽",
+        "imageUrl": "/quiz/options/q97_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Evening walk ya cycling 🚴"
+        "text": "Evening walk ya cycling 🚴",
+        "imageUrl": "/quiz/options/q97_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Bistar par let kar phone chalana 📱"
+        "text": "Bistar par let kar phone chalana 📱",
+        "imageUrl": "/quiz/options/q97_opt3.svg"
       }
     ]
   },
@@ -2351,19 +2931,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Book lover (Novel & Stories) 📖"
+        "text": "Book lover (Novel & Stories) 📖",
+        "imageUrl": "/quiz/options/q98_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Audiobooks aur podcasts sunna 🎧"
+        "text": "Audiobooks aur podcasts sunna 🎧",
+        "imageUrl": "/quiz/options/q98_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sirf zarurat ke waqt syllabus dekhna 📑"
+        "text": "Sirf zarurat ke waqt syllabus dekhna 📑",
+        "imageUrl": "/quiz/options/q98_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Kitab kholte hi neend aa jana 😴"
+        "text": "Kitab kholte hi neend aa jana 😴",
+        "imageUrl": "/quiz/options/q98_opt3.svg"
       }
     ]
   },
@@ -2375,19 +2959,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Online courses aur tech skills 💻"
+        "text": "Online courses aur tech skills 💻",
+        "imageUrl": "/quiz/options/q99_opt0.svg"
       },
       {
         "id": 1,
-        "text": "New language seekhna 🗣️"
+        "text": "New language seekhna 🗣️",
+        "imageUrl": "/quiz/options/q99_opt1.svg"
       },
       {
         "id": 2,
-        "text": "DIY ghar ke kaam aur cooking 🍳"
+        "text": "DIY ghar ke kaam aur cooking 🍳",
+        "imageUrl": "/quiz/options/q99_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Seekhna chahta hoon lekin waqt nahi ⏳"
+        "text": "Seekhna chahta hoon lekin waqt nahi ⏳",
+        "imageUrl": "/quiz/options/q99_opt3.svg"
       }
     ]
   },
@@ -2399,19 +2987,15 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Ghar par akele chill karna (Peace) 🧘"
+        "text": "Ghar par akele chill karna (Peace) 🧘",
+        "emoji": "🧘",
+        "imageUrl": "/quiz/options/q100_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Doston ke sath hangout aur party 🥳"
-      },
-      {
-        "id": 2,
-        "text": "Family ke sath dinner 🍲"
-      },
-      {
-        "id": 3,
-        "text": "Naye logon se networking 💼"
+        "text": "Doston ke sath hangout aur party 🥳",
+        "emoji": "🥳",
+        "imageUrl": "/quiz/options/q100_opt1.svg"
       }
     ]
   },
@@ -2423,19 +3007,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Billi (Cats) ka deewana 🐱"
+        "text": "Billi (Cats) ka deewana 🐱",
+        "imageUrl": "/quiz/options/q101_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Kutta (Dogs) ka loyal friend 🐶"
+        "text": "Kutta (Dogs) ka loyal friend 🐶",
+        "imageUrl": "/quiz/options/q101_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Parinday ya fishes 🦜"
+        "text": "Parinday ya fishes 🦜",
+        "imageUrl": "/quiz/options/q101_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Door se dekhna pasand hai, paas nahi 🙈"
+        "text": "Door se dekhna pasand hai, paas nahi 🙈",
+        "imageUrl": "/quiz/options/q101_opt3.svg"
       }
     ]
   },
@@ -2447,19 +3035,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Har naya phone aur gadget chahiye 📱"
+        "text": "Har naya phone aur gadget chahiye 📱",
+        "imageUrl": "/quiz/options/q102_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Sirf kaam ki hadd tak theek hai ⚙️"
+        "text": "Sirf kaam ki hadd tak theek hai ⚙️",
+        "imageUrl": "/quiz/options/q102_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Gaming PC aur setups ka shouq 🖥️"
+        "text": "Gaming PC aur setups ka shouq 🖥️",
+        "imageUrl": "/quiz/options/q102_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Purana mobile jab tak chalay chalne do 🔋"
+        "text": "Purana mobile jab tak chalay chalne do 🔋",
+        "imageUrl": "/quiz/options/q102_opt3.svg"
       }
     ]
   },
@@ -2471,19 +3063,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Headphones laga kar dunya se cut-off 🎧"
+        "text": "Headphones laga kar dunya se cut-off 🎧",
+        "imageUrl": "/quiz/options/q103_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Gari ya kamray mein full volume speakers 🔊"
+        "text": "Gari ya kamray mein full volume speakers 🔊",
+        "imageUrl": "/quiz/options/q103_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Sirf drive ya safar ke waqt 🚗"
+        "text": "Sirf drive ya safar ke waqt 🚗",
+        "imageUrl": "/quiz/options/q103_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Gungunana aur sath sath gaana 🎤"
+        "text": "Gungunana aur sath sath gaana 🎤",
+        "imageUrl": "/quiz/options/q103_opt3.svg"
       }
     ]
   },
@@ -2495,19 +3091,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Ghar ko jungle bana rakha hai (Plant lover) 🌿"
+        "text": "Ghar ko jungle bana rakha hai (Plant lover) 🌿",
+        "imageUrl": "/quiz/options/q104_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Do teen gamlay hain jinhe paani deta hoon 🪴"
+        "text": "Do teen gamlay hain jinhe paani deta hoon 🪴",
+        "imageUrl": "/quiz/options/q104_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Plants murjha jate hain mere hath se 🥀"
+        "text": "Plants murjha jate hain mere hath se 🥀",
+        "imageUrl": "/quiz/options/q104_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Bilkul shouq nahi 🤷"
+        "text": "Bilkul shouq nahi 🤷",
+        "imageUrl": "/quiz/options/q104_opt3.svg"
       }
     ]
   },
@@ -2519,19 +3119,23 @@ export const DEFAULT_QUIZ_QUESTIONS: QuizQuestion[] = [
     "options": [
       {
         "id": 0,
-        "text": "Cart mein 50 cheezein daal kar chhor dena 🛒"
+        "text": "Cart mein 50 cheezein daal kar chhor dena 🛒",
+        "imageUrl": "/quiz/options/q105_opt0.svg"
       },
       {
         "id": 1,
-        "text": "Jo cart mein dala foran buy now karna 💳"
+        "text": "Jo cart mein dala foran buy now karna 💳",
+        "imageUrl": "/quiz/options/q105_opt1.svg"
       },
       {
         "id": 2,
-        "text": "Reviews parh kar 3 din tak sochna 🧐"
+        "text": "Reviews parh kar 3 din tak sochna 🧐",
+        "imageUrl": "/quiz/options/q105_opt2.svg"
       },
       {
         "id": 3,
-        "text": "Cart bana kar delete kar dena 🗑️"
+        "text": "Cart bana kar delete kar dena 🗑️",
+        "imageUrl": "/quiz/options/q105_opt3.svg"
       }
     ]
   }

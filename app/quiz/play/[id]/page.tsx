@@ -3,10 +3,14 @@
 import React, { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { quizAudio } from "@/lib/quiz/audio";
 import { QuizPublicData } from "@/lib/quiz/types";
+import { BrandMark } from "@/components/quiz-home/Illustrations";
+import {
+  VisualOptionCard,
+  getVisualOptionGridClasses,
+} from "@/components/quiz/VisualOptionCard";
 
 export default function QuizPlayPage({
   params,
@@ -56,7 +60,7 @@ export default function QuizPlayPage({
   };
 
   const handleSelectOption = (optionId: number) => {
-    if (!quiz) return;
+    if (!quiz || isSubmitting) return;
     quizAudio.playPop();
 
     const currentQ = quiz.questions[currentIndex];
@@ -110,10 +114,10 @@ export default function QuizPlayPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-sky-50 flex items-center justify-center p-4">
-        <div className="text-center font-black text-slate-800 text-lg animate-pulse flex items-center gap-2">
-          <Loader2 className="animate-spin text-sky-600" />
-          <span>Loading challenge... 🎯</span>
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
+        <div className="text-center font-black text-[#29324c] text-base flex items-center gap-2">
+          <Loader2 className="animate-spin text-[#6650b7]" />
+          <span>Loading challenge... ✦</span>
         </div>
       </div>
     );
@@ -121,14 +125,16 @@ export default function QuizPlayPage({
 
   if (error || !quiz) {
     return (
-      <div className="min-h-screen bg-sky-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl p-6 border-4 border-slate-900 text-center shadow-xl">
-          <AlertCircle size={40} className="text-red-500 mx-auto mb-2" />
-          <h2 className="text-xl font-black text-slate-900 mb-1">Quiz Not Found</h2>
-          <p className="text-xs text-slate-600 mb-4">{error || "This quiz may have been deleted or expired."}</p>
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#29324c] shadow-[0_6px_0_#d6ad63] text-center">
+          <AlertCircle size={40} className="text-[#a52938] mx-auto mb-2" />
+          <h2 className="text-xl font-black text-[#29324c] mb-1">Quiz Not Found</h2>
+          <p className="text-xs font-bold text-[#536079] mb-4">
+            {error || "This quiz may have been deleted or expired."}
+          </p>
           <Link
             href="/quiz"
-            className="inline-block py-3 px-6 bg-emerald-400 text-slate-950 font-black rounded-2xl border-2 border-slate-900 text-sm uppercase"
+            className="inline-block py-3 px-6 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black rounded-2xl border-2 border-[#29324c] shadow-[0_3px_0_#d6ad63] text-sm uppercase tracking-wider transition-all"
           >
             Create Your Own Quiz
           </Link>
@@ -139,32 +145,29 @@ export default function QuizPlayPage({
 
   const creatorName = quiz.creatorName;
   const currentQ = quiz.questions[currentIndex];
-  const progressPercent = Math.round(((currentIndex) / quiz.questions.length) * 100);
+  const progressPercent = Math.min(
+    100,
+    Math.round(((currentIndex) / quiz.questions.length) * 100)
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#8AC0EF]/30 via-sky-50 to-amber-50/40 text-slate-900 flex flex-col font-sans relative overflow-x-hidden">
-      {/* Background Clouds */}
-      <div className="absolute top-0 left-0 right-0 h-44 bg-[url('/quiz/assets/img/player/clouds-bg.webp')] bg-repeat-x bg-contain opacity-40 pointer-events-none" />
-
-      {/* Header */}
-      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-2 flex items-center justify-between">
-        <Link href="/quiz" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 relative rounded-xl bg-white shadow-sm flex items-center justify-center p-1 border-2 border-slate-900">
-            <Image
-              src="/quiz/assets/img/logo-f.webp"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-slate-900">
-            Don&apos;t Block Me!
+    <div className="min-h-screen bg-[#edf7ff] text-[#29324c] flex flex-col font-sans relative overflow-x-hidden">
+      {/* Brand Header */}
+      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-3 flex items-center justify-between">
+        <Link
+          href="/quiz"
+          className="inline-flex items-center gap-2.5 no-underline group focus-visible:outline-3 focus-visible:outline-[#6650b7]"
+          aria-label="Click & Clique homepage"
+        >
+          <BrandMark />
+          <span className="text-xl font-black tracking-tight text-[#29324c]">
+            click <span className="text-[#6650b7] font-medium">&amp;</span> clique
+            <span className="text-[#bd4a66]">.</span>
           </span>
         </Link>
         {isStarted && (
-          <span className="text-xs font-black bg-amber-300 text-slate-900 px-3 py-1 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a]">
-            {currentIndex + 1} / {quiz.questions.length} Qs
+          <span className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63]">
+            {currentIndex + 1} of {quiz.questions.length}
           </span>
         )}
       </header>
@@ -173,23 +176,30 @@ export default function QuizPlayPage({
       <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-4 flex flex-col justify-center">
         {!isStarted ? (
           /* Step 1: Friend Name Input Screen */
-          <div className="w-full bg-white rounded-3xl p-6 sm:p-8 shadow-[0_12px_30px_rgba(56,189,248,0.18)] border-4 border-slate-900 text-center relative animate-in zoom-in-95 duration-200">
-            <div className="inline-flex items-center gap-1.5 bg-red-100 text-red-800 font-black text-xs uppercase px-3 py-1 rounded-full border border-red-300 mb-3">
+          <div className="w-full bg-white rounded-3xl p-6 sm:p-8 shadow-[0_6px_0_#d6ad63] border-2 border-[#29324c] text-center relative">
+            <div className="inline-flex items-center gap-1.5 bg-[#edf7ff] text-[#6650b7] font-black text-xs uppercase px-3 py-1 rounded-full border border-[#d7e6ef] mb-3">
               <Sparkles size={14} />
-              Friendship Dare Challenge
+              Friendship Challenge
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
-              Will <span className="text-sky-600 bg-sky-100 px-2 rounded-lg">{creatorName}</span> block you? 🚫📱
+            <h1 className="text-2xl sm:text-3xl font-black text-[#29324c] tracking-tight leading-snug">
+              How well do you know{" "}
+              <span className="text-[#6650b7] underline decoration-[#ffce71] decoration-4 underline-offset-4">
+                {creatorName}
+              </span>
+              ? ✦
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">
-              Prove that you are a real friend! Answer {quiz.questions.length} questions to reveal your friendship score!
+            <p className="text-xs sm:text-sm text-[#536079] mt-2 font-medium">
+              Answer {quiz.questions.length} questions to reveal your friendship score!
             </p>
 
             <form onSubmit={handleStartPlay} className="mt-6 space-y-4 text-left">
               <div>
-                <label htmlFor="player-name-input" className="block text-xs font-black uppercase text-slate-700 tracking-wider mb-1.5">
-                  Enter Your Name:
+                <label
+                  htmlFor="player-name-input"
+                  className="block text-xs font-black uppercase text-[#29324c] tracking-wider mb-1.5"
+                >
+                  Enter Your Name
                 </label>
                 <input
                   id="player-name-input"
@@ -199,16 +209,16 @@ export default function QuizPlayPage({
                     setPlayerName(e.target.value);
                     if (error) setError("");
                   }}
-                  placeholder="Your full or nickname..."
+                  placeholder="e.g. Zainab or Hamza"
                   maxLength={30}
-                  className="w-full px-4 py-3.5 text-base font-bold bg-slate-50 text-slate-900 rounded-2xl border-2 border-slate-900 focus:outline-none focus:ring-4 focus:ring-sky-200 focus:bg-white transition-all shadow-inner"
+                  className="w-full px-4 py-3.5 text-base font-bold bg-[#fffefa] text-[#29324c] rounded-2xl border-2 border-[#29324c] focus:outline-none focus:ring-4 focus:ring-[#6650b7]/20 transition-all shadow-[0_2px_0_#d7e1e8]"
                 />
-                {error && <p className="text-xs font-bold text-red-600 mt-1.5 ml-1">{error}</p>}
+                {error && <p className="text-xs font-bold text-[#a52938] mt-1.5 ml-1">{error}</p>}
               </div>
 
               <button
                 type="submit"
-                className="w-full py-4 px-6 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-slate-950 font-black text-base sm:text-lg rounded-2xl border-2 border-slate-900 shadow-[0_5px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                className="w-full py-4 px-6 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black text-base sm:text-lg rounded-2xl border-2 border-[#29324c] shadow-[0_4px_0_#d6ad63] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
               >
                 <span>Accept Challenge</span>
                 <ArrowRight size={20} className="stroke-[3]" />
@@ -216,51 +226,60 @@ export default function QuizPlayPage({
             </form>
           </div>
         ) : isSubmitting ? (
-          <div className="w-full bg-white rounded-3xl p-8 border-4 border-slate-900 text-center shadow-xl">
-            <Loader2 size={36} className="animate-spin text-sky-600 mx-auto mb-3" />
-            <h2 className="text-xl font-black text-slate-900">Calculating your score...</h2>
-            <p className="text-xs text-slate-500 mt-1">Dekhein {creatorName} aapko block karta hai ya nahi! 😂</p>
+          <div className="w-full bg-white rounded-3xl p-8 border-2 border-[#29324c] shadow-[0_6px_0_#d6ad63] text-center">
+            <Loader2 size={36} className="animate-spin text-[#6650b7] mx-auto mb-3" />
+            <h2 className="text-xl font-black text-[#29324c]">Calculating your score...</h2>
+            <p className="text-xs text-[#536079] mt-1 font-medium">Checking how well you matched {creatorName}! 🎯</p>
           </div>
         ) : (
           <div>
             {/* Progress Bar */}
-            <div className="w-full bg-slate-200 h-3 rounded-full border-2 border-slate-900 overflow-hidden mb-4 p-0.5 shadow-inner">
+            <div className="w-full bg-white h-3.5 rounded-full border-2 border-[#29324c] overflow-hidden mb-4 p-0.5 shadow-[0_2px_0_#d7e1e8]">
               <div
-                className="bg-gradient-to-r from-sky-400 to-emerald-400 h-full rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-[#6650b7] to-[#ffce71] h-full rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
+                role="progressbar"
+                aria-valuenow={progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Quiz progress"
               />
             </div>
 
             {/* Question Card */}
-            <div className="w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_12px_30px_rgba(56,189,248,0.18)] border-4 border-slate-900 relative animate-in fade-in zoom-in-95 duration-200">
+            <article className="w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_6px_0_#d6ad63] border-2 border-[#29324c] relative transition-all">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black uppercase tracking-wider text-sky-600 bg-sky-50 px-3 py-1 rounded-lg border border-sky-200">
+                <span className="text-xs font-black uppercase tracking-wider text-[#6650b7] bg-[#edf7ff] px-3 py-1 rounded-lg border border-[#d7e6ef]">
                   Question {currentIndex + 1} of {quiz.questions.length}
                 </span>
-                <span className="text-xl">{currentQ.emoji || "❓"}</span>
+                <span className="text-2xl" aria-hidden="true">{currentQ.emoji || "✦"}</span>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug mb-6">
+              <h2 className="text-xl sm:text-2xl font-black text-[#29324c] tracking-tight leading-snug mb-3">
                 {currentQ.question}
               </h2>
 
-              {/* Options */}
-              <div className="space-y-3">
+              <p className="text-xs font-bold text-[#536079] mb-5">
+                What do you think <span className="text-[#6650b7] font-black">{creatorName}</span> picked?
+              </p>
+
+              {/* Visual Options Grid */}
+              <div
+                className={getVisualOptionGridClasses(currentQ.options.length)}
+                role="radiogroup"
+                aria-label={currentQ.question}
+              >
                 {currentQ.options.map((option) => (
-                  <button
+                  <VisualOptionCard
                     key={option.id}
-                    type="button"
-                    onClick={() => handleSelectOption(option.id)}
-                    className="w-full text-left p-4 rounded-2xl border-2 border-slate-900 font-bold text-sm sm:text-base bg-slate-50 hover:bg-amber-300 text-slate-900 shadow-[0_3px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-between cursor-pointer"
-                  >
-                    <span>{option.text}</span>
-                    <span className="text-xs font-black uppercase text-slate-400">
-                      Tap
-                    </span>
-                  </button>
+                    option={option}
+                    isSelected={selectedAnswersMap[currentQ.questionId] === option.id}
+                    onSelect={handleSelectOption}
+                    totalOptions={currentQ.options.length}
+                  />
                 ))}
               </div>
-            </div>
+            </article>
           </div>
         )}
       </main>

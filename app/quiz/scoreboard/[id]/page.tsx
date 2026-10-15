@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Trophy, Share2, Trash2, Eye, X, RefreshCw, AlertCircle, MessageCircle, Lock } from "lucide-react";
+import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { quizAudio } from "@/lib/quiz/audio";
 import { ScoreboardEntry, ScoreboardDetailEntry } from "@/lib/quiz/types";
 
@@ -153,29 +153,23 @@ export default function QuizScoreboardPage({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#8AC0EF]/30 via-sky-50 to-amber-50/40 text-slate-900 flex flex-col font-sans relative overflow-x-hidden">
-      {/* Background Clouds */}
-      <div className="absolute top-0 left-0 right-0 h-44 bg-[url('/quiz/assets/img/player/clouds-bg.webp')] bg-repeat-x bg-contain opacity-40 pointer-events-none" />
-
+    <div className="min-h-screen bg-[#edf7ff] text-[#29324c] flex flex-col font-sans relative overflow-x-hidden">
       {/* Header */}
-      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-2 flex items-center justify-between">
-        <Link href="/quiz" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 relative rounded-xl bg-white shadow-sm flex items-center justify-center p-1 border-2 border-slate-900">
-            <Image
-              src="/quiz/assets/img/logo-f.webp"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-slate-900">
-            Don&apos;t Block Me!
+      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-3 flex items-center justify-between">
+        <Link
+          href="/quiz"
+          className="inline-flex items-center gap-2.5 no-underline group focus-visible:outline-3 focus-visible:outline-[#6650b7]"
+          aria-label="Click & Clique homepage"
+        >
+          <BrandMark />
+          <span className="text-xl font-black tracking-tight text-[#29324c]">
+            click <span className="text-[#6650b7] font-medium">&amp;</span> clique
+            <span className="text-[#bd4a66]">.</span>
           </span>
         </Link>
         <Link
           href={`/quiz/share/${quizId}`}
-          className="text-xs font-black bg-emerald-400 text-slate-900 px-3.5 py-1.5 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a] flex items-center gap-1.5"
+          className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63] flex items-center gap-1.5 hover:bg-[#ffdb92] transition-all"
         >
           <Share2 size={13} />
           <span>Share Quiz</span>
