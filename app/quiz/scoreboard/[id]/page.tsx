@@ -2,10 +2,19 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { Trophy, Share2, Trash2, Eye, X, RefreshCw, AlertCircle, MessageCircle, Lock } from "lucide-react";
+import { Trophy, Share2, Trash2, Eye, X, RefreshCw, AlertCircle, MessageCircle, Lock, Copy, Check } from "lucide-react";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { quizAudio } from "@/lib/quiz/audio";
 import { ScoreboardEntry, ScoreboardDetailEntry } from "@/lib/quiz/types";
+import {
+  formatWhatsAppScoreboardShare,
+  getWhatsAppShareUrl,
+  getChallengeUrl,
+  sanitizeCreatorName,
+  copyToClipboard,
+  detectEnvironment,
+  EnvironmentInfo,
+} from "@/lib/quiz/sharing";
 
 export default function QuizScoreboardPage({
   params,
@@ -26,6 +35,17 @@ export default function QuizScoreboardPage({
   const [deleting, setDeleting] = useState(false);
   const [authError, setAuthError] = useState("");
   const [isCreator, setIsCreator] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  const [envInfo, setEnvInfo] = useState<EnvironmentInfo>(() => detectEnvironment());
+
+  useEffect(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    setEnvInfo(detectEnvironment(origin));
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      setCanNativeShare(true);
+    }
+  }, []);
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
@@ -186,20 +206,46 @@ export default function QuizScoreboardPage({
     }
   };
 
+  const safeCreator = sanitizeCreatorName(creatorName);
+
   const handleShareScoreboardWhatsApp = () => {
     quizAudio.playPop();
-    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/quiz/play/${quizId}` : "";
-    let text = `👑 *${creatorName}'s Challenge Leaderboard*\n\n`;
-    if (scoreboard.length > 0) {
-      scoreboard.slice(0, 5).forEach((entry, idx) => {
-        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🔹";
-        text += `${medal} ${entry.playerName}: ${entry.score}/${entry.totalQuestions} points\n`;
-      });
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const text = formatWhatsAppScoreboardShare(safeCreator, scoreboard, quizId, origin);
+    window.open(getWhatsAppShareUrl(text), "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyScoreboardLink = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    const success = await copyToClipboard(link);
+    if (success) {
+      setCopyStatus("copied");
+      setTimeout(() => setCopyStatus("idle"), 2500);
     } else {
-      text += "No one has played yet. Be the first!\n";
+      setCopyStatus("error");
+      setTimeout(() => setCopyStatus("idle"), 3000);
     }
-    text += `\nCan you beat them? Try here 👇\n${shareUrl}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleNativeShareScoreboard = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${safeCreator}'s Challenge Leaderboard 🏆`,
+          text: `Check out the scores and take ${safeCreator}'s challenge on Click & Clique!`,
+          url: link,
+        });
+      } catch (err) {
+        if ((err as Error)?.name !== "AbortError") {
+          handleCopyScoreboardLink();
+        }
+      }
+    }
   };
 
   return (
@@ -228,6 +274,18 @@ export default function QuizScoreboardPage({
 
       {/* Main Container */}
       <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-5 flex flex-col">
+        {/* Preview Testing Notice */}
+        {envInfo.isPreview && (
+          <div
+            role="alert"
+            aria-label="Preview Testing Environment"
+            className="mb-4 py-2 px-3.5 bg-amber-50 border-2 border-amber-400 rounded-2xl text-center text-xs font-bold text-amber-950 flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span className="p-0.5 bg-amber-200 rounded text-xs">⚠️</span>
+            <span>Preview / Testing Environment — Internal test link active</span>
+          </div>
+        )}
+
         {/* Title Card */}
         <div className="w-full bg-white rounded-3xl p-6 shadow-[0_12px_30px_rgba(56,189,248,0.18)] border-4 border-slate-900 text-center mb-5">
           <div className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 font-black text-xs uppercase px-3 py-1 rounded-full border border-amber-300 mb-2">
@@ -241,23 +299,62 @@ export default function QuizScoreboardPage({
             Total {scoreboard.length} friend{scoreboard.length === 1 ? "" : "s"} took this challenge!
           </p>
 
-          <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
               onClick={handleShareScoreboardWhatsApp}
-              className="py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+              aria-label="Share leaderboard on WhatsApp"
+              className="py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
             >
               <MessageCircle size={15} className="fill-white" />
               <span>Share Leaderboard</span>
             </button>
+
+            {canNativeShare && (
+              <button
+                type="button"
+                onClick={handleNativeShareScoreboard}
+                aria-label="Share leaderboard via device app"
+                className="py-2.5 px-3 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+              >
+                <Share2 size={14} />
+                <span>Share App</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleCopyScoreboardLink}
+              aria-label={copyStatus === "copied" ? "Challenge link copied" : "Copy challenge link"}
+              className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+            >
+              {copyStatus === "copied" ? (
+                <>
+                  <Check size={14} className="text-emerald-400" />
+                  <span>Copied!</span>
+                </>
+              ) : copyStatus === "error" ? (
+                <span>Failed</span>
+              ) : (
+                <>
+                  <Copy size={14} />
+                  <span>Copy Link</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={fetchPublicScoreboard}
               className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all cursor-pointer"
-              title="Refresh"
+              title="Refresh Scoreboard"
+              aria-label="Refresh Scoreboard"
             >
               <RefreshCw size={15} />
             </button>
+          </div>
+          <div className="sr-only" aria-live="polite">
+            {copyStatus === "copied" ? "Challenge link copied to clipboard!" : ""}
           </div>
         </div>
 

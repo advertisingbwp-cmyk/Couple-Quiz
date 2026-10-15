@@ -408,7 +408,6 @@ async function runQA() {
 
     let currentUrl = await client.eval(`window.location.href`);
     console.log("Redirected to:", currentUrl);
-    await client.screenshot("creator_06_share_page_375px.png");
 
     // Extract quizId
     const quizIdMatch = currentUrl.match(/\/quiz\/share\/([a-zA-Z0-9_-]+)/);
@@ -428,6 +427,48 @@ async function runQA() {
     } catch {
       // Ignore
     }
+
+    console.log("\n==========================================");
+    console.log("PHASE 7: SOCIAL SHARE PAGE RESPONSIVE AUDIT");
+    console.log("==========================================");
+
+    // 1. 375px Mobile Viewport
+    await client.setViewport(375, 812);
+    await sleep(400);
+    await client.screenshot("creator_06_share_page_375px.png");
+    await client.screenshot("share_02_share_page_375px.png");
+
+    // Test Copy Link Button and feedback
+    console.log("Testing Copy Link button feedback...");
+    await client.eval(`
+      const copyBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Copy'));
+      copyBtn?.click();
+    `);
+    await sleep(300);
+    const isCopiedShown = await client.eval(`
+      Array.from(document.querySelectorAll('button')).some(b => b.innerText.includes('Copied'))
+    `);
+    console.log("Copy Link feedback ('Copied!') displayed:", isCopiedShown);
+
+    // 2. 320px Narrow Mobile Viewport
+    await client.setViewport(320, 568);
+    await sleep(400);
+    const hasHorizontalScroll320 = await client.eval(`document.documentElement.scrollWidth > window.innerWidth`);
+    console.log("320px narrow mobile horizontal overflow:", hasHorizontalScroll320 ? "FAIL (overflow)" : "PASS (no overflow)");
+    await client.screenshot("share_01_share_page_320px.png");
+
+    // 3. 768px Tablet Viewport
+    await client.setViewport(768, 1024);
+    await sleep(400);
+    await client.screenshot("share_03_share_page_768px.png");
+
+    // 4. 1280px Desktop Viewport
+    await client.setViewport(1280, 800);
+    await sleep(400);
+    await client.screenshot("share_04_share_page_1280px.png");
+
+    // Reset to 375px for player flow
+    await client.setViewport(375, 812);
 
     console.log("\n==========================================");
     console.log("STEP 2: PLAYER FLOW TESTING & SCREENSHOTS");
