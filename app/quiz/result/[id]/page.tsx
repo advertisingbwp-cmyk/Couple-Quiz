@@ -2,10 +2,17 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { Trophy, MessageCircle, RefreshCw, Sparkles, AlertCircle } from "lucide-react";
+import { Trophy, MessageCircle, RefreshCw, Sparkles, AlertCircle, Copy, Check, Share2 } from "lucide-react";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { quizAudio } from "@/lib/quiz/audio";
 import { triggerConfetti } from "@/lib/quiz/confetti";
+import {
+  formatWhatsAppResultShare,
+  getWhatsAppShareUrl,
+  getChallengeUrl,
+  sanitizeCreatorName,
+  copyToClipboard,
+} from "@/lib/quiz/sharing";
 
 export default function QuizResultPage({
   params,
@@ -24,6 +31,14 @@ export default function QuizResultPage({
 
   const [dialogueStep, setDialogueStep] = useState(0);
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [canNativeShare, setCanNativeShare] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      setCanNativeShare(true);
+    }
+  }, []);
 
   useEffect(() => {
     // Read scoped session result
@@ -108,11 +123,46 @@ export default function QuizResultPage({
     badgeColor = "bg-sky-100 text-sky-800 border-sky-300";
   }
 
+  const safeCreator = sanitizeCreatorName(creatorName);
+
   const handleShareResultWhatsApp = () => {
     quizAudio.playPop();
-    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/quiz/play/${quizId}` : "";
-    const msg = `🎉 I scored ${score}/${total} on ${creatorName}'s Friendship Challenge!\n\nCan you beat my score on the Click & Clique leaderboard? 🏆\n\nTry here 👇\n${shareUrl}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const msg = formatWhatsAppResultShare(safeCreator, score, total, quizId, origin);
+    window.open(getWhatsAppShareUrl(msg), "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyResultLink = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    const success = await copyToClipboard(link);
+    if (success) {
+      setCopyStatus("copied");
+      setTimeout(() => setCopyStatus("idle"), 2500);
+    } else {
+      setCopyStatus("error");
+      setTimeout(() => setCopyStatus("idle"), 3000);
+    }
+  };
+
+  const handleNativeShareResult = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `I scored ${score}/${total} on ${safeCreator}'s Friendship Challenge! 🏆`,
+          text: `Can you beat my score on Click & Clique?`,
+          url: link,
+        });
+      } catch (err) {
+        if ((err as Error)?.name !== "AbortError") {
+          handleCopyResultLink();
+        }
+      }
+    }
   };
 
   return (
@@ -229,22 +279,63 @@ export default function QuizResultPage({
             </p>
 
             {/* Action Buttons */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 space-y-2.5">
               <button
                 type="button"
                 onClick={handleShareResultWhatsApp}
-                className="w-full py-3.5 px-6 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-sm sm:text-base rounded-2xl border-2 border-slate-900 shadow-[0_4px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                aria-label="Share score on WhatsApp"
+                className="w-full py-3.5 px-6 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-sm sm:text-base rounded-2xl border-2 border-slate-900 shadow-[0_4px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
               >
                 <MessageCircle size={18} className="fill-white" />
                 <span>Share Score on WhatsApp</span>
               </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                {canNativeShare && (
+                  <button
+                    type="button"
+                    onClick={handleNativeShareResult}
+                    aria-label="Share score via device app"
+                    className="py-2.5 px-3 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase"
+                  >
+                    <Share2 size={15} />
+                    <span>Share App</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleCopyResultLink}
+                  aria-label={copyStatus === "copied" ? "Challenge link copied" : "Copy challenge link"}
+                  className={`py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase ${
+                    !canNativeShare ? "col-span-2" : ""
+                  }`}
+                >
+                  {copyStatus === "copied" ? (
+                    <>
+                      <Check size={14} className="text-emerald-400" />
+                      <span>Copied!</span>
+                    </>
+                  ) : copyStatus === "error" ? (
+                    <span>Failed</span>
+                  ) : (
+                    <>
+                      <Copy size={14} />
+                      <span>Copy Challenge Link</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="sr-only" aria-live="polite">
+                {copyStatus === "copied" ? "Challenge link copied to clipboard!" : ""}
+              </div>
 
               <Link
                 href={`/quiz/scoreboard/${quizId}`}
                 className="w-full py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-900 font-extrabold text-xs sm:text-sm rounded-2xl border-2 border-slate-900 shadow-[0_3px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
               >
                 <Trophy size={16} />
-                <span>See Leaderboard ({creatorName})</span>
+                <span>See Leaderboard ({safeCreator})</span>
               </Link>
 
               <div className="pt-2">
