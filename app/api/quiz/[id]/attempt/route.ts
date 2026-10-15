@@ -1,6 +1,6 @@
 import { StorageUnavailableError } from "@/lib/quiz/storage";
 import { NextResponse } from "next/server";
-import { getQuizById, recordAttempt } from "@/lib/quiz/storage";
+import { getQuizById, recordAttempt, getScoreboard } from "@/lib/quiz/storage";
 import { PlayerAttempt } from "@/lib/quiz/types";
 import { generateAttemptId } from "@/lib/quiz/security";
 
@@ -111,7 +111,44 @@ export async function POST(
     // Score can never exceed total questions
     const finalScore = Math.min(score, quiz.questions.length);
 
-    const attemptId = generateAttemptId();
+    // 5. Server-side Idempotency: Support client-supplied attempt ID or idempotency key
+    let attemptId = generateAttemptId();
+    const candidateId =
+      (typeof body.attemptId === "string" && body.attemptId) ||
+      (typeof body.idempotencyKey === "string" && body.idempotencyKey) ||
+      req.headers.get("idempotency-key") ||
+      req.headers.get("x-attempt-id");
+
+    if (candidateId && typeof candidateId === "string") {
+      const cleanCandidate = candidateId.trim();
+      // Valid attempt ID format: att_<timestamp>_<entropy> or clean safe alphanumeric token (12-64 chars)
+      if (/^att_[0-9]{10,16}_[0-9a-f]{6,32}$/i.test(cleanCandidate)) {
+        attemptId = cleanCandidate;
+      } else if (/^[a-zA-Z0-9_-]{12,64}$/.test(cleanCandidate)) {
+        attemptId = cleanCandidate.startsWith("att_") ? cleanCandidate : `att_${cleanCandidate}`;
+      } else {
+        return NextResponse.json(
+          { success: false, error: "Invalid attempt ID format." },
+          { status: 400 }
+        );
+      }
+
+      // Check if this attempt was already recorded (idempotency safety)
+      const existingEntries = await getScoreboard(id);
+      const existing = existingEntries.find((entry) => entry.id === attemptId);
+      if (existing) {
+        return NextResponse.json({
+          success: true,
+          score: existing.score,
+          totalQuestions: existing.totalQuestions,
+          creatorName: quiz.creatorName,
+          gender: quiz.gender,
+          attemptId: existing.id,
+          alreadyRecorded: true,
+        });
+      }
+    }
+
     const attempt: PlayerAttempt = {
       id: attemptId,
       quizId: id,

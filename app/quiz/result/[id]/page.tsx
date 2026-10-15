@@ -37,6 +37,10 @@ export default function QuizResultPage({
       }
     }
     setHasCheckedSession(true);
+
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDialogueStep(4);
+    }
   }, [quizId]);
 
   useEffect(() => {
@@ -55,12 +59,12 @@ export default function QuizResultPage({
 
   if (hasCheckedSession && !result) {
     return (
-      <div className="min-h-screen bg-sky-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl p-6 border-4 border-slate-900 text-center shadow-xl">
           <AlertCircle size={40} className="text-amber-500 mx-auto mb-2" />
           <h2 className="text-xl font-black text-slate-900 mb-1">No Active Result Found</h2>
           <p className="text-xs text-slate-600 mb-4">
-            Aapne shayad abhi tak yeh quiz complete nahi kiya ya session expire ho chuka hai.
+            You haven&apos;t completed this quiz yet, or your session has expired.
           </p>
           <div className="flex flex-col gap-2">
             <Link
@@ -92,16 +96,16 @@ export default function QuizResultPage({
 
   if (ratio >= 0.8) {
     reactionText = "You know me inside out! Pure clique legend! 🌟";
-    reactionEmoji = "❤️ True Bestie!";
+    reactionEmoji = "Bestie Alert! ❤️";
     badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
   } else if (ratio >= 0.5) {
     reactionText = "Solid clique energy! You know your stuff! 😎";
-    reactionEmoji = "🙂 Great Friend";
+    reactionEmoji = "Great Friend 🙂";
     badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
   } else {
-    reactionText = "Ouch! We definitely need to hang out more! ☕";
-    reactionEmoji = "👀 Acquaintance Alert!";
-    badgeColor = "bg-rose-100 text-rose-800 border-rose-300";
+    reactionText = "We definitely need to hang out more and build our clique bond! ☕";
+    reactionEmoji = "Friend in Training 🌱";
+    badgeColor = "bg-sky-100 text-sky-800 border-sky-300";
   }
 
   const handleShareResultWhatsApp = () => {
@@ -184,6 +188,22 @@ export default function QuizResultPage({
                   {creatorName}
                 </span>
                 <span>&ldquo;Moment of truth... reveal results! 🎉&rdquo;</span>
+              </div>
+            )}
+
+            {dialogueStep < 4 && (
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    quizAudio.playPop();
+                    setDialogueStep(4);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase text-amber-300 hover:text-white px-3 py-1 rounded-full border border-amber-400/40 hover:border-amber-300 bg-slate-800/80 cursor-pointer transition-colors"
+                >
+                  <span>Skip to Score</span>
+                  <span>⏭️</span>
+                </button>
               </div>
             )}
           </div>
