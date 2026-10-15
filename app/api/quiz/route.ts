@@ -35,10 +35,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Strict Questions Validation
-    if (!questions || !Array.isArray(questions) || questions.length < 5 || questions.length > 15) {
+    // 2. Strict Questions Validation (Exactly 10 questions required)
+    if (!questions || !Array.isArray(questions) || questions.length !== 10) {
       return NextResponse.json(
-        { success: false, error: "Quiz must have between 5 and 15 questions." },
+        { success: false, error: "Quiz must have exactly 10 questions." },
         { status: 400 }
       );
     }

@@ -408,6 +408,59 @@ test("API: Rejects invalid options, duplicate questions, and invalid PINs", asyn
   assert.match(data4.error, /Please enter your name/i);
 });
 
+test("API: Strictly enforces exactly 10 questions (rejects 9, accepts 10, rejects 11)", async () => {
+  // 1. Exactly 9 questions -> must be rejected with 400
+  const nineQuestionsPayload = {
+    creatorName: "Ahmad",
+    gender: "male",
+    country: "PK",
+    secretPin: "5566",
+    questions: DEFAULT_QUIZ_QUESTIONS.slice(0, 9).map((q) => ({
+      questionId: q.id,
+      correctOptionId: 0,
+    })),
+  };
+  const resNine = await createQuiz(mockRequest("POST", nineQuestionsPayload));
+  assert.equal(resNine.status, 400, "9 questions must return HTTP 400");
+  const dataNine = await resNine.json();
+  assert.equal(dataNine.success, false);
+  assert.match(dataNine.error, /exactly 10 questions/i);
+
+  // 2. Exactly 10 valid unique questions -> must be accepted with 200
+  const tenQuestionsPayload = {
+    creatorName: "Ahmad",
+    gender: "male",
+    country: "PK",
+    secretPin: "5566",
+    questions: DEFAULT_QUIZ_QUESTIONS.slice(0, 10).map((q) => ({
+      questionId: q.id,
+      correctOptionId: 0,
+    })),
+  };
+  const resTen = await createQuiz(mockRequest("POST", tenQuestionsPayload));
+  assert.equal(resTen.status, 200, "10 questions must return HTTP 200");
+  const dataTen = await resTen.json();
+  assert.equal(dataTen.success, true);
+  assert.ok(dataTen.quizId);
+
+  // 3. Exactly 11 questions -> must be rejected with 400
+  const elevenQuestionsPayload = {
+    creatorName: "Ahmad",
+    gender: "male",
+    country: "PK",
+    secretPin: "5566",
+    questions: DEFAULT_QUIZ_QUESTIONS.slice(0, 11).map((q) => ({
+      questionId: q.id,
+      correctOptionId: 0,
+    })),
+  };
+  const resEleven = await createQuiz(mockRequest("POST", elevenQuestionsPayload));
+  assert.equal(resEleven.status, 400, "11 questions must return HTTP 400");
+  const dataEleven = await resEleven.json();
+  assert.equal(dataEleven.success, false);
+  assert.match(dataEleven.error, /exactly 10 questions/i);
+});
+
 // ---------------------------------------------------------------------------
 // 8. SECRET PIN REGEX RULES (4-6 digits only)
 // ---------------------------------------------------------------------------
