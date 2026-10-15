@@ -122,6 +122,7 @@ export function verifyCreatorSessionToken(
 
 /**
  * Constant-time verification of creator secret token against raw token, session token, or SHA-256 hash.
+ * A stored SHA-256 digest is NEVER accepted directly as a bearer credential (prevents pass-the-hash attacks).
  */
 export function verifyCreatorToken(
   enteredToken: string,
@@ -136,18 +137,19 @@ export function verifyCreatorToken(
     return verifyCreatorSessionToken(enteredToken, quizContext.quizId, quizContext.pinHash);
   }
 
-  // 2. Direct string equality (for local JSON dev storage or identical token match)
-  if (timingSafeEqualString(enteredToken, storedTokenOrHash)) {
-    return true;
-  }
-
-  // 3. Raw creator secret token verification against stored SHA-256 digest
+  // 2. Stored SHA-256 digest: requires the original valid raw creator token.
+  // A stored digest is NEVER accepted directly as a bearer credential.
   if (/^[0-9a-f]{64}$/i.test(storedTokenOrHash)) {
+    // Prevent pass-the-hash: presenting the stored digest directly is strictly rejected
+    if (timingSafeEqualString(enteredToken, storedTokenOrHash)) {
+      return false;
+    }
     const enteredHash = hashCreatorToken(enteredToken);
     return timingSafeEqualString(enteredHash, storedTokenOrHash);
   }
 
-  return false;
+  // 3. Raw creator secret token verification for local/test storage (where storedToken is the raw secret)
+  return timingSafeEqualString(enteredToken, storedTokenOrHash);
 }
 
 /**

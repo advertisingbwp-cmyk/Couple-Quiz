@@ -67,27 +67,63 @@ test("Phase 5: HMAC creator session token generation, verification, clock-skew a
   assert.equal(verifyCreatorSessionToken("", quizId, pinHash), false);
 });
 
-test("Phase 5: verifyCreatorToken supports raw token, session token, and stored digest", () => {
+test("Phase 5.1: verifyCreatorToken requires original raw token and strictly rejects pass-the-hash digest submission", () => {
   const rawToken = generateCreatorToken();
   const storedDigest = hashCreatorToken(rawToken);
   const quizId = "q_verify_ctx";
   const pinHash = hashPin("4321");
   const ctx = { quizId, pinHash };
 
-  // Raw token verified against stored SHA-256 digest
-  assert.equal(verifyCreatorToken(rawToken, storedDigest, ctx), true);
+  // 1. Original raw creator token succeeds
+  assert.equal(verifyCreatorToken(rawToken, storedDigest, ctx), true, "Original raw creator token must be accepted");
 
-  // Session token verified against quizContext
-  const sessionToken = generateCreatorSessionToken(quizId, pinHash);
-  assert.equal(verifyCreatorToken(sessionToken, storedDigest, ctx), true);
+  // 2. Pass-the-hash defense: Stored SHA-256 token digest submitted directly as bearer credential is REJECTED
+  assert.equal(
+    verifyCreatorToken(storedDigest, storedDigest, ctx),
+    false,
+    "Stored SHA-256 digest submitted directly MUST be rejected (pass-the-hash defense)"
+  );
 
-  // Direct match (for local storage where raw token is stored)
-  assert.equal(verifyCreatorToken(rawToken, rawToken, ctx), true);
-
-  // Invalid / forged credentials rejected
-  assert.equal(verifyCreatorToken("adm_invalid_token", storedDigest, ctx), false);
+  // 3. Invalid raw token is rejected
+  assert.equal(verifyCreatorToken("adm_invalid_token_1234567890", storedDigest, ctx), false);
   assert.equal(verifyCreatorToken("wrong_token", rawToken, ctx), false);
   assert.equal(verifyCreatorToken("", storedDigest, ctx), false);
+
+  // 4. Valid signed session token succeeds
+  const sessionToken = generateCreatorSessionToken(quizId, pinHash);
+  assert.equal(verifyCreatorToken(sessionToken, storedDigest, ctx), true, "Valid signed session token must succeed");
+
+  // 5. Expired session token is rejected
+  const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
+  const expiredSig = crypto
+    .createHmac("sha256", pinHash)
+    .update(`${quizId}:${eightDaysAgo}`)
+    .digest("hex");
+  const expiredSessionToken = `adm_cts_${eightDaysAgo}_${expiredSig}`;
+  assert.equal(
+    verifyCreatorToken(expiredSessionToken, storedDigest, ctx),
+    false,
+    "Expired session token must be rejected"
+  );
+
+  // 6. Forged session token is rejected
+  assert.equal(
+    verifyCreatorToken("adm_cts_1234567890_deadbeefbadsignature", storedDigest, ctx),
+    false,
+    "Forged session token must be rejected"
+  );
+
+  // 7. Legitimate existing raw creator tokens in local/test storage (where storedToken is raw secret) succeed
+  assert.equal(
+    verifyCreatorToken(rawToken, rawToken, ctx),
+    true,
+    "Legitimate raw creator token in local storage must succeed"
+  );
+  assert.equal(
+    verifyCreatorToken("wrong_raw", rawToken, ctx),
+    false,
+    "Wrong raw token in local storage must be rejected"
+  );
 });
 
 test("Phase 5: Server-side creator authorization workflow with session token lifecycle", async () => {
@@ -187,6 +223,28 @@ test("Phase 5: Server-side creator authorization workflow with session token lif
     params: Promise.resolve({ id: quizId }),
   });
   assert.equal(forgedRes.status, 403);
+
+  // 6b. Pass-the-hash attack: Submitting the SHA-256 digest directly to API is rejected with 403
+  const rawTokenHash = hashCreatorToken(initialRawToken);
+  const pthReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/scoreboard`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
+    body: JSON.stringify({ creatorToken: rawTokenHash }),
+  });
+  const pthRes = await getDetailedScoreboard(pthReq, {
+    params: Promise.resolve({ id: quizId }),
+  });
+  assert.equal(pthRes.status, 403, "Pass-the-hash submission to scoreboard POST must return 403");
+
+  const pthDeleteReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
+    body: JSON.stringify({ creatorToken: rawTokenHash }),
+  });
+  const pthDeleteRes = await deleteQuiz(pthDeleteReq, {
+    params: Promise.resolve({ id: quizId }),
+  });
+  assert.equal(pthDeleteRes.status, 403, "Pass-the-hash submission to quiz DELETE must return 403");
 
   // 7. Authorized quiz deletion using session token
   const deleteQuizReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {

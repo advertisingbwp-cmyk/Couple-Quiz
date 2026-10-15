@@ -12,6 +12,7 @@ import {
   generateCreatorToken,
   generateCreatorSessionToken,
   verifyCreatorSessionToken,
+  verifyCreatorToken,
 } from "../lib/quiz/security";
 import type { QuizData, PlayerAttempt } from "../lib/quiz/types";
 
@@ -664,10 +665,42 @@ test(
       assert.equal(details[0].answers[0].correctAnswer, "Option A");
       assert.equal(details[0].answers[0].isCorrect, true);
 
-      // 4. Creator session token verification
+      // 4. Creator session token & pass-the-hash defense against live PostgreSQL record
+      const storedQuiz = await storage.getQuizById(quizId);
+      assert.ok(storedQuiz);
+      const storedDigest = storedQuiz.creatorToken; // 64-char SHA-256 hash in PostgreSQL
+      assert.match(storedDigest, /^[0-9a-f]{64}$/i, "Supabase must store a 64-char SHA-256 hex digest");
+
+      // Original raw token succeeds
+      assert.equal(
+        verifyCreatorToken(rawCreatorToken, storedDigest, { quizId, pinHash }),
+        true,
+        "Original raw creator token must succeed against Supabase digest"
+      );
+
+      // Pass-the-hash attack is rejected: submitting the stored SHA-256 digest directly fails
+      assert.equal(
+        verifyCreatorToken(storedDigest, storedDigest, { quizId, pinHash }),
+        false,
+        "Stored SHA-256 digest submitted directly MUST be rejected (pass-the-hash defense)"
+      );
+
+      // Invalid raw token is rejected
+      assert.equal(
+        verifyCreatorToken("adm_fake_raw_token_1234567890", storedDigest, { quizId, pinHash }),
+        false,
+        "Invalid raw token must be rejected"
+      );
+
+      // Session token succeeds
       const sessionToken = generateCreatorSessionToken(quizId, pinHash);
       assert.ok(sessionToken.startsWith("adm_cts_"));
       assert.equal(verifyCreatorSessionToken(sessionToken, quizId, pinHash), true);
+      assert.equal(
+        verifyCreatorToken(sessionToken, storedDigest, { quizId, pinHash }),
+        true,
+        "Session token must be accepted"
+      );
 
       // 5. Authorized attempt deletion
       const deletedAtt = await storage.deleteAttempt(quizId, `${quizId}_att3`);
