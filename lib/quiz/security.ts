@@ -74,19 +74,81 @@ export function hashCreatorToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+export const CREATOR_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 /**
- * Constant-time verification of creator secret token against raw token or SHA-256 hash.
+ * Generates an HMAC-signed, time-limited creator session token.
+ * Format: adm_cts_<timestampMs>_<hmacHex>
  */
-export function verifyCreatorToken(enteredToken: string, storedTokenOrHash: string): boolean {
+export function generateCreatorSessionToken(quizId: string, pinHash: string): string {
+  const timestamp = Date.now();
+  const signature = crypto
+    .createHmac("sha256", pinHash)
+    .update(`${quizId}:${timestamp}`)
+    .digest("hex");
+  return `adm_cts_${timestamp}_${signature}`;
+}
+
+/**
+ * Verifies an HMAC-signed creator session token against the quiz ID and PIN hash,
+ * checking signature integrity and verifying expiration.
+ */
+export function verifyCreatorSessionToken(
+  token: string,
+  quizId: string,
+  pinHash: string,
+  maxAgeMs = CREATOR_SESSION_TTL_MS
+): boolean {
+  if (typeof token !== "string" || !token.startsWith("adm_cts_")) return false;
+  const parts = token.slice("adm_cts_".length).split("_");
+  if (parts.length !== 2) return false;
+  const timestamp = Number(parts[0]);
+  const signature = parts[1];
+  if (!Number.isFinite(timestamp) || !signature) return false;
+
+  const now = Date.now();
+  // Reject future tokens (> 60s clock skew) and expired tokens
+  if (timestamp > now + 60_000 || now - timestamp > maxAgeMs) {
+    return false;
+  }
+
+  const expectedSignature = crypto
+    .createHmac("sha256", pinHash)
+    .update(`${quizId}:${timestamp}`)
+    .digest("hex");
+
+  return timingSafeEqualString(signature, expectedSignature);
+}
+
+/**
+ * Constant-time verification of creator secret token against raw token, session token, or SHA-256 hash.
+ * A stored SHA-256 digest is NEVER accepted directly as a bearer credential (prevents pass-the-hash attacks).
+ */
+export function verifyCreatorToken(
+  enteredToken: string,
+  storedTokenOrHash: string,
+  quizContext?: { quizId: string; pinHash: string }
+): boolean {
   if (typeof enteredToken !== "string" || typeof storedTokenOrHash !== "string") return false;
   if (!enteredToken || !storedTokenOrHash) return false;
 
-  // If stored as 64-char hex, it is a SHA-256 digest
+  // 1. Session token verification (issued on PIN login)
+  if (quizContext && enteredToken.startsWith("adm_cts_")) {
+    return verifyCreatorSessionToken(enteredToken, quizContext.quizId, quizContext.pinHash);
+  }
+
+  // 2. Stored SHA-256 digest: requires the original valid raw creator token.
+  // A stored digest is NEVER accepted directly as a bearer credential.
   if (/^[0-9a-f]{64}$/i.test(storedTokenOrHash)) {
+    // Prevent pass-the-hash: presenting the stored digest directly is strictly rejected
+    if (timingSafeEqualString(enteredToken, storedTokenOrHash)) {
+      return false;
+    }
     const enteredHash = hashCreatorToken(enteredToken);
     return timingSafeEqualString(enteredHash, storedTokenOrHash);
   }
 
+  // 3. Raw creator secret token verification for local/test storage (where storedToken is the raw secret)
   return timingSafeEqualString(enteredToken, storedTokenOrHash);
 }
 
@@ -233,8 +295,14 @@ export async function authenticateCreator(
   if (!(await checkPinRateLimit(ip))) return 429;
 
   const valid =
-    (typeof credentials.creatorToken === "string" && verifyCreatorToken(credentials.creatorToken, quiz.creatorToken)) ||
-    (typeof credentials.pin === "string" && /^\d{4,6}$/.test(credentials.pin.trim()) && verifyPin(credentials.pin, quiz.pinHash));
+    (typeof credentials.creatorToken === "string" &&
+      verifyCreatorToken(credentials.creatorToken, quiz.creatorToken, {
+        quizId: quiz.id,
+        pinHash: quiz.pinHash,
+      })) ||
+    (typeof credentials.pin === "string" &&
+      /^\d{4,6}$/.test(credentials.pin.trim()) &&
+      verifyPin(credentials.pin, quiz.pinHash));
 
   const decision = await finishAuthentication(ip, valid);
   return decision === "allowed" ? 200 : decision === "limited" ? 429 : 403;

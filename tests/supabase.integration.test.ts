@@ -4,7 +4,16 @@ import crypto from "node:crypto";
 import { createQuizStorage } from "../lib/quiz/storage";
 import { _enableMockSupabase, getSupabaseClient } from "../lib/quiz/supabase";
 import { createClient } from "@supabase/supabase-js";
-import { recordFailedPinAttempt, checkPinRateLimit, clearPinRateLimit } from "../lib/quiz/security";
+import {
+  recordFailedPinAttempt,
+  checkPinRateLimit,
+  clearPinRateLimit,
+  hashPin,
+  generateCreatorToken,
+  generateCreatorSessionToken,
+  verifyCreatorSessionToken,
+  verifyCreatorToken,
+} from "../lib/quiz/security";
 import type { QuizData, PlayerAttempt } from "../lib/quiz/types";
 
 import { loadEnvConfig, resetEnv } from "@next/env";
@@ -374,6 +383,347 @@ test(
     const serviceHealth = await serviceClient.from("quizzes").select("*", { count: "exact", head: true });
     assert.equal(serviceHealth.status, 200, "service_role client must retain full healthy access to quizzes");
     assert.equal(serviceHealth.error, null, "service_role client returned unexpected error");
+  }
+);
+
+test(
+  "REAL SUPABASE Phase 5: Image + text option persistence, variable option counts (2, 4, 6, 9), and public sanitization",
+  {
+    skip: enabled
+      ? false
+      : "Requires explicit opt-in and a disposable Supabase test project (QUIZ_SUPABASE_INTEGRATION=1, SUPABASE_URL / QUIZ_TEST_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY / QUIZ_TEST_SUPABASE_SERVICE_ROLE_KEY)",
+  },
+  async () => {
+    _enableMockSupabase(false);
+    process.env.SUPABASE_URL = testUrl;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = testKey;
+
+    const storage = createQuizStorage();
+    const quizId = "phase5_visual_" + crypto.randomUUID();
+    const pin = "7890";
+    const pinHash = hashPin(pin);
+    const rawCreatorToken = generateCreatorToken();
+
+    // 10 questions covering 2, 4, 6, and 9 options with image and text
+    const sampleQuestions: QuizData["questions"] = [
+      {
+        questionId: "v_q2_opt",
+        question: "2-Option Morning Routine",
+        emoji: "🌅",
+        options: [
+          { id: 0, text: "Early Bird", imageUrl: "/illustrations/early_bird.svg" },
+          { id: 1, text: "Night Owl", imageUrl: "/illustrations/night_owl.svg" },
+        ],
+        correctOptionId: 0,
+      },
+      {
+        questionId: "v_q4_opt",
+        question: "4-Option Favorite Drink",
+        emoji: "☕",
+        options: [
+          { id: 0, text: "Chai", imageUrl: "/illustrations/chai.svg" },
+          { id: 1, text: "Coffee", imageUrl: "/illustrations/coffee.svg" },
+          { id: 2, text: "Fresh Juice", imageUrl: "/illustrations/juice.svg" },
+          { id: 3, text: "Boba Tea", imageUrl: "/illustrations/boba.svg" },
+        ],
+        correctOptionId: 1,
+      },
+      {
+        questionId: "v_q6_opt",
+        question: "6-Option Weekend Vibe",
+        emoji: "🏖️",
+        options: [
+          { id: 0, text: "Mountain Hike", imageUrl: "/illustrations/mountain_hike.svg" },
+          { id: 1, text: "Beach Chill", imageUrl: "/illustrations/beach.svg" },
+          { id: 2, text: "City Walk", imageUrl: "/illustrations/city_walk.svg" },
+          { id: 3, text: "Binge Shows", imageUrl: "/illustrations/binge_shows.svg" },
+          { id: 4, text: "Gaming All Day", imageUrl: "/illustrations/gaming_night.svg" },
+          { id: 5, text: "Reading in Cafe", imageUrl: "/illustrations/reading.svg" },
+        ],
+        correctOptionId: 4,
+      },
+      {
+        questionId: "v_q9_opt",
+        question: "9-Option Dream Trip",
+        emoji: "✈️",
+        options: [
+          { id: 0, text: "Tokyo, Japan", imageUrl: "/illustrations/tokyo.svg" },
+          { id: 1, text: "Paris, France", imageUrl: "/illustrations/paris.svg" },
+          { id: 2, text: "New York, USA", imageUrl: "/illustrations/new_york.svg" },
+          { id: 3, text: "Rome, Italy", imageUrl: "/illustrations/rome.svg" },
+          { id: 4, text: "Cairo, Egypt", imageUrl: "/illustrations/cairo.svg" },
+          { id: 5, text: "London, UK", imageUrl: "/illustrations/london.svg" },
+          { id: 6, text: "Sydney, Australia", imageUrl: "/illustrations/sydney.svg" },
+          { id: 7, text: "Rio, Brazil", imageUrl: "/illustrations/rio.svg" },
+          { id: 8, text: "Istanbul, Turkey", imageUrl: "/illustrations/istanbul.svg" },
+        ],
+        correctOptionId: 8,
+      },
+      // 6 more standard questions to make exactly 10
+      ...Array.from({ length: 6 }, (_, i) => ({
+        questionId: `v_extra_${i + 5}`,
+        question: `Question ${i + 5} Topic`,
+        options: [
+          { id: 0, text: `Option A for Q${i + 5}`, imageUrl: "/illustrations/chai.svg" },
+          { id: 1, text: `Option B for Q${i + 5}`, imageUrl: "/illustrations/coffee.svg" },
+        ],
+        correctOptionId: 0,
+      })),
+    ];
+
+    const quiz: QuizData = {
+      id: quizId,
+      slug: quizId,
+      creatorName: "Supabase Visual Tester",
+      gender: "female",
+      country: "PK",
+      theme: "dont_block_me",
+      pinHash,
+      creatorToken: rawCreatorToken,
+      createdAt: Date.now(),
+      questions: sampleQuestions,
+    };
+
+    try {
+      // 1. Save quiz in PostgreSQL
+      const saveResult = await storage.saveQuiz(quiz);
+      assert.equal(saveResult, true, "Quiz must be saved to Supabase PostgreSQL");
+
+      // 2. Fetch full quiz (creator/admin)
+      const retrieved = await storage.getQuizById(quizId);
+      assert.ok(retrieved, "Retrieved quiz must exist");
+      assert.equal(retrieved.questions.length, 10, "Must have exactly 10 questions");
+
+      // Check 2-option question
+      const q2 = retrieved.questions.find((q) => q.questionId === "v_q2_opt")!;
+      assert.equal(q2.options.length, 2);
+      assert.equal(q2.options[0].text, "Early Bird");
+      assert.equal(q2.options[0].imageUrl, "/illustrations/early_bird.svg");
+      assert.equal(q2.correctOptionId, 0);
+
+      // Check 4-option question
+      const q4 = retrieved.questions.find((q) => q.questionId === "v_q4_opt")!;
+      assert.equal(q4.options.length, 4);
+      assert.equal(q4.options[1].text, "Coffee");
+      assert.equal(q4.options[1].imageUrl, "/illustrations/coffee.svg");
+      assert.equal(q4.correctOptionId, 1);
+
+      // Check 6-option question
+      const q6 = retrieved.questions.find((q) => q.questionId === "v_q6_opt")!;
+      assert.equal(q6.options.length, 6);
+      assert.equal(q6.options[4].text, "Gaming All Day");
+      assert.equal(q6.options[4].imageUrl, "/illustrations/gaming_night.svg");
+      assert.equal(q6.correctOptionId, 4);
+
+      // Check 9-option question
+      const q9 = retrieved.questions.find((q) => q.questionId === "v_q9_opt")!;
+      assert.equal(q9.options.length, 9);
+      assert.equal(q9.options[8].text, "Istanbul, Turkey");
+      assert.equal(q9.options[8].imageUrl, "/illustrations/istanbul.svg");
+      assert.equal(q9.correctOptionId, 8);
+
+      // 3. Fetch public quiz (player)
+      const publicData = await storage.getQuizPublicData(quizId);
+      assert.ok(publicData, "Public quiz data must exist");
+      assert.equal(publicData.totalQuestions, 10);
+      assert.equal("pinHash" in (publicData as unknown as Record<string, unknown>), false, "pinHash must never be exposed publicly");
+      assert.equal("creatorToken" in (publicData as unknown as Record<string, unknown>), false, "creatorToken must never be exposed publicly");
+
+      for (const pq of publicData.questions) {
+        assert.equal("correctOptionId" in (pq as unknown as Record<string, unknown>), false, "correctOptionId must never be exposed publicly");
+        assert.ok(pq.options.length >= 2, "Question options must be present");
+        for (const opt of pq.options) {
+          assert.ok(opt.text, "Option text must persist");
+          assert.ok(opt.imageUrl, "Option imageUrl must persist");
+        }
+      }
+    } finally {
+      // Cleanup
+      try {
+        await storage.deleteQuiz(quizId);
+      } catch {
+        // ignore
+      }
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    }
+  }
+);
+
+test(
+  "REAL SUPABASE Phase 5: Creator session token authorization, deterministic scoring, and attempt cleanup",
+  {
+    skip: enabled
+      ? false
+      : "Requires explicit opt-in and a disposable Supabase test project (QUIZ_SUPABASE_INTEGRATION=1, SUPABASE_URL / QUIZ_TEST_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY / QUIZ_TEST_SUPABASE_SERVICE_ROLE_KEY)",
+  },
+  async () => {
+    _enableMockSupabase(false);
+    process.env.SUPABASE_URL = testUrl;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = testKey;
+
+    const storage = createQuizStorage();
+    const quizId = "phase5_scoring_" + crypto.randomUUID();
+    const pin = "6543";
+    const pinHash = hashPin(pin);
+    const rawCreatorToken = generateCreatorToken();
+
+    const quiz: QuizData = {
+      id: quizId,
+      slug: quizId,
+      creatorName: "Deterministic Scorer",
+      gender: "male",
+      country: "PK",
+      theme: "dont_block_me",
+      pinHash,
+      creatorToken: rawCreatorToken,
+      createdAt: Date.now(),
+      questions: [
+        {
+          questionId: "q1",
+          question: "Question 1",
+          options: [
+            { id: 0, text: "Option A" },
+            { id: 1, text: "Option B" },
+          ],
+          correctOptionId: 0,
+        },
+        {
+          questionId: "q2",
+          question: "Question 2",
+          options: [
+            { id: 0, text: "Option C" },
+            { id: 1, text: "Option D" },
+          ],
+          correctOptionId: 1,
+        },
+      ],
+    };
+
+    try {
+      await storage.saveQuiz(quiz);
+
+      // 1. Submit attempts with tie-breaking conditions
+      const att1: PlayerAttempt = {
+        id: `${quizId}_att1`,
+        quizId,
+        playerName: "PlayerOne_Early",
+        score: 2,
+        totalQuestions: 2,
+        answers: [
+          { questionId: "q1", selectedOptionId: 0, isCorrect: true },
+          { questionId: "q2", selectedOptionId: 1, isCorrect: true },
+        ],
+        createdAt: 1000,
+      };
+
+      const att2: PlayerAttempt = {
+        id: `${quizId}_att2`,
+        quizId,
+        playerName: "PlayerTwo_Late",
+        score: 2,
+        totalQuestions: 2,
+        answers: [
+          { questionId: "q1", selectedOptionId: 0, isCorrect: true },
+          { questionId: "q2", selectedOptionId: 1, isCorrect: true },
+        ],
+        createdAt: 2000,
+      };
+
+      const att3: PlayerAttempt = {
+        id: `${quizId}_att3`,
+        quizId,
+        playerName: "PlayerThree_Lower",
+        score: 1,
+        totalQuestions: 2,
+        answers: [
+          { questionId: "q1", selectedOptionId: 0, isCorrect: true },
+          { questionId: "q2", selectedOptionId: 0, isCorrect: false },
+        ],
+        createdAt: 500,
+      };
+
+      assert.equal(await storage.recordAttempt(att2), true);
+      assert.equal(await storage.recordAttempt(att1), true);
+      assert.equal(await storage.recordAttempt(att3), true);
+
+      // 2. Scoreboard ordering verification: score DESC, created_at_ms ASC, id ASC
+      const scoreboard = await storage.getScoreboard(quizId);
+      assert.equal(scoreboard.length, 3);
+      assert.equal(scoreboard[0].playerName, "PlayerOne_Early");
+      assert.equal(scoreboard[0].score, 2);
+      assert.equal(scoreboard[1].playerName, "PlayerTwo_Late");
+      assert.equal(scoreboard[1].score, 2);
+      assert.equal(scoreboard[2].playerName, "PlayerThree_Lower");
+      assert.equal(scoreboard[2].score, 1);
+
+      // 3. Creator detailed answers breakdown
+      const details = await storage.getScoreboardDetails(quizId);
+      assert.equal(details.length, 3);
+      assert.equal(details[0].answers.length, 2);
+      assert.equal(details[0].answers[0].theirAnswer, "Option A");
+      assert.equal(details[0].answers[0].correctAnswer, "Option A");
+      assert.equal(details[0].answers[0].isCorrect, true);
+
+      // 4. Creator session token & pass-the-hash defense against live PostgreSQL record
+      const storedQuiz = await storage.getQuizById(quizId);
+      assert.ok(storedQuiz);
+      const storedDigest = storedQuiz.creatorToken; // 64-char SHA-256 hash in PostgreSQL
+      assert.match(storedDigest, /^[0-9a-f]{64}$/i, "Supabase must store a 64-char SHA-256 hex digest");
+
+      // Original raw token succeeds
+      assert.equal(
+        verifyCreatorToken(rawCreatorToken, storedDigest, { quizId, pinHash }),
+        true,
+        "Original raw creator token must succeed against Supabase digest"
+      );
+
+      // Pass-the-hash attack is rejected: submitting the stored SHA-256 digest directly fails
+      assert.equal(
+        verifyCreatorToken(storedDigest, storedDigest, { quizId, pinHash }),
+        false,
+        "Stored SHA-256 digest submitted directly MUST be rejected (pass-the-hash defense)"
+      );
+
+      // Invalid raw token is rejected
+      assert.equal(
+        verifyCreatorToken("adm_fake_raw_token_1234567890", storedDigest, { quizId, pinHash }),
+        false,
+        "Invalid raw token must be rejected"
+      );
+
+      // Session token succeeds
+      const sessionToken = generateCreatorSessionToken(quizId, pinHash);
+      assert.ok(sessionToken.startsWith("adm_cts_"));
+      assert.equal(verifyCreatorSessionToken(sessionToken, quizId, pinHash), true);
+      assert.equal(
+        verifyCreatorToken(sessionToken, storedDigest, { quizId, pinHash }),
+        true,
+        "Session token must be accepted"
+      );
+
+      // 5. Authorized attempt deletion
+      const deletedAtt = await storage.deleteAttempt(quizId, `${quizId}_att3`);
+      assert.equal(deletedAtt, true, "Attempt must be deleted from Supabase");
+
+      const remainingScoreboard = await storage.getScoreboard(quizId);
+      assert.equal(remainingScoreboard.length, 2);
+      assert.equal(remainingScoreboard.some((a) => a.id === `${quizId}_att3`), false);
+
+      // 6. Authorized quiz deletion
+      const deletedQuiz = await storage.deleteQuiz(quizId);
+      assert.equal(deletedQuiz, true, "Quiz must be deleted from Supabase");
+      assert.equal(await storage.getQuizById(quizId), null);
+      assert.deepEqual(await storage.getScoreboard(quizId), []);
+    } finally {
+      try {
+        await storage.deleteQuiz(quizId);
+      } catch {
+        // ignore
+      }
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    }
   }
 );
 
