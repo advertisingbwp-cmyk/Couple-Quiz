@@ -22,8 +22,16 @@ test("Configuration Consistency: next.config.mjs security headers match producti
   assert.ok(hsts, "Strict-Transport-Security header must exist");
   assert.equal(
     hsts.value,
-    "max-age=63072000; includeSubDomains; preload",
-    "HSTS must match exact configured 2-year value with includeSubDomains and preload"
+    "max-age=31536000",
+    "HSTS must match safe 1-year value (max-age=31536000)"
+  );
+  assert.ok(
+    !hsts.value.includes("includeSubDomains"),
+    "HSTS must NOT include 'includeSubDomains' before domain verification"
+  );
+  assert.ok(
+    !hsts.value.includes("preload"),
+    "HSTS must NOT include 'preload' before domain verification"
   );
 
   const xfo = rootHeaders.find((h) => h.key === "X-Frame-Options");

@@ -18,7 +18,7 @@ The Click & Clique application has satisfied all automated functional, visual, d
 
 **Status Definition**:
 - **Application Code & Architecture**: **GO** (All automated tests pass, zero TypeScript/ESLint errors, production build successful).
-- **Production Infrastructure & Operations**: **CONDITIONAL** (Subject to user completion of pre-launch deployment prerequisites: Production Supabase DDL execution, production environment variable configuration, canonical domain confirmation, and HSTS preload risk review).
+- **Production Infrastructure & Operations**: **CONDITIONAL** (Subject to user completion of pre-launch deployment prerequisites: Production Supabase DDL execution, production environment variable configuration, and canonical domain confirmation; safe HSTS policy resolved in Phase 9.2).
 
 **CRITICAL LAUNCH SAFETY PROTOCOL**:  
 No pull requests have been merged into `main`, no commits pushed directly to `main`, and no production deployments triggered during this evaluation. Execution remains strictly paused awaiting explicit authorization from the product owner.
@@ -32,7 +32,7 @@ Every security, architecture, and configuration claim in this report has been ve
 | System Dimension | Code-Verified Specification | Verification Evidence | Status |
 | :--- | :--- | :--- | :---: |
 | **Content Security Policy** | Hardened in `next.config.mjs` via `buildContentSecurityPolicy`. Dev permits `'unsafe-eval'`; Prod strictly removes `'unsafe-eval'`. **Production `script-src` explicitly retains `'unsafe-inline'`** (required by Next.js 15 App Router inline hydration scripts). | Unit test in `tests/configuration-consistency.test.ts` & `tests/security.phase8.test.ts`. | **PASS (Disclosed)** |
-| **Strict-Transport-Security (HSTS)** | Configured in `next.config.mjs` as `max-age=63072000; includeSubDomains; preload` (2 full years). Applies to all subdomains and includes preload flag. | Direct inspection of `next.config.mjs` line 41. Tested in `tests/configuration-consistency.test.ts`. | **PASS (Risk Flagged)** |
+| **Strict-Transport-Security (HSTS)** | Configured in `next.config.mjs` as `max-age=31536000` (1 full year, host-only). Omits `includeSubDomains` and `preload` to prevent lockout of unverified subdomains. | Direct inspection of `next.config.mjs` line 41. Tested in `tests/configuration-consistency.test.ts`. | **PASS** |
 | **Request Body Limiting** | Implemented in `lib/quiz/requestBody.ts` via `readJsonWithLimit`. Streaming byte limit with early `reader.cancel()` and HTTP 413 responses. | Tested in `tests/security.phase8.test.ts` across streaming, forged headers, and chunked streams. | **PASS** |
 | **Route Payload Size Limits** | Route-specific byte bounds enforced: <br>• `POST /api/quiz`: **100 KB** <br>• `POST /api/quiz/[id]/attempt`: **64 KB** <br>• `DELETE /api/quiz/[id]`: **32 KB** <br>• `POST /api/quiz/[id]/scoreboard`: **32 KB** <br>• `DELETE /api/quiz/[id]/scoreboard`: **32 KB** | Verified in route definitions (`app/api/quiz/...`). Tested against oversized payloads. | **PASS** |
 | **Creator Authentication & Tokens** | • Creator token: `adm_<48_hex_chars>` (52 chars, 24 bytes / 192 bits cryptographic entropy via `crypto.randomBytes(24)`). Stored as SHA-256 digest in DB. Direct digest bearer submission is strictly rejected (prevents pass-the-hash). <br>• Creator session token: `adm_cts_<timestampMs>_<hmacHex>` signed with HMAC-SHA256 using `pinHash` as secret key. <br>• Session TTL: **7 days** (`CREATOR_SESSION_TTL_MS = 604,800,000 ms`). <br>• Clock skew allowance: **60 seconds** (`timestamp > now + 60_000`). | Verified in `lib/quiz/security.ts`. Tested in `tests/configuration-consistency.test.ts` and `tests/creator.test.ts`. | **PASS** |
@@ -209,32 +209,22 @@ The rollback command depends strictly on the merge strategy used:
 
 ---
 
-## 9. HSTS Preload Risk & Safer Policy Proposal
+## 9. Safe HSTS Policy Implementation (Phase 9.2)
 
-### 9.1 Exact Configured Header
+### 9.1 Configured Header
 `next.config.mjs` line 41 specifies:
 ```javascript
 {
   key: "Strict-Transport-Security",
-  value: "max-age=63072000; includeSubDomains; preload",
+  value: "max-age=31536000",
 }
 ```
 
-### 9.2 Technical & Operational Consequences
-1. `max-age=63072000`: Specifies a duration of **2 full years** (63,072,000 seconds).
-2. `includeSubDomains`: Enforces HTTPS on **every present and future subdomain** (e.g., `*.domain.com`, `api.domain.com`, `mail.domain.com`). If any subdomain lacks an active, auto-renewing SSL certificate, users who visited the main site will be hard-blocked from that subdomain.
-3. `preload`: Signals consent for browser vendors (Google, Mozilla, Apple) to hardcode the domain into browser binaries.
-4. **Current Status**: Subdomain inventory and custom-domain HTTPS readiness are currently **NOT VERIFIED**.
-
-### 9.3 Safer Proposed Policy for Production Launch
-For initial production launch, before domain-wide subdomain verification is complete, the recommended safer HSTS configuration is:
-```javascript
-{
-  key: "Strict-Transport-Security",
-  value: "max-age=31536000", // 1 year, host-only, no irreversible preload lock-in
-}
-```
-*Note*: This change is proposed for user review and has not been applied to code without explicit authorization.
+### 9.2 Technical Rationale & Risk Elimination
+1. **1-Year Duration (`max-age=31536000`)**: Enforces HTTPS transport security for all modern browsers for 365 days while avoiding extreme 2-year lock-in.
+2. **Omission of `includeSubDomains`**: Prevents collateral breakage of any third-party services, mail systems, or legacy subdomains that may not yet have automated TLS certificate renewal configured.
+3. **Omission of `preload`**: Eliminates the catastrophic risk of irreversible domain inclusion in browser binary preload lists (`hstspreload.org`) prior to thorough multi-month operational verification.
+4. **Automated Regression Defense**: Verified via `tests/configuration-consistency.test.ts` to ensure `includeSubDomains` and `preload` are strictly absent.
 
 ---
 
@@ -267,15 +257,15 @@ Because Vercel Preview Authentication intentionally blocks unauthenticated exter
 
 ## 11. Launch Blockers & Required User Actions
 
-Before triggering production launch, the following 5 operational steps must be executed by the authorized administrator:
+Before triggering production launch, the following operational steps must be executed by the authorized administrator:
 
-| Action Item | Responsible Party | Description |
-| :--- | :--- | :--- |
-| **1. Verify Production Domain** | Administrator / Product Owner | Confirm canonical domain in Vercel Dashboard (e.g. `couple-quiz-three.vercel.app` or custom domain). |
-| **2. Configure Vercel Env Vars** | Administrator | Add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `NEXT_PUBLIC_APP_URL` to Vercel Production Environment Variables. |
-| **3. Execute Supabase Migrations** | Database Administrator | Execute `20261014000001_create_quiz_schema.sql` and `20261015000001_targeted_quiz_rpc_permissions.sql` in Production Supabase SQL Editor. |
-| **4. Decide on HSTS Policy** | Security / Tech Lead | Decide whether to keep the 2-year `max-age=63072000; includeSubDomains; preload` header or switch to safer `max-age=31536000`. |
-| **5. Select PR Merge Strategy** | Tech Lead / Repository Admin | Create a Release PR from `feature/phase-9-final-acceptance` targeting `main`, review final diff, and execute merge. |
+| Action Item | Responsible Party | Description | Status |
+| :--- | :--- | :--- | :---: |
+| **1. Verify Production Domain** | Administrator / Product Owner | Confirm canonical domain in Vercel Dashboard (e.g. `couple-quiz-three.vercel.app` or custom domain). | **PENDING** |
+| **2. Configure Vercel Env Vars** | Administrator | Add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `NEXT_PUBLIC_APP_URL` to Vercel Production Environment Variables. | **PENDING** |
+| **3. Execute Supabase Migrations** | Database Administrator | Execute `20261014000001_create_quiz_schema.sql` and `20261015000001_targeted_quiz_rpc_permissions.sql` in Production Supabase SQL Editor. | **PENDING** |
+| **4. Safe HSTS Policy** | Security / Tech Lead | Set `max-age=31536000` host-only policy, omitting `includeSubDomains` and `preload`. | **RESOLVED (Phase 9.2)** |
+| **5. Select PR Merge Strategy** | Tech Lead / Repository Admin | Create a dedicated Release PR from `feature/phase-9-final-acceptance` targeting `main`, review final diff, and execute merge. | **PENDING** |
 
 ---
 
