@@ -8,6 +8,11 @@ import { getVisualOptionGridClasses } from "../components/quiz/VisualOptionCard"
 import { POST as createQuiz } from "../app/api/quiz/route";
 import { GET as getQuiz } from "../app/api/quiz/[id]/route";
 import { POST as submitAttempt } from "../app/api/quiz/[id]/attempt/route";
+import {
+  GET as getScoreboard,
+  POST as getScoreboardDetails,
+  DELETE as deleteScoreboardAttempt,
+} from "../app/api/quiz/[id]/scoreboard/route";
 
 test("Phase 4: Every option in 105-question bank has both non-empty text and valid imageUrl", () => {
   assert.equal(DEFAULT_QUIZ_QUESTIONS.length, 105);
@@ -237,4 +242,144 @@ test("Phase 4: Attempt API rejects option IDs outside variable option bounds", a
   const errData = await invalidAttemptRes.json();
   assert.equal(errData.success, false);
   assert.equal(errData.error, "Invalid option selected.");
+});
+
+test("Phase 4.1: Responsive 9-option grid uses 2 columns on mobile and 3 columns on tablet/desktop", () => {
+  const grid9 = getVisualOptionGridClasses(9);
+  assert.equal(grid9, "grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3");
+});
+
+test("Phase 4.1: Dream Destinations (q8) illustrations are distinct recognizable landmarks without generic airplanes", () => {
+  const publicDir = path.join(process.cwd(), "public");
+  const genericPlaneD = "M24 64 L50 60 L68 34";
+
+  for (let i = 0; i <= 5; i++) {
+    const svgPath = path.join(publicDir, "quiz", "options", `q8_opt${i}.svg`);
+    assert.ok(fs.existsSync(svgPath), `q8_opt${i}.svg must exist`);
+    const content = fs.readFileSync(svgPath, "utf-8");
+    assert.ok(!content.includes(genericPlaneD), `q8_opt${i}.svg must not contain generic airplane path`);
+  }
+
+  // Verify Switzerland has Swiss cross/shield
+  const ch = fs.readFileSync(path.join(publicDir, "quiz", "options", "q8_opt0.svg"), "utf-8");
+  assert.ok(ch.includes("Alps Peaks") || ch.includes("Swiss Shield"), "q8_opt0.svg must represent Switzerland Alps");
+
+  // Verify Dubai has Burj Khalifa
+  const dubai = fs.readFileSync(path.join(publicDir, "quiz", "options", "q8_opt1.svg"), "utf-8");
+  assert.ok(dubai.includes("Burj Khalifa") || dubai.includes("Spire"), "q8_opt1.svg must represent Dubai");
+
+  // Verify Turkey has Mosque / Minarets
+  const turkey = fs.readFileSync(path.join(publicDir, "quiz", "options", "q8_opt2.svg"), "utf-8");
+  assert.ok(turkey.includes("Minaret") || turkey.includes("Mosque"), "q8_opt2.svg must represent Turkey");
+
+  // Verify Maldives has Beach / Palm
+  const maldives = fs.readFileSync(path.join(publicDir, "quiz", "options", "q8_opt3.svg"), "utf-8");
+  assert.ok(maldives.includes("Palm") || maldives.includes("Island"), "q8_opt3.svg must represent Maldives");
+
+  // Verify Japan has Torii / Fuji
+  const japan = fs.readFileSync(path.join(publicDir, "quiz", "options", "q8_opt4.svg"), "utf-8");
+  assert.ok(japan.includes("Torii") || japan.includes("Mount Fuji"), "q8_opt4.svg must represent Japan");
+
+  // Verify Paris has Eiffel Tower
+  const paris = fs.readFileSync(path.join(publicDir, "quiz", "options", "q8_opt5.svg"), "utf-8");
+  assert.ok(paris.includes("Eiffel Tower"), "q8_opt5.svg must represent Paris");
+});
+
+test("Phase 4.1: Scoreboard authorization protects private answers and attempt deletion", async () => {
+  const selectedQuestionConfigs = [
+    { questionId: "q40", correctOptionId: 0 },
+    { questionId: "q42", correctOptionId: 1 },
+    { questionId: "q2", correctOptionId: 2 },
+    { questionId: "q3", correctOptionId: 0 },
+    { questionId: "q4", correctOptionId: 3 },
+    { questionId: "q5", correctOptionId: 1 },
+    { questionId: "q7", correctOptionId: 2 },
+    { questionId: "q9", correctOptionId: 0 },
+    { questionId: "q10", correctOptionId: 1 },
+    { questionId: "q11", correctOptionId: 3 },
+  ];
+
+  const createReq = new NextRequest("http://localhost:3000/api/quiz", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      creatorName: "Scoreboard Auth Creator",
+      gender: "female",
+      country: "PK",
+      secretPin: "8888",
+      questions: selectedQuestionConfigs,
+    }),
+  });
+
+  const createRes = await createQuiz(createReq);
+  const { quizId, creatorToken } = await createRes.json();
+  assert.ok(quizId);
+  assert.ok(creatorToken);
+
+  // Submit an attempt
+  const attemptReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      playerName: "Scoreboard Auth Player",
+      answers: selectedQuestionConfigs.map((q) => ({
+        questionId: q.questionId,
+        selectedOptionId: q.correctOptionId,
+      })),
+    }),
+  });
+  const attemptRes = await submitAttempt(attemptReq, { params: Promise.resolve({ id: quizId }) });
+  const { attemptId } = await attemptRes.json();
+  assert.ok(attemptId);
+
+  // 1. Public GET: returns public scoreboard with NO answers or question details
+  const publicReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/scoreboard`);
+  const publicRes = await getScoreboard(publicReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(publicRes.status, 200);
+  const publicData = await publicRes.json();
+  assert.ok(publicData.success);
+  assert.ok(Array.isArray(publicData.scoreboard));
+  assert.equal(publicData.scoreboard.length, 1);
+  assert.equal(publicData.scoreboard[0].answers, undefined, "Public scoreboard must NEVER leak answers");
+
+  // 2. Unauthorized POST: rejected
+  const unauthReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/scoreboard`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin: "0000" }),
+  });
+  const unauthRes = await getScoreboardDetails(unauthReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(unauthRes.status, 403);
+
+  // 3. Authorized POST with creatorToken: returns detailed answers
+  const authReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/scoreboard`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ creatorToken }),
+  });
+  const authRes = await getScoreboardDetails(authReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(authRes.status, 200);
+  const authData = await authRes.json();
+  assert.ok(authData.success);
+  assert.ok(Array.isArray(authData.scoreboard[0].answers), "Authorized creator must see answers breakdown");
+
+  // 4. Unauthorized DELETE: rejected
+  const unauthDeleteReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/scoreboard`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attemptId, pin: "wrong" }),
+  });
+  const unauthDeleteRes = await deleteScoreboardAttempt(unauthDeleteReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(unauthDeleteRes.status, 403);
+
+  // 5. Authorized DELETE with valid PIN: deletes attempt
+  const authDeleteReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/scoreboard`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attemptId, pin: "8888" }),
+  });
+  const authDeleteRes = await deleteScoreboardAttempt(authDeleteReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(authDeleteRes.status, 200);
+  const authDeleteData = await authDeleteRes.json();
+  assert.ok(authDeleteData.success);
 });

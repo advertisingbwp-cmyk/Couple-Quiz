@@ -53,10 +53,8 @@ export default function QuizSharePage({
   };
 
   const creatorName = quiz?.creatorName || "Your Friend";
-  const pronoun = quiz?.gender === "female" ? "her" : "his";
-  const pronounSubject = quiz?.gender === "female" ? "she" : "he";
 
-  const whatsappText = `🎭\n\n${creatorName} is *blocking* 🚫📱 ${pronoun} _fake_ friends!\n\nWill ${pronounSubject} *block* you as well? 😂\n\nLet's see 👇\n${shareUrl}`;
+  const whatsappText = `✨ *Click & Clique Friendship Challenge* ✨\n\n${creatorName} created a quiz! 🎯\nHow well do you REALLY know ${creatorName}?\n\nTake the test and see your rank on the leaderboard! 👇\n${shareUrl}`;
 
   const handleWhatsAppShare = () => {
     quizAudio.playPop();
@@ -127,7 +125,7 @@ export default function QuizSharePage({
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
-            Share your link &amp; find your <span className="line-through decoration-red-500 decoration-4">fake</span> friends!
+            Share your challenge &amp; see who knows you best! ✨
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">
             Apne doston ko challenge bhejein aur dekhein kon aapko sab se behtar janta hai!

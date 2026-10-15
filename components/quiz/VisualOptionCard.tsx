@@ -24,7 +24,7 @@ export function getVisualOptionGridClasses(optionCount: number): string {
     case 6:
       return "grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3";
     case 9:
-      return "grid grid-cols-3 gap-2 sm:gap-2.5";
+      return "grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3";
     case 4:
     default:
       return "grid grid-cols-2 gap-3 sm:gap-3.5";
@@ -56,20 +56,20 @@ export function VisualOptionCard({
     : "w-16 h-16 sm:w-20 sm:h-20";
 
   const textSizeClasses = isCompact
-    ? "text-[11px] sm:text-xs font-black line-clamp-2"
+    ? "text-[11px] sm:text-xs font-black break-normal hyphens-none leading-snug"
     : isMedium
-    ? "text-xs sm:text-sm font-black line-clamp-2"
+    ? "text-xs sm:text-sm font-black break-normal hyphens-none leading-snug"
     : isLarge
-    ? "text-sm sm:text-base font-black"
-    : "text-xs sm:text-sm font-black line-clamp-2";
+    ? "text-sm sm:text-base font-black break-normal hyphens-none leading-snug"
+    : "text-xs sm:text-sm font-black break-normal hyphens-none leading-snug";
 
   const cardPaddingClasses = isCompact
-    ? "p-2 sm:p-2.5 min-h-[110px] sm:min-h-[125px]"
+    ? "p-2 sm:p-2.5 h-auto min-h-[105px] sm:min-h-[120px]"
     : isMedium
-    ? "p-2.5 sm:p-3 min-h-[120px] sm:min-h-[135px]"
+    ? "p-2.5 sm:p-3 h-auto min-h-[115px] sm:min-h-[130px]"
     : isLarge
-    ? "p-4 sm:p-5 min-h-[150px] sm:min-h-[165px]"
-    : "p-3 sm:p-3.5 min-h-[135px] sm:min-h-[145px]";
+    ? "p-4 sm:p-5 h-auto min-h-[145px] sm:min-h-[160px]"
+    : "p-3 sm:p-3.5 h-auto min-h-[125px] sm:min-h-[140px]";
 
   const badgeSizeClasses = isCompact
     ? "w-4 h-4 top-1.5 right-1.5"
@@ -128,7 +128,7 @@ export function VisualOptionCard({
 
       {/* Readable Answer Text */}
       <span
-        className={`w-full tracking-tight text-[#29324c] px-1 leading-snug break-words ${textSizeClasses}`}
+        className={`w-full tracking-tight text-[#29324c] px-1 leading-snug break-normal hyphens-none ${textSizeClasses}`}
       >
         {option.text}
       </span>

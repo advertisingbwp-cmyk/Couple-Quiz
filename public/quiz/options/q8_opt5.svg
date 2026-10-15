@@ -1,14 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
   <defs>
-    <radialGradient id="grad-5" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#fff7ed" />
-      <stop offset="100%" stop-color="#ffedd5" />
+    <radialGradient id="grad-paris" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#faf5ff" />
+      <stop offset="100%" stop-color="#f3e8ff" />
     </radialGradient>
   </defs>
-  <rect x="4" y="4" width="112" height="112" rx="24" fill="url(#grad-5)" stroke="#29324c" stroke-width="3" />
-  <circle cx="60" cy="60" r="46" fill="none" stroke="#fb923c" stroke-width="2" stroke-dasharray="4,4" opacity="0.6" />
+  <rect x="4" y="4" width="112" height="112" rx="24" fill="url(#grad-paris)" stroke="#29324c" stroke-width="3" />
+  <circle cx="60" cy="60" r="46" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,4" opacity="0.4" />
   
-      <path d="M24 64 L50 60 L68 34 L76 34 L64 60 L92 60 L98 52 L102 52 L100 64 L102 76 L98 76 L92 68 L64 68 L76 94 L68 94 L50 68 L24 64 Z" fill="#ea580c" stroke="#29324c" stroke-width="3" stroke-linejoin="round" />
-      <circle cx="34" cy="64" r="3" fill="#fef08a" />
-    
+  <!-- Eiffel Tower Antenna & Spire -->
+  <line x1="60" y1="14" x2="60" y2="28" stroke="#29324c" stroke-width="3" stroke-linecap="round" />
+  <circle cx="60" cy="14" r="2" fill="#ec4899" />
+
+  <!-- Top Cupola -->
+  <path d="M57 28 H63 V34 H57 Z" fill="#9333ea" stroke="#29324c" stroke-width="2" />
+
+  <!-- Upper Tier -->
+  <polygon points="56,34 64,34 66,48 54,48" fill="#a855f7" stroke="#29324c" stroke-width="2.5" />
+  <!-- Upper Platform -->
+  <line x1="51" y1="48" x2="69" y2="48" stroke="#29324c" stroke-width="3.5" stroke-linecap="round" />
+
+  <!-- Middle Tier -->
+  <polygon points="54,48 66,48 69,66 51,66" fill="#7e22ce" stroke="#29324c" stroke-width="2.5" />
+  <!-- Lower Platform -->
+  <line x1="44" y1="66" x2="76" y2="66" stroke="#29324c" stroke-width="4" stroke-linecap="round" />
+
+  <!-- Lower Base Legs & Arch -->
+  <path d="M51 66 L36 90 H48 L55 76 C56 74 64 74 65 76 L72 90 H84 L69 66 Z" fill="#6b21a8" stroke="#29324c" stroke-width="3" stroke-linejoin="round" />
+  <path d="M49 90 C49 78 71 78 71 90" fill="none" stroke="#29324c" stroke-width="2.5" />
+
+  <!-- Floating Romantic Hearts -->
+  <path d="M26 38 C24 33 18 33 18 39 C18 45 26 50 26 50 C26 50 34 45 34 39 C34 33 28 33 26 38 Z" fill="#ec4899" stroke="#29324c" stroke-width="1.5" />
+  <path d="M92 34 C90.5 30 86 30 86 35 C86 39 92 43 92 43 C92 43 98 39 98 35 C98 30 93.5 30 92 34 Z" fill="#f43f5e" stroke="#29324c" stroke-width="1.5" />
+
+  <!-- Ground Line -->
+  <line x1="16" y1="90" x2="104" y2="90" stroke="#29324c" stroke-width="3" stroke-linecap="round" />
 </svg>

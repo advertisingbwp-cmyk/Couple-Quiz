@@ -91,23 +91,23 @@ export default function QuizResultPage({
   let badgeColor = "";
 
   if (ratio >= 0.8) {
-    reactionText = "You made me smile! 😆 I'll never block you!";
+    reactionText = "You know me inside out! Pure clique legend! 🌟";
     reactionEmoji = "❤️ True Bestie!";
     badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
   } else if (ratio >= 0.5) {
-    reactionText = "I won't block you... but please leave me alone 😕";
-    reactionEmoji = "🙂 Average Friend";
+    reactionText = "Solid clique energy! You know your stuff! 😎";
+    reactionEmoji = "🙂 Great Friend";
     badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
   } else {
-    reactionText = "BYE! BYE! … I will block you… huh! 🤬";
-    reactionEmoji = "🚨 FAKE FRIEND ALERT!";
-    badgeColor = "bg-red-100 text-red-800 border-red-300";
+    reactionText = "Ouch! We definitely need to hang out more! ☕";
+    reactionEmoji = "👀 Acquaintance Alert!";
+    badgeColor = "bg-rose-100 text-rose-800 border-rose-300";
   }
 
   const handleShareResultWhatsApp = () => {
     quizAudio.playPop();
     const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/quiz/play/${quizId}` : "";
-    const msg = `🎉 I scored ${score}/${total} on ${creatorName}'s Friendship Challenge!\n\nCan you beat my score or will ${creatorName} block you? 😂\n\nTry here 👇\n${shareUrl}`;
+    const msg = `🎉 I scored ${score}/${total} on ${creatorName}'s Friendship Challenge!\n\nCan you beat my score on the Click & Clique leaderboard? 🏆\n\nTry here 👇\n${shareUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -148,7 +148,7 @@ export default function QuizResultPage({
               <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                 {creatorName}
               </span>
-              <span>&ldquo;Should I block you? 🤬&rdquo;</span>
+              <span>&ldquo;Let&apos;s see how well you really know me! 😏&rdquo;</span>
             </div>
 
             {dialogueStep >= 1 && (
@@ -156,7 +156,7 @@ export default function QuizResultPage({
                 <span className="bg-sky-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   You
                 </span>
-                <span>&ldquo;Wait... I&apos;m not your fake friend! 🥺&rdquo;</span>
+                <span>&ldquo;I know your clique vibe better than anyone! 😎&rdquo;</span>
               </div>
             )}
 
@@ -165,7 +165,7 @@ export default function QuizResultPage({
                 <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   {creatorName}
                 </span>
-                <span>&ldquo;Then prove you&apos;re a real friend! 😏&rdquo;</span>
+                <span>&ldquo;Big claims! Did you actually pay attention? 🧐&rdquo;</span>
               </div>
             )}
 
@@ -174,7 +174,7 @@ export default function QuizResultPage({
                 <span className="bg-sky-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   You
                 </span>
-                <span>&ldquo;Just look at my score! 🫣&rdquo;</span>
+                <span>&ldquo;Check the leaderboard score! 🚀&rdquo;</span>
               </div>
             )}
 
@@ -183,7 +183,7 @@ export default function QuizResultPage({
                 <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   {creatorName}
                 </span>
-                <span>&ldquo;Okay... let&apos;s see! 👀&rdquo;</span>
+                <span>&ldquo;Moment of truth... reveal results! 🎉&rdquo;</span>
               </div>
             )}
           </div>

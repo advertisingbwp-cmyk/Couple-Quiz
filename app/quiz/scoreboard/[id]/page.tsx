@@ -25,6 +25,14 @@ export default function QuizScoreboardPage({
   const [pinPrompt, setPinPrompt] = useState<{ open: boolean; attemptId: string }>({ open: false, attemptId: "" });
   const [deleting, setDeleting] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [isCreator, setIsCreator] = useState(false);
+
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
+    if (token) {
+      setIsCreator(true);
+    }
+  }, [quizId]);
 
   const fetchPublicScoreboard = React.useCallback(() => {
     setLoading(true);
@@ -87,15 +95,17 @@ export default function QuizScoreboardPage({
       });
       const data = await res.json();
       if (data.success && data.scoreboard) {
-        const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === targetDetailId);
-        if (detail) {
-          setSelectedEntry(detail);
-          setShowAuthModal(false);
-          setEnteredPin("");
-          quizAudio.playCorrect();
-        } else {
-          setAuthError("Player record not found.");
+        setIsCreator(true);
+        if (targetDetailId) {
+          const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === targetDetailId);
+          if (detail) {
+            setSelectedEntry(detail);
+          }
         }
+        setShowAuthModal(false);
+        setEnteredPin("");
+        setTargetDetailId(null);
+        quizAudio.playCorrect();
       } else {
         setAuthError(data.error || "Incorrect Secret PIN.");
         quizAudio.playWrong();
@@ -213,9 +223,28 @@ export default function QuizScoreboardPage({
 
         {/* Score List (Ranked Highest Score First) */}
         <div className="w-full bg-white rounded-3xl p-5 border-4 border-slate-900 shadow-lg">
-          <h2 className="text-xs font-black uppercase text-slate-500 tracking-wider mb-3">
-            Ranked Players (Highest Score First)
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-black uppercase text-slate-500 tracking-wider">
+              Ranked Players
+            </h2>
+            {isCreator ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                👑 Creator Mode
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetDetailId(null);
+                  setShowAuthModal(true);
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-700 hover:text-sky-900 hover:underline cursor-pointer"
+              >
+                <Lock size={12} />
+                <span>Creator Access</span>
+              </button>
+            )}
+          </div>
 
           {loading ? (
             <div className="py-8 text-center text-xs font-bold text-slate-500 animate-pulse">
@@ -264,11 +293,11 @@ export default function QuizScoreboardPage({
                             isBestie
                               ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                               : isFake
-                              ? "bg-red-100 text-red-800 border-red-300"
+                              ? "bg-amber-100 text-amber-800 border-amber-300"
                               : "bg-sky-100 text-sky-800 border-sky-300"
                           }`}
                         >
-                          {isBestie ? "True Bestie ❤️" : isFake ? "Fake Friend 🚨 Block" : "Friend ✨"}
+                          {isBestie ? "True Bestie ❤️" : isFake ? "Needs Catch-up ☕" : "Clique Friend ✨"}
                         </span>
                       </div>
                     </div>
@@ -281,25 +310,28 @@ export default function QuizScoreboardPage({
                         <span className="text-xs font-bold text-slate-400">/{entry.totalQuestions}</span>
                       </div>
 
-                      {/* View answers button with auth protection */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenAnswers(entry)}
-                        className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-                        title="View Answers (Creator Only)"
-                      >
-                        <Eye size={16} />
-                      </button>
+                      {/* Creator-only controls: view answers or delete attempt */}
+                      {isCreator && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAnswers(entry)}
+                            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                            title="View Answers (Creator Only)"
+                          >
+                            <Eye size={16} />
+                          </button>
 
-                      {/* Delete attempt button */}
-                      <button
-                        type="button"
-                        onClick={() => setPinPrompt({ open: true, attemptId: entry.id })}
-                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
-                        title="Delete Player"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                          <button
+                            type="button"
+                            onClick={() => setPinPrompt({ open: true, attemptId: entry.id })}
+                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Player (Creator Only)"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
