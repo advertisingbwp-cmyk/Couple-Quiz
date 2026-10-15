@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Copy, Check, Trophy, ExternalLink, Sparkles, MessageCircle, AlertCircle } from "lucide-react";
 import { quizAudio } from "@/lib/quiz/audio";
 import { triggerConfetti } from "@/lib/quiz/confetti";
 import { QuizPublicData } from "@/lib/quiz/types";
+import { BrandMark } from "@/components/quiz-home/Illustrations";
 
 export default function QuizSharePage({
   params,
@@ -98,23 +98,20 @@ export default function QuizSharePage({
 
       {/* Header */}
       <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-2 flex items-center justify-between">
-        <Link href="/quiz" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 relative rounded-xl bg-white shadow-sm flex items-center justify-center p-1 border-2 border-slate-900">
-            <Image
-              src="/quiz/assets/img/logo-f.webp"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-slate-900">
-            Don&apos;t Block Me!
+        <Link
+          href="/quiz"
+          className="inline-flex items-center gap-2.5 no-underline group focus-visible:outline-3 focus-visible:outline-[#6650b7]"
+          aria-label="Click & Clique homepage"
+        >
+          <BrandMark />
+          <span className="text-xl font-black tracking-tight text-[#29324c]">
+            click <span className="text-[#6650b7] font-medium">&amp;</span> clique
+            <span className="text-[#bd4a66]">.</span>
           </span>
         </Link>
         <Link
           href={`/quiz/scoreboard/${quizId}`}
-          className="text-xs font-black bg-amber-300 text-slate-900 px-3.5 py-1.5 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a] flex items-center gap-1.5 hover:bg-amber-400 transition-all cursor-pointer"
+          className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63] flex items-center gap-1.5 hover:bg-[#ffdb92] transition-all cursor-pointer"
         >
           <Trophy size={14} />
           <span>Scoreboard</span>

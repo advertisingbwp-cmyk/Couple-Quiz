@@ -104,3 +104,33 @@ export function selectQuestionOption(
 export function isDeckComplete(state: DeckState): boolean {
   return state.answers.length >= state.targetCount || getRemainingUnanswered(state).length === 0;
 }
+
+/**
+ * Steps back to the previous answered question, removing it from answers
+ * and placing it back as the currently active question with its previously
+ * chosen option ID. Returns { nextState, previousOptionId }.
+ */
+export function stepBackQuestion(state: DeckState): {
+  nextState: DeckState;
+  previousOptionId: number | null;
+} {
+  if (state.answers.length === 0) {
+    return { nextState: state, previousOptionId: null };
+  }
+
+  const lastAnswer = state.answers[state.answers.length - 1];
+  const nextAnswers = state.answers.slice(0, -1);
+  const remainingIds = new Set(nextAnswers.map((a) => a.questionId));
+  const remaining = state.availableQuestions.filter((q) => !remainingIds.has(q.id));
+  const restoredIndex = remaining.findIndex((q) => q.id === lastAnswer.questionId);
+
+  return {
+    nextState: {
+      ...state,
+      answers: nextAnswers,
+      currentPoolIndex: restoredIndex >= 0 ? restoredIndex : 0,
+    },
+    previousOptionId: lastAnswer.correctOptionId,
+  };
+}
+

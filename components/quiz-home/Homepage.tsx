@@ -239,7 +239,9 @@ export default function Homepage() {
       );
       return;
     }
-    router.push("/quiz/create");
+    router.push(
+      `/quiz/create?name=${encodeURIComponent(name.trim())}&gender=${gender}`,
+    );
   }
   return (
     <div className={styles.home}>
