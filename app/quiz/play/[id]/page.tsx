@@ -262,7 +262,7 @@ export default function QuizPlayPage({
                   maxLength={40}
                   className="w-full px-4 py-3.5 text-base font-bold bg-[#fffefa] text-[#29324c] rounded-2xl border-2 border-[#29324c] focus:outline-none focus:ring-4 focus:ring-[#6650b7]/20 transition-all shadow-[0_2px_0_#d7e1e8]"
                 />
-                {error && <p className="text-xs font-bold text-[#a52938] mt-1.5 ml-1">{error}</p>}
+                {error && <p className="text-xs font-bold text-[#a52938] mt-1.5 ml-1" role="alert">{error}</p>}
               </div>
 
               <button
@@ -297,7 +297,7 @@ export default function QuizPlayPage({
 
             {/* Submission Error Banner */}
             {submissionError && (
-              <div className="mb-4 bg-[#fff1f2] border-2 border-[#a52938] text-[#a52938] p-4 rounded-2xl shadow-[0_3px_0_#a52938] text-center">
+              <div className="mb-4 bg-[#fff1f2] border-2 border-[#a52938] text-[#a52938] p-4 rounded-2xl shadow-[0_3px_0_#a52938] text-center" role="alert">
                 <p className="text-xs sm:text-sm font-black mb-2">{submissionError}</p>
                 <button
                   type="button"

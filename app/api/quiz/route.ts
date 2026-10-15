@@ -9,6 +9,14 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > 100 * 1024) {
+      return NextResponse.json(
+        { success: false, error: "Payload too large. Maximum 100KB allowed." },
+        { status: 413 }
+      );
+    }
+
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json(

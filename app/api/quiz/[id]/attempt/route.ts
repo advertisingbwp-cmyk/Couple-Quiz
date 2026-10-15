@@ -11,6 +11,14 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > 64 * 1024) {
+      return NextResponse.json(
+        { success: false, error: "Payload too large. Maximum 64KB allowed." },
+        { status: 413 }
+      );
+    }
+
     const { id } = await params;
     const body = await req.json().catch(() => null);
 

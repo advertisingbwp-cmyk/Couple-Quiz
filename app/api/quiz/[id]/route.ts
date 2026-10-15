@@ -41,6 +41,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > 32 * 1024) {
+      return NextResponse.json(
+        { success: false, error: "Payload too large. Maximum 32KB allowed." },
+        { status: 413 }
+      );
+    }
+
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
     const { pin, creatorToken } = body;

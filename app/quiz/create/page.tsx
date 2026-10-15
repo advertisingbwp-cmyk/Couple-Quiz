@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,6 +11,7 @@ import {
   Sparkles,
   KeyRound,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
 import { quizAudio } from "@/lib/quiz/audio";
@@ -118,18 +119,33 @@ function QuizCreateContent() {
     setSubmitError("");
   };
 
-  const handleEditCompleted = () => {
+  const handleEditCompleted = useCallback(() => {
     // When editing from the PIN modal or complete state, reopen the last answered question
     // with its previous selection restored so the user is editing question 10 of 10.
-    if (deck.answers.length > 0) {
-      const { nextState, previousOptionId } = stepBackQuestion(deck);
-      setDeck(nextState);
-      setSelectedOptionId(previousOptionId);
-    }
+    setDeck((prevDeck) => {
+      if (prevDeck.answers.length > 0) {
+        const { nextState, previousOptionId } = stepBackQuestion(prevDeck);
+        setSelectedOptionId(previousOptionId);
+        return nextState;
+      }
+      return prevDeck;
+    });
     setShowPinModal(false);
     setSubmitError("");
     setPinError("");
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!showPinModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        handleEditCompleted();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showPinModal, handleEditCompleted]);
 
   const handleSkip = () => {
     quizAudio.playPop();
@@ -455,7 +471,16 @@ function QuizCreateContent() {
           aria-modal="true"
           aria-labelledby="pin-modal-title"
         >
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-7 border-2 border-[#29324c] shadow-[0_12px_32px_rgba(41,50,76,0.2)] animate-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-sm bg-white rounded-3xl p-6 sm:p-7 border-2 border-[#29324c] shadow-[0_12px_32px_rgba(41,50,76,0.2)] animate-in zoom-in-95 duration-150">
+            <button
+              type="button"
+              onClick={handleEditCompleted}
+              aria-label="Close PIN modal and edit questions"
+              className="absolute top-4 right-4 p-1.5 text-[#536079] hover:text-[#29324c] hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+
             <div className="w-12 h-12 rounded-2xl bg-[#ffce71] border-2 border-[#29324c] flex items-center justify-center mx-auto mb-3.5 shadow-[0_3px_0_#d6ad63]">
               <KeyRound size={24} className="text-[#29324c]" />
             </div>
