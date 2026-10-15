@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getQuizById, recordAttemptAtomic } from "@/lib/quiz/storage";
 import { PlayerAttempt } from "@/lib/quiz/types";
 import { generateAttemptId } from "@/lib/quiz/security";
+import { readJsonWithLimit } from "@/lib/quiz/requestBody";
 
 export const dynamic = "force-dynamic";
 
@@ -11,21 +12,22 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const contentLength = req.headers.get("content-length");
-    if (contentLength && parseInt(contentLength, 10) > 64 * 1024) {
+    const parseResult = await readJsonWithLimit<{
+      playerName?: unknown;
+      answers?: unknown;
+      attemptId?: unknown;
+      idempotencyKey?: unknown;
+    }>(req, 64 * 1024);
+
+    if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: "Payload too large. Maximum 64KB allowed." },
-        { status: 413 }
+        { success: false, error: parseResult.error },
+        { status: parseResult.status }
       );
     }
 
     const { id } = await params;
-    const body = await req.json().catch(() => null);
-
-    if (!body || typeof body !== "object") {
-      return NextResponse.json({ success: false, error: "Invalid payload." }, { status: 400 });
-    }
-
+    const body = parseResult.data;
     const { playerName, answers } = body;
 
     if (!playerName || typeof playerName !== "string" || !playerName.trim()) {
