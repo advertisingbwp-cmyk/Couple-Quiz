@@ -1,6 +1,6 @@
 import { StorageUnavailableError } from "@/lib/quiz/storage";
 import { NextResponse } from "next/server";
-import { getQuizById, recordAttempt, getScoreboard } from "@/lib/quiz/storage";
+import { getQuizById, recordAttemptAtomic } from "@/lib/quiz/storage";
 import { PlayerAttempt } from "@/lib/quiz/types";
 import { generateAttemptId } from "@/lib/quiz/security";
 
@@ -119,7 +119,7 @@ export async function POST(
       req.headers.get("idempotency-key") ||
       req.headers.get("x-attempt-id");
 
-    if (candidateId && typeof candidateId === "string") {
+    if (candidateId && typeof candidateId === "string" && candidateId.trim()) {
       const cleanCandidate = candidateId.trim();
       // Valid attempt ID format: att_<timestamp>_<entropy> or clean safe alphanumeric token (12-64 chars)
       if (/^att_[0-9]{10,16}_[0-9a-f]{6,32}$/i.test(cleanCandidate)) {
@@ -131,21 +131,6 @@ export async function POST(
           { success: false, error: "Invalid attempt ID format." },
           { status: 400 }
         );
-      }
-
-      // Check if this attempt was already recorded (idempotency safety)
-      const existingEntries = await getScoreboard(id);
-      const existing = existingEntries.find((entry) => entry.id === attemptId);
-      if (existing) {
-        return NextResponse.json({
-          success: true,
-          score: existing.score,
-          totalQuestions: existing.totalQuestions,
-          creatorName: quiz.creatorName,
-          gender: quiz.gender,
-          attemptId: existing.id,
-          alreadyRecorded: true,
-        });
       }
     }
 
@@ -159,21 +144,47 @@ export async function POST(
       createdAt: Date.now(),
     };
 
-    const isRecorded = await recordAttempt(attempt);
-    if (!isRecorded) {
+    // Atomic server-side idempotency: insert or detect existing attempt
+    const result = await recordAttemptAtomic(attempt);
+
+    if (result.status === "quiz_not_found") {
       return NextResponse.json(
-        { success: false, error: "Failed to save attempt to storage. Please try again." },
-        { status: 503 }
+        { success: false, error: "Quiz not found or may have been deleted." },
+        { status: 404 }
       );
     }
 
+    if (result.status === "conflict") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Idempotency key conflict: this attempt ID was already used with different submission data.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (result.status === "duplicate") {
+      // Return the persisted database attempt result
+      return NextResponse.json({
+        success: true,
+        score: result.attempt.score,
+        totalQuestions: result.attempt.totalQuestions,
+        creatorName: quiz.creatorName,
+        gender: quiz.gender,
+        attemptId: result.attempt.id,
+        alreadyRecorded: true,
+      });
+    }
+
+    // result.status === "recorded"
     return NextResponse.json({
       success: true,
-      score: finalScore,
-      totalQuestions: quiz.questions.length,
+      score: result.attempt.score,
+      totalQuestions: result.attempt.totalQuestions,
       creatorName: quiz.creatorName,
       gender: quiz.gender,
-      attemptId: attempt.id,
+      attemptId: result.attempt.id,
     });
   } catch (err) {
     if (err instanceof StorageUnavailableError)

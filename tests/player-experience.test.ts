@@ -120,6 +120,63 @@ test("Phase 6: Player Attempt Idempotency & Network Retry Safety", async () => {
   });
   const resBadAttempt = await submitAttempt(badAttemptReq, { params: Promise.resolve({ id: quizId }) });
   assert.equal(resBadAttempt.status, 400);
+
+  // 6. Conflicting payload reuse with different player name returns 409 Conflict
+  const conflictNameReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      attemptId: clientAttemptId,
+      playerName: "Imposter",
+      answers,
+    }),
+  });
+  const resConflictName = await submitAttempt(conflictNameReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(resConflictName.status, 409);
+
+  // 7. Conflicting payload reuse with different answers returns 409 Conflict
+  const conflictAnsReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      attemptId: clientAttemptId,
+      playerName: "Zara",
+      answers: answers.map((a, idx) => ({ ...a, selectedOptionId: idx === 0 ? (a.selectedOptionId === 0 ? 1 : 0) : a.selectedOptionId })),
+    }),
+  });
+  const resConflictAns = await submitAttempt(conflictAnsReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(resConflictAns.status, 409);
+
+  // 8. 20 simultaneous concurrent identical submissions with same attemptId
+  const concurrentAttemptId = generateAttemptId();
+  const concurrentReqs = Array.from({ length: 20 }, () =>
+    submitAttempt(
+      new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          attemptId: concurrentAttemptId,
+          playerName: "Concurrent Player",
+          answers,
+        }),
+      }),
+      { params: Promise.resolve({ id: quizId }) }
+    )
+  );
+
+  const concurrentResults = await Promise.all(concurrentReqs);
+  for (const res of concurrentResults) {
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.success, true);
+    assert.equal(body.attemptId, concurrentAttemptId);
+    assert.equal(body.score, 10);
+  }
+
+  // Verify only 1 attempt added to scoreboard (total 3 attempts on quiz: Zara, Ali, Concurrent Player)
+  const scoreResFinal = await getPublicScoreboard(scoreReq, { params: Promise.resolve({ id: quizId }) });
+  const scoreDataFinal = await scoreResFinal.json();
+  assert.equal(scoreDataFinal.scoreboard.filter((e: { id: string }) => e.id === concurrentAttemptId).length, 1);
 });
 
 test("Phase 6: Player Name Validation & Whitespace Trimming", async () => {

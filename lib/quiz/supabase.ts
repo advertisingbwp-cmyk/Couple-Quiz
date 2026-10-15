@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import type { QuizData, PlayerAttempt, QuizPublicData } from "./types";
-import { hashCreatorToken } from "./security";
+import type { QuizData, PlayerAttempt, QuizPublicData, RecordAttemptOutcome } from "./types";
+import { hashCreatorToken, computeAttemptFingerprint } from "./security";
 
 export class StorageUnavailableError extends Error {
   constructor(message = "Database storage unavailable") {
@@ -557,7 +557,72 @@ export async function dbGetQuizPublic(id: string): Promise<QuizPublicData | null
   };
 }
 
-export async function dbRecordAttempt(attempt: PlayerAttempt): Promise<boolean> {
+export async function dbFetchAttemptById(attemptId: string): Promise<PlayerAttempt | null> {
+  if (canMock() && mockSupabaseStore) {
+    if (forceFailNextQuery) throw new StorageUnavailableError("Simulated query failure");
+    const att = mockSupabaseStore.attempts.get(attemptId);
+    if (!att) return null;
+    const answers = (mockSupabaseStore.answers.get(attemptId) || []).map((ans) => ({
+      questionId: ans.question_id,
+      selectedOptionId: ans.selected_option_id,
+      isCorrect: ans.is_correct,
+    }));
+    return {
+      id: att.id,
+      quizId: att.quiz_id,
+      playerName: att.player_name,
+      score: att.score,
+      totalQuestions: att.total_questions,
+      createdAt: att.created_at_ms,
+      answers,
+    };
+  }
+
+  const client = getSupabaseClient();
+  // Under concurrent transactions, retry briefly if row was just committed by another connection
+  for (let retry = 0; retry < 4; retry++) {
+    const { data: attRow, error: attError } = await client
+      .from("quiz_attempts")
+      .select("*")
+      .eq("id", attemptId)
+      .maybeSingle();
+
+    if (attError) throw new StorageUnavailableError(attError.message);
+    if (attRow) {
+      const { data: ansRows, error: ansError } = await client
+        .from("quiz_attempt_answers")
+        .select("*")
+        .eq("attempt_id", attemptId);
+
+      if (ansError) throw new StorageUnavailableError(ansError.message);
+
+      const typedAtt = attRow as unknown as MockAttemptRow;
+      const typedAns = (ansRows as unknown as MockAnswerRow[]) || [];
+
+      return {
+        id: typedAtt.id,
+        quizId: typedAtt.quiz_id,
+        playerName: typedAtt.player_name,
+        score: typedAtt.score,
+        totalQuestions: typedAtt.total_questions,
+        createdAt: typedAtt.created_at_ms || new Date(typedAtt.created_at).getTime(),
+        answers: typedAns.map((a) => ({
+          questionId: a.question_id,
+          selectedOptionId: a.selected_option_id,
+          isCorrect: a.is_correct,
+        })),
+      };
+    }
+
+    if (retry < 3) {
+      await new Promise((resolve) => setTimeout(resolve, 50 * (retry + 1)));
+    }
+  }
+
+  return null;
+}
+
+export async function dbRecordAttemptAtomic(attempt: PlayerAttempt): Promise<RecordAttemptOutcome> {
   const pAttempt = {
     id: attempt.id,
     quizId: attempt.quizId,
@@ -579,8 +644,33 @@ export async function dbRecordAttempt(attempt: PlayerAttempt): Promise<boolean> 
   });
 
   if (res.error) throw new StorageUnavailableError(res.error.message);
-  if (res.data === -1) return false; // Parent quiz missing/deleted
-  return res.data === 1 || res.data === 0;
+  if (res.data === -1) {
+    return { status: "quiz_not_found" };
+  }
+  if (res.data === 1) {
+    return { status: "recorded", attempt };
+  }
+
+  // res.data === 0 -> Attempt ID already exists (atomic ON CONFLICT DO NOTHING)
+  // Fetch persisted attempt from database to enforce canonical fingerprint idempotency
+  const existingAttempt = await dbFetchAttemptById(attempt.id);
+  if (!existingAttempt) {
+    throw new StorageUnavailableError("Attempt duplicate detected but existing attempt row not readable");
+  }
+
+  const incomingFp = computeAttemptFingerprint(attempt.quizId, attempt.playerName, attempt.answers);
+  const existingFp = computeAttemptFingerprint(existingAttempt.quizId, existingAttempt.playerName, existingAttempt.answers);
+
+  if (incomingFp === existingFp) {
+    return { status: "duplicate", attempt: existingAttempt };
+  } else {
+    return { status: "conflict", existingAttempt };
+  }
+}
+
+export async function dbRecordAttempt(attempt: PlayerAttempt): Promise<boolean> {
+  const outcome = await dbRecordAttemptAtomic(attempt);
+  return outcome.status === "recorded" || outcome.status === "duplicate";
 }
 
 export async function dbFetchAttempts(quizId: string): Promise<PlayerAttempt[]> {

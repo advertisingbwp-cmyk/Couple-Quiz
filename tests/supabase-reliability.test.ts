@@ -405,74 +405,76 @@ test("Phase 5: Storage reliability, atomic transactions, insertion-only semantic
     ],
   };
 
-  // 1. Initial save succeeds
-  const saved = await storage.saveQuiz(quiz);
-  assert.equal(saved, true);
+  try {
+    // 1. Initial save succeeds
+    const saved = await storage.saveQuiz(quiz);
+    assert.equal(saved, true);
 
-  // 2. Insert-only semantics: duplicate insertion returns false
-  const duplicateSave = await storage.saveQuiz(quiz);
-  assert.equal(duplicateSave, false);
+    // 2. Insert-only semantics: duplicate insertion returns false
+    const duplicateSave = await storage.saveQuiz(quiz);
+    assert.equal(duplicateSave, false);
 
-  // 3. Overwrite attempt returns false
-  const overwrite = await storage.saveQuiz({ ...quiz, creatorName: "Evil Overwrite" });
-  assert.equal(overwrite, false);
+    // 3. Overwrite attempt returns false
+    const overwrite = await storage.saveQuiz({ ...quiz, creatorName: "Evil Overwrite" });
+    assert.equal(overwrite, false);
 
-  // 4. Public data sanitization: pinHash, creatorToken, and correctOptionId are NEVER exposed
-  const publicData = await storage.getQuizPublicData(id);
-  assert.ok(publicData);
-  assert.equal("pinHash" in (publicData as unknown as Record<string, unknown>), false);
-  assert.equal("creatorToken" in (publicData as unknown as Record<string, unknown>), false);
-  for (const q of publicData.questions) {
-    assert.equal("correctOptionId" in (q as unknown as Record<string, unknown>), false);
-    assert.ok(q.options.length >= 2);
-    // Image and text persist intact
-    for (const opt of q.options) {
-      assert.ok(opt.text);
-      assert.ok(opt.imageUrl);
+    // 4. Public data sanitization: pinHash, creatorToken, and correctOptionId are NEVER exposed
+    const publicData = await storage.getQuizPublicData(id);
+    assert.ok(publicData);
+    assert.equal("pinHash" in (publicData as unknown as Record<string, unknown>), false);
+    assert.equal("creatorToken" in (publicData as unknown as Record<string, unknown>), false);
+    for (const q of publicData.questions) {
+      assert.equal("correctOptionId" in (q as unknown as Record<string, unknown>), false);
+      assert.ok(q.options.length >= 2);
+      // Image and text persist intact
+      for (const opt of q.options) {
+        assert.ok(opt.text);
+        assert.ok(opt.imageUrl);
+      }
     }
+
+    // 5. Deterministic tie-breaking on scoreboard
+    const att1: PlayerAttempt = {
+      id: `${id}_att_early`,
+      quizId: id,
+      playerName: "SameScoreEarly",
+      score: 2,
+      totalQuestions: 2,
+      answers: [],
+      createdAt: 1000,
+    };
+    const att2: PlayerAttempt = {
+      id: `${id}_att_late`,
+      quizId: id,
+      playerName: "SameScoreLate",
+      score: 2,
+      totalQuestions: 2,
+      answers: [],
+      createdAt: 2000,
+    };
+    const att3: PlayerAttempt = {
+      id: `${id}_att_low`,
+      quizId: id,
+      playerName: "LowScore",
+      score: 1,
+      totalQuestions: 2,
+      answers: [],
+      createdAt: 500,
+    };
+
+    await storage.recordAttempt(att2);
+    await storage.recordAttempt(att1);
+    await storage.recordAttempt(att3);
+
+    const scoreboard = await storage.getScoreboard(id);
+    assert.equal(scoreboard.length, 3);
+    assert.equal(scoreboard[0].playerName, "SameScoreEarly", "Earlier timestamp breaks score tie");
+    assert.equal(scoreboard[1].playerName, "SameScoreLate");
+    assert.equal(scoreboard[2].playerName, "LowScore");
+  } finally {
+    // 6. Cleanup
+    await storage.deleteQuiz(id);
   }
-
-  // 5. Deterministic tie-breaking on scoreboard
-  const att1: PlayerAttempt = {
-    id: "att_early",
-    quizId: id,
-    playerName: "SameScoreEarly",
-    score: 2,
-    totalQuestions: 2,
-    answers: [],
-    createdAt: 1000,
-  };
-  const att2: PlayerAttempt = {
-    id: "att_late",
-    quizId: id,
-    playerName: "SameScoreLate",
-    score: 2,
-    totalQuestions: 2,
-    answers: [],
-    createdAt: 2000,
-  };
-  const att3: PlayerAttempt = {
-    id: "att_low",
-    quizId: id,
-    playerName: "LowScore",
-    score: 1,
-    totalQuestions: 2,
-    answers: [],
-    createdAt: 500,
-  };
-
-  await storage.recordAttempt(att2);
-  await storage.recordAttempt(att1);
-  await storage.recordAttempt(att3);
-
-  const scoreboard = await storage.getScoreboard(id);
-  assert.equal(scoreboard.length, 3);
-  assert.equal(scoreboard[0].playerName, "SameScoreEarly", "Earlier timestamp breaks score tie");
-  assert.equal(scoreboard[1].playerName, "SameScoreLate");
-  assert.equal(scoreboard[2].playerName, "LowScore");
-
-  // 6. Cleanup
-  await storage.deleteQuiz(id);
 });
 
 test("Phase 5: Backward compatibility with older 5-question text-only quiz records", async () => {

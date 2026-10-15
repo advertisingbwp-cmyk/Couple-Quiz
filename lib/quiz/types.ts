@@ -85,3 +85,10 @@ export interface ScoreboardDetailEntry extends ScoreboardEntry {
     isCorrect: boolean;
   }>;
 }
+
+export type RecordAttemptOutcome =
+  | { status: "recorded"; attempt: PlayerAttempt }
+  | { status: "duplicate"; attempt: PlayerAttempt }
+  | { status: "conflict"; existingAttempt: PlayerAttempt }
+  | { status: "quiz_not_found" };
+
