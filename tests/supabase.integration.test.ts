@@ -238,6 +238,10 @@ test(
     assert.ok(testUrl, "SUPABASE_URL must be configured");
     assert.ok(testAnonKey, "Valid publishable/anon key must be configured");
 
+    _enableMockSupabase(false);
+    process.env.SUPABASE_URL = testUrl;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = testKey;
+
     const anonClient = createClient(testUrl, testAnonKey);
 
     const tables = [
