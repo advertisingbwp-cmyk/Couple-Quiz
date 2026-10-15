@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Trophy, MessageCircle, RefreshCw, Sparkles, AlertCircle } from "lucide-react";
+import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { quizAudio } from "@/lib/quiz/audio";
 import { triggerConfetti } from "@/lib/quiz/confetti";
 
@@ -91,50 +91,44 @@ export default function QuizResultPage({
   let badgeColor = "";
 
   if (ratio >= 0.8) {
-    reactionText = "You made me smile! 😆 I'll never block you!";
+    reactionText = "You know me inside out! Pure clique legend! 🌟";
     reactionEmoji = "❤️ True Bestie!";
     badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
   } else if (ratio >= 0.5) {
-    reactionText = "I won't block you... but please leave me alone 😕";
-    reactionEmoji = "🙂 Average Friend";
+    reactionText = "Solid clique energy! You know your stuff! 😎";
+    reactionEmoji = "🙂 Great Friend";
     badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
   } else {
-    reactionText = "BYE! BYE! … I will block you… huh! 🤬";
-    reactionEmoji = "🚨 FAKE FRIEND ALERT!";
-    badgeColor = "bg-red-100 text-red-800 border-red-300";
+    reactionText = "Ouch! We definitely need to hang out more! ☕";
+    reactionEmoji = "👀 Acquaintance Alert!";
+    badgeColor = "bg-rose-100 text-rose-800 border-rose-300";
   }
 
   const handleShareResultWhatsApp = () => {
     quizAudio.playPop();
     const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/quiz/play/${quizId}` : "";
-    const msg = `🎉 I scored ${score}/${total} on ${creatorName}'s Friendship Challenge!\n\nCan you beat my score or will ${creatorName} block you? 😂\n\nTry here 👇\n${shareUrl}`;
+    const msg = `🎉 I scored ${score}/${total} on ${creatorName}'s Friendship Challenge!\n\nCan you beat my score on the Click & Clique leaderboard? 🏆\n\nTry here 👇\n${shareUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#8AC0EF]/30 via-sky-50 to-amber-50/40 text-slate-900 flex flex-col font-sans relative overflow-x-hidden">
-      {/* Background Clouds */}
-      <div className="absolute top-0 left-0 right-0 h-44 bg-[url('/quiz/assets/img/player/clouds-bg.webp')] bg-repeat-x bg-contain opacity-40 pointer-events-none" />
-
+    <div className="min-h-screen bg-[#edf7ff] text-[#29324c] flex flex-col font-sans relative overflow-x-hidden">
       {/* Header */}
-      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-2 flex items-center justify-between">
-        <Link href="/quiz" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 relative rounded-xl bg-white shadow-sm flex items-center justify-center p-1 border-2 border-slate-900">
-            <Image
-              src="/quiz/assets/img/logo-f.webp"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-slate-900">
-            Don&apos;t Block Me!
+      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-3 flex items-center justify-between">
+        <Link
+          href="/quiz"
+          className="inline-flex items-center gap-2.5 no-underline group focus-visible:outline-3 focus-visible:outline-[#6650b7]"
+          aria-label="Click & Clique homepage"
+        >
+          <BrandMark />
+          <span className="text-xl font-black tracking-tight text-[#29324c]">
+            click <span className="text-[#6650b7] font-medium">&amp;</span> clique
+            <span className="text-[#bd4a66]">.</span>
           </span>
         </Link>
         <Link
           href={`/quiz/scoreboard/${quizId}`}
-          className="text-xs font-black bg-amber-300 text-slate-900 px-3 py-1 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a] flex items-center gap-1.5"
+          className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63] flex items-center gap-1.5"
         >
           <Trophy size={14} />
           <span>Scores</span>
@@ -154,7 +148,7 @@ export default function QuizResultPage({
               <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                 {creatorName}
               </span>
-              <span>&ldquo;Should I block you? 🤬&rdquo;</span>
+              <span>&ldquo;Let&apos;s see how well you really know me! 😏&rdquo;</span>
             </div>
 
             {dialogueStep >= 1 && (
@@ -162,7 +156,7 @@ export default function QuizResultPage({
                 <span className="bg-sky-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   You
                 </span>
-                <span>&ldquo;Wait... I&apos;m not your fake friend! 🥺&rdquo;</span>
+                <span>&ldquo;I know your clique vibe better than anyone! 😎&rdquo;</span>
               </div>
             )}
 
@@ -171,7 +165,7 @@ export default function QuizResultPage({
                 <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   {creatorName}
                 </span>
-                <span>&ldquo;Then prove you&apos;re a real friend! 😏&rdquo;</span>
+                <span>&ldquo;Big claims! Did you actually pay attention? 🧐&rdquo;</span>
               </div>
             )}
 
@@ -180,7 +174,7 @@ export default function QuizResultPage({
                 <span className="bg-sky-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   You
                 </span>
-                <span>&ldquo;Just look at my score! 🫣&rdquo;</span>
+                <span>&ldquo;Check the leaderboard score! 🚀&rdquo;</span>
               </div>
             )}
 
@@ -189,7 +183,7 @@ export default function QuizResultPage({
                 <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   {creatorName}
                 </span>
-                <span>&ldquo;Okay... let&apos;s see! 👀&rdquo;</span>
+                <span>&ldquo;Moment of truth... reveal results! 🎉&rdquo;</span>
               </div>
             )}
           </div>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <radialGradient id="grad-japan" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fff1f2" />
+      <stop offset="100%" stop-color="#ffe4e6" />
+    </radialGradient>
+  </defs>
+  <rect x="4" y="4" width="112" height="112" rx="24" fill="url(#grad-japan)" stroke="#29324c" stroke-width="3" />
+  <circle cx="60" cy="60" r="46" fill="none" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4,4" opacity="0.4" />
+  
+  <!-- Rising Red Sun -->
+  <circle cx="60" cy="42" r="20" fill="#ef4444" stroke="#29324c" stroke-width="2.5" />
+
+  <!-- Mount Fuji Base and Snow Cap -->
+  <path d="M18 90 L48 46 L72 46 L102 90 Z" fill="#3b82f6" stroke="#29324c" stroke-width="3" stroke-linejoin="round" />
+  <path d="M48 46 L42 56 L50 54 L60 58 L70 54 L78 56 L72 46 Z" fill="#ffffff" stroke="#29324c" stroke-width="2" stroke-linejoin="round" />
+
+  <!-- Torii Gate Foreground -->
+  <!-- Top curved lintel -->
+  <path d="M34 66 Q60 60 86 66" fill="none" stroke="#dc2626" stroke-width="5" stroke-linecap="round" />
+  <path d="M34 66 Q60 60 86 66" fill="none" stroke="#29324c" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Second horizontal tie beam -->
+  <line x1="40" y1="72" x2="80" y2="72" stroke="#dc2626" stroke-width="3.5" />
+  <line x1="40" y1="72" x2="80" y2="72" stroke="#29324c" stroke-width="1" />
+  <!-- Left post -->
+  <line x1="45" y1="66" x2="45" y2="92" stroke="#dc2626" stroke-width="4.5" stroke-linecap="round" />
+  <!-- Right post -->
+  <line x1="75" y1="66" x2="75" y2="92" stroke="#dc2626" stroke-width="4.5" stroke-linecap="round" />
+
+  <!-- Cherry Blossom Petals -->
+  <circle cx="24" cy="30" r="3.5" fill="#fb7185" />
+  <circle cx="94" cy="34" r="3" fill="#fb7185" />
+  <circle cx="86" cy="22" r="2.5" fill="#f43f5e" />
+  
+  <!-- Ground Line -->
+  <line x1="14" y1="92" x2="106" y2="92" stroke="#29324c" stroke-width="3" stroke-linecap="round" />
+</svg>

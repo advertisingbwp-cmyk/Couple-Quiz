@@ -7,6 +7,8 @@ export interface QuizQuestionOption {
   imageUrl?: string;
 }
 
+export type QuizOption = QuizQuestionOption;
+
 export interface QuizQuestion {
   id: string;
   question: string;

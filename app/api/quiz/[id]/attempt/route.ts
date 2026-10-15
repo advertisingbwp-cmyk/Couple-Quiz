@@ -77,7 +77,8 @@ export async function POST(
       processedQuestionIds.add(questionId);
 
       const optionIdNum = Number(selectedOptionId);
-      if (!Number.isInteger(optionIdNum) || optionIdNum < 0 || optionIdNum > 3) {
+      const optionExists = targetQuestion.options.some((opt) => opt.id === optionIdNum);
+      if (!Number.isInteger(optionIdNum) || !optionExists) {
         return NextResponse.json(
           { success: false, error: "Invalid option selected." },
           { status: 400 }

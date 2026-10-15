@@ -72,6 +72,7 @@ export async function POST(
       creatorName: quiz.creatorName,
       totalQuestions: quiz.questions.length,
       scoreboard: detailedLeaderboard,
+      creatorToken: quiz.creatorToken,
     });
   } catch (err) {
     if (err instanceof StorageUnavailableError || err instanceof RateLimitUnavailableError)
