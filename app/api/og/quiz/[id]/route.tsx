@@ -37,6 +37,10 @@ export async function GET(
     ? `${creatorName} created a 10-question challenge. Can you score 10/10?`
     : "Create your 10-question friendship dare & share on WhatsApp!";
 
+  const cacheControl = isCustom
+    ? "public, max-age=900, s-maxage=3600, stale-while-revalidate=7200"
+    : "no-cache, no-store, max-age=0, must-revalidate";
+
   return new ImageResponse(
     (
       <div
@@ -252,7 +256,7 @@ export async function GET(
       width: 1200,
       height: 630,
       headers: {
-        "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400",
+        "Cache-Control": cacheControl,
       },
     }
   );

@@ -4,7 +4,7 @@ import type { QuizPublicData } from "./types";
 /**
  * Returns the canonical base URL for the application.
  * Prioritizes explicitly configured NEXT_PUBLIC_APP_URL, then Vercel production domain,
- * falling back to the canonical production URL.
+ * avoiding protected preview domains so social crawlers and search engines always target production.
  */
 export function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
@@ -13,7 +13,7 @@ export function getBaseUrl(): string {
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/+$/, "")}`;
   }
-  if (process.env.VERCEL_URL) {
+  if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL.replace(/\/+$/, "")}`;
   }
   return "https://couple-quiz-three.vercel.app";
@@ -22,10 +22,23 @@ export function getBaseUrl(): string {
 /**
  * Generates the canonical challenge URL for players.
  * Guaranteed to point to /quiz/play/[quizId] without tokens or secrets.
+ * Avoids generating shared URLs pointing to protected Vercel preview domains.
  */
 export function getChallengeUrl(quizId: string, origin?: string): string {
-  const base = origin ? origin.replace(/\/+$/, "") : getBaseUrl();
-  return `${base}/quiz/play/${encodeURIComponent(quizId)}`;
+  if (origin) {
+    try {
+      const parsed = new URL(origin);
+      const host = parsed.hostname.toLowerCase();
+      // If running on a protected Vercel preview deployment, point shared links to canonical public domain
+      if (host.endsWith(".vercel.app") && host.includes("-git-")) {
+        return `${getBaseUrl()}/quiz/play/${encodeURIComponent(quizId)}`;
+      }
+      return `${parsed.origin}/quiz/play/${encodeURIComponent(quizId)}`;
+    } catch {
+      // Fall through to canonical base
+    }
+  }
+  return `${getBaseUrl()}/quiz/play/${encodeURIComponent(quizId)}`;
 }
 
 /**

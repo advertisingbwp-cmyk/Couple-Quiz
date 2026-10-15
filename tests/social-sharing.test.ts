@@ -181,7 +181,8 @@ test("Phase 7: Branded Open Graph Image Route (/api/og/quiz/[id])", async () => 
 
   assert.equal(res.status, 200);
   assert.equal(res.headers.get("content-type"), "image/png");
-  assert.ok(String(res.headers.get("cache-control")).includes("max-age=3600"));
+  assert.ok(String(res.headers.get("cache-control")).includes("max-age=900"));
+  assert.ok(String(res.headers.get("cache-control")).includes("s-maxage=3600"));
 
   // Verify image binary body was generated
   const arrayBuffer = await res.arrayBuffer();
@@ -192,12 +193,15 @@ test("Phase 7: Branded Open Graph Image Route (/api/og/quiz/[id])", async () => 
   const defaultRes = await getOgImage(defaultReq, { params: Promise.resolve({ id: "default" }) });
   assert.equal(defaultRes.status, 200);
   assert.equal(defaultRes.headers.get("content-type"), "image/png");
+  assert.ok(String(defaultRes.headers.get("cache-control")).includes("no-cache"));
 
-  // 3. Fallback OG Image for deleted/missing quiz
+  // 3. Fallback OG Image for deleted/missing quiz (must NOT cache stale deleted quiz)
   const missingReq = new NextRequest("http://localhost:3000/api/og/quiz/nonexistent_id");
   const missingRes = await getOgImage(missingReq, { params: Promise.resolve({ id: "nonexistent_id" }) });
   assert.equal(missingRes.status, 200);
   assert.equal(missingRes.headers.get("content-type"), "image/png");
+  assert.ok(String(missingRes.headers.get("cache-control")).includes("no-cache"));
+  assert.ok(String(missingRes.headers.get("cache-control")).includes("no-store"));
 });
 
 test("Phase 7: SEO Strategy, Robots Rules & Sitemap Generation", () => {
@@ -206,9 +210,40 @@ test("Phase 7: SEO Strategy, Robots Rules & Sitemap Generation", () => {
   assert.ok(robotsConfig.rules);
   const rules = Array.isArray(robotsConfig.rules) ? robotsConfig.rules[0] : robotsConfig.rules;
   assert.equal(rules.userAgent, "*");
-  assert.deepEqual(rules.allow, ["/", "/quiz", "/quiz/create"]);
-  assert.deepEqual(rules.disallow, ["/api/", "/quiz/share/", "/quiz/result/"]);
+  assert.ok(Array.isArray(rules.allow));
+  assert.ok(rules.allow.includes("/api/og/quiz/"), "Must explicitly permit /api/og/quiz/ for social crawlers");
+  assert.ok(rules.allow.includes("/api/og/quiz"), "Must permit /api/og/quiz without trailing slash");
+  assert.ok(rules.allow.includes("/"));
+  assert.ok(rules.allow.includes("/quiz"));
+  assert.ok(rules.allow.includes("/quiz/create"));
+
+  assert.ok(Array.isArray(rules.disallow));
+  assert.ok(rules.disallow.includes("/api/"), "Must disallow general /api/ routes");
+  assert.ok(rules.disallow.includes("/quiz/share/"));
+  assert.ok(rules.disallow.includes("/quiz/result/"));
   assert.ok(String(robotsConfig.sitemap).endsWith("/sitemap.xml"));
+
+  // Path precedence simulation (RFC 9309 longest prefix match)
+  const isAllowedByRobots = (path: string): boolean => {
+    let longestAllow = -1;
+    for (const a of rules.allow as string[]) {
+      if (path.startsWith(a) && a.length > longestAllow) longestAllow = a.length;
+    }
+    let longestDisallow = -1;
+    for (const d of rules.disallow as string[]) {
+      if (path.startsWith(d) && d.length > longestDisallow) longestDisallow = d.length;
+    }
+    // Longest match wins; Allow wins tie
+    return longestAllow >= longestDisallow;
+  };
+
+  assert.equal(isAllowedByRobots("/api/og/quiz/q_12345"), true, "/api/og/quiz/ images must be crawlable");
+  assert.equal(isAllowedByRobots("/api/og/quiz/default"), true, "/api/og/quiz/default must be crawlable");
+  assert.equal(isAllowedByRobots("/api/quiz"), false, "/api/quiz must be blocked by robots.txt");
+  assert.equal(isAllowedByRobots("/api/quiz/123/scoreboard"), false, "/api/quiz/scoreboard must be blocked");
+  assert.equal(isAllowedByRobots("/quiz/share/123"), false, "/quiz/share must be blocked");
+  assert.equal(isAllowedByRobots("/quiz/result/123"), false, "/quiz/result must be blocked");
+  assert.equal(isAllowedByRobots("/quiz/play/123"), true, "/quiz/play must be crawlable for social previews");
 
   // 2. Sitemap generation
   const sitemapConfig = sitemap();
@@ -224,4 +259,24 @@ test("Phase 7: SEO Strategy, Robots Rules & Sitemap Generation", () => {
     assert.ok(!item.url.includes("/result/"), "Sitemap must never index /quiz/result/");
     assert.ok(!item.url.includes("token"), "Sitemap must never index tokens");
   }
+});
+
+test("Phase 7: Domain Canonicalization and Preview Isolation", () => {
+  // Test isolation against protected Vercel preview domains
+  const previewOrigin = "https://couple-quiz-git-feature-phase-7-social-sharing.vercel.app";
+  const challengeFromPreview = getChallengeUrl("q_preview_test", previewOrigin);
+  assert.equal(
+    challengeFromPreview,
+    "https://couple-quiz-three.vercel.app/quiz/play/q_preview_test",
+    "Must not leak protected Vercel preview URL into challenge link"
+  );
+
+  // Localhost origin preserved for local testing
+  const localOrigin = "http://localhost:3005";
+  const challengeFromLocal = getChallengeUrl("q_local_test", localOrigin);
+  assert.equal(
+    challengeFromLocal,
+    "http://localhost:3005/quiz/play/q_local_test",
+    "Localhost origin preserved for local automation"
+  );
 });

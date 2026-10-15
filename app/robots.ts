@@ -7,7 +7,13 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/quiz", "/quiz/create"],
+        allow: [
+          "/",
+          "/quiz",
+          "/quiz/create",
+          "/api/og/quiz/",
+          "/api/og/quiz",
+        ],
         disallow: [
           "/api/",
           "/quiz/share/",
