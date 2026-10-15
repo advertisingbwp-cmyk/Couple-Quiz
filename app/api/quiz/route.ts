@@ -35,10 +35,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Strict Questions Validation
-    if (!questions || !Array.isArray(questions) || questions.length < 5 || questions.length > 15) {
+    // 2. Strict Questions Validation (Exactly 10 questions required)
+    if (!questions || !Array.isArray(questions) || questions.length !== 10) {
       return NextResponse.json(
-        { success: false, error: "Quiz must have between 5 and 15 questions." },
+        { success: false, error: "Quiz must have exactly 10 questions." },
         { status: 400 }
       );
     }
@@ -62,12 +62,15 @@ export async function POST(req: Request) {
       }
       seenQuestionIds.add(q.questionId);
 
+      const originalQuestion = DEFAULT_QUIZ_QUESTIONS.find((def) => def.id === q.questionId)!;
+
       const correctOptionId = Number(q.correctOptionId);
-      if (!Number.isInteger(correctOptionId) || correctOptionId < 0 || correctOptionId > 3) {
+      if (
+        !Number.isInteger(correctOptionId) ||
+        !originalQuestion.options.some((opt) => opt.id === correctOptionId)
+      ) {
         return NextResponse.json({ success: false, error: "Invalid option selected." }, { status: 400 });
       }
-
-      const originalQuestion = DEFAULT_QUIZ_QUESTIONS.find((def) => def.id === q.questionId)!;
 
       validatedQuestions.push({
         questionId: q.questionId,

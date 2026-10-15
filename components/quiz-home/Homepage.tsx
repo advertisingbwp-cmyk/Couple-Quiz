@@ -226,19 +226,25 @@ export default function Homepage() {
   }
   function startQuiz(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    try {
-      const failure = saveCreatorSetup(name, gender, sessionStorage);
-      if (failure) {
-        setError(failure);
-        nameField.current?.focus();
-        return;
-      }
-    } catch {
-      setError(
-        "Your browser couldn't save your quiz setup. Allow site storage, then try again.",
-      );
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError("Add your name or a nickname to get started.");
+      nameField.current?.focus();
       return;
     }
+    if (trimmed.length > 30) {
+      setError("Keep your name or nickname to 30 characters.");
+      nameField.current?.focus();
+      return;
+    }
+
+    try {
+      saveCreatorSetup(name, gender, sessionStorage);
+    } catch {
+      // Storage unavailable or blocked; creator page inline fallback will safely handle setup
+    }
+
+    // Privacy-conscious handoff: avoid leaking personal names in URL query strings
     router.push("/quiz/create");
   }
   return (

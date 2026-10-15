@@ -379,7 +379,7 @@ test("API create, answer, scoreboard, private details, deletion and repeat delet
     gender: "female",
     country: "PK",
     secretPin: pin,
-    questions: DEFAULT_QUIZ_QUESTIONS.slice(0, 5).map((q) => ({
+    questions: DEFAULT_QUIZ_QUESTIONS.slice(0, 10).map((q) => ({
       questionId: q.id,
       correctOptionId: 1,
     })),
@@ -395,7 +395,7 @@ test("API create, answer, scoreboard, private details, deletion and repeat delet
   assert.equal(getRes.status, 200);
   const publicData = (await getRes.json()).quiz;
   assert.equal(publicData.creatorName, "Ayesha");
-  assert.equal(publicData.questions.length, 5);
+  assert.equal(publicData.questions.length, 10);
   assert.equal("pinHash" in publicData, false);
   assert.equal("creatorToken" in publicData, false);
   for (const q of publicData.questions) {
@@ -413,7 +413,7 @@ test("API create, answer, scoreboard, private details, deletion and repeat delet
   const submitRes = await submit(request("POST", answerPayload), params(created.quizId));
   assert.equal(submitRes.status, 200);
   const answerResult = await submitRes.json();
-  assert.equal(answerResult.score, 5);
+  assert.equal(answerResult.score, 10);
 
   // Scoreboard
   const boardRes = await scoreboard(request("GET"), params(created.quizId));
@@ -421,7 +421,7 @@ test("API create, answer, scoreboard, private details, deletion and repeat delet
   const boardData = (await boardRes.json()).scoreboard;
   assert.equal(boardData.length, 1);
   assert.equal(boardData[0].playerName, "Bilal");
-  assert.equal(boardData[0].score, 5);
+  assert.equal(boardData[0].score, 10);
 
   // Creator details with creatorToken
   const detailsRes = await details(
@@ -431,7 +431,7 @@ test("API create, answer, scoreboard, private details, deletion and repeat delet
   assert.equal(detailsRes.status, 200);
   const detailData = (await detailsRes.json()).scoreboard;
   assert.equal(detailData.length, 1);
-  assert.equal(detailData[0].answers.length, 5);
+  assert.equal(detailData[0].answers.length, 10);
 
   // Remove attempt
   const removeAttemptRes = await removeAttempt(
@@ -473,7 +473,7 @@ test("API returns 503 on Supabase failure", async () => {
     gender: "female",
     country: "PK",
     secretPin: pin,
-    questions: DEFAULT_QUIZ_QUESTIONS.slice(0, 5).map((q) => ({
+    questions: DEFAULT_QUIZ_QUESTIONS.slice(0, 10).map((q) => ({
       questionId: q.id,
       correctOptionId: 1,
     })),
