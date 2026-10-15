@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import ./tests/setup.mjs --import tsx --test \"tests/*.test.ts\"",
     "test:supabase": "node --import ./tests/setup.mjs --import tsx --test tests/supabase.integration.test.ts",
-    "test:redis": "node --import ./tests/setup.mjs --import tsx --test tests/redis.integration.test.ts",
     "migrate:legacy": "tsx scripts/migrate-legacy-data.ts"
   },
   "dependencies": {

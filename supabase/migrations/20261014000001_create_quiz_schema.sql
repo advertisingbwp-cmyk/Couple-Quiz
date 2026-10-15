@@ -142,7 +142,13 @@ BEGIN
         RETURN FALSE;
     END IF;
 
-    -- Upsert quiz row
+    -- Prevent unauthorized quiz overwrites: enforce strict insert-only semantics.
+    -- If a quiz with this ID already exists, reject the creation immediately.
+    IF EXISTS (SELECT 1 FROM public.quizzes WHERE id = v_quiz_id) THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Strict insert quiz row
     INSERT INTO public.quizzes (
         id, slug, creator_name, gender, country, theme,
         pin_hash, creator_token_hash, created_at, created_at_ms, updated_at
@@ -158,19 +164,7 @@ BEGIN
         to_timestamp((p_quiz->>'createdAt')::DOUBLE PRECISION / 1000.0),
         (p_quiz->>'createdAt')::BIGINT,
         now()
-    )
-    ON CONFLICT (id) DO UPDATE SET
-        slug = EXCLUDED.slug,
-        creator_name = EXCLUDED.creator_name,
-        gender = EXCLUDED.gender,
-        country = EXCLUDED.country,
-        theme = EXCLUDED.theme,
-        pin_hash = EXCLUDED.pin_hash,
-        creator_token_hash = EXCLUDED.creator_token_hash,
-        updated_at = now();
-
-    -- Replace questions atomically
-    DELETE FROM public.quiz_questions WHERE quiz_id = v_quiz_id;
+    );
 
     FOR q IN SELECT * FROM jsonb_to_recordset(p_questions) AS x(
         "questionId" TEXT,
@@ -413,3 +407,36 @@ BEGIN
     DELETE FROM public.creator_auth_rate_limits WHERE rate_key = p_rate_key;
 END;
 $$;
+
+-- -----------------------------------------------------------------------------
+-- 8. Least Privilege Permissions & RPC Access Control
+-- -----------------------------------------------------------------------------
+
+-- Revoke all function execution privileges from PUBLIC, anon, and authenticated roles
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM anon;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM authenticated;
+
+-- Grant EXECUTE only to service_role for privileged backend RPC functions
+GRANT EXECUTE ON FUNCTION public.save_quiz_with_questions(JSONB, JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.record_quiz_attempt(JSONB, JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.delete_quiz_atomic(TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.delete_attempt_atomic(TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.check_pin_rate_limit(TEXT, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.record_pin_rate_limit_outcome(TEXT, TEXT, INTEGER, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.clear_pin_rate_limit(TEXT) TO service_role;
+
+-- Revoke all direct table access from public, anon, and authenticated
+REVOKE ALL ON TABLE public.quizzes FROM anon, authenticated, PUBLIC;
+REVOKE ALL ON TABLE public.quiz_questions FROM anon, authenticated, PUBLIC;
+REVOKE ALL ON TABLE public.quiz_attempts FROM anon, authenticated, PUBLIC;
+REVOKE ALL ON TABLE public.quiz_attempt_answers FROM anon, authenticated, PUBLIC;
+REVOKE ALL ON TABLE public.creator_auth_rate_limits FROM anon, authenticated, PUBLIC;
+
+-- Ensure service_role has necessary table access
+GRANT ALL ON TABLE public.quizzes TO service_role;
+GRANT ALL ON TABLE public.quiz_questions TO service_role;
+GRANT ALL ON TABLE public.quiz_attempts TO service_role;
+GRANT ALL ON TABLE public.quiz_attempt_answers TO service_role;
+GRANT ALL ON TABLE public.creator_auth_rate_limits TO service_role;
+

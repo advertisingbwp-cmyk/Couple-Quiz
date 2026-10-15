@@ -75,6 +75,9 @@ export function createQuizStorage(filePath = path.join(process.cwd(), "data", "q
     }
     try {
       const next = structuredClone(local());
+      if (next.quizzes[quiz.id]) {
+        return false;
+      }
       next.quizzes[quiz.id] = structuredClone(quiz);
       next.attempts[quiz.id] ??= [];
       persist(next);

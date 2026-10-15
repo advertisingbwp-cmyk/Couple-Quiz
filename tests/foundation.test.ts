@@ -514,9 +514,104 @@ test("Data migration utility: dry-run, validation, and idempotent import", async
   // 3. Idempotent re-run
   const rerunSummary = await migrateLegacyData({ filePath, dryRun: false });
   assert.equal(rerunSummary.status, "COMPLETED");
-  assert.equal(rerunSummary.quizzesImported, 2);
+  assert.equal(rerunSummary.quizzesImported, 0); // 0 new quizzes imported on re-run because insert-only rejects duplicates
 
   // 4. Missing file
   const missingSummary = await migrateLegacyData({ filePath: path.join(dir, "none.json") });
   assert.equal(missingSummary.status, "SKIPPED_NO_DATA");
 });
+
+test("Security: save_quiz_with_questions enforces strict insert-only semantics, rejecting overwrites", async () => {
+  const q = fixture();
+  const originalPinHash = "scrypt:salt_original:hash_original";
+  const originalTokenHash = "token_hash_original";
+  
+  // 1. Initial creation succeeds
+  const initialRes = await dbRpc<boolean>("save_quiz_with_questions", {
+    p_quiz: {
+      id: q.id,
+      slug: q.slug,
+      creatorName: "Original Creator",
+      gender: q.gender,
+      country: q.country,
+      theme: q.theme,
+      pinHash: originalPinHash,
+      creatorTokenHash: originalTokenHash,
+      createdAt: q.createdAt,
+    },
+    p_questions: q.questions.map((item, idx) => ({
+      questionId: item.questionId,
+      question: item.question,
+      emoji: item.emoji,
+      options: item.options,
+      correctOptionId: item.correctOptionId,
+      displayOrder: idx,
+    })),
+  });
+  assert.equal(initialRes.data, true);
+  
+  const originalStored = _getMockSupabaseStore()!.quizzes.get(q.id);
+  assert.equal(originalStored?.creator_name, "Original Creator");
+  assert.equal(originalStored?.pin_hash, originalPinHash);
+  assert.equal(originalStored?.creator_token_hash, originalTokenHash);
+
+  // 2. Malicious overwrite attempt with altered credentials and questions MUST be rejected (returns false)
+  const overwriteRes = await dbRpc<boolean>("save_quiz_with_questions", {
+    p_quiz: {
+      id: q.id,
+      slug: "malicious-takeover",
+      creatorName: "Attacker",
+      gender: "male",
+      country: "US",
+      theme: "hacked",
+      pinHash: "scrypt:salt_evil:hash_evil",
+      creatorTokenHash: "token_hash_evil",
+      createdAt: Date.now(),
+    },
+    p_questions: [
+      {
+        questionId: "q_evil",
+        question: "Compromised Question",
+        options: [{ id: 1, text: "Compromised" }],
+        correctOptionId: 1,
+        displayOrder: 0,
+      },
+    ],
+  });
+  assert.equal(overwriteRes.data, false);
+
+  // 3. Confirm original quiz state, questions, and hashes remain completely untampered
+  const afterAttempt = _getMockSupabaseStore()!.quizzes.get(q.id);
+  assert.equal(afterAttempt?.creator_name, "Original Creator");
+  assert.equal(afterAttempt?.pin_hash, originalPinHash);
+  assert.equal(afterAttempt?.creator_token_hash, originalTokenHash);
+  assert.equal(_getMockSupabaseStore()!.questions.get(q.id)!.length, 5);
+  assert.notEqual(_getMockSupabaseStore()!.questions.get(q.id)![0].question_id, "q_evil");
+});
+
+test("Security: SQL migration defines explicit least-privilege revokes and service_role grants", async () => {
+  const migrationPath = path.join(process.cwd(), "supabase", "migrations", "20261014000001_create_quiz_schema.sql");
+  const sql = fs.readFileSync(migrationPath, "utf8");
+
+  // Verify explicit revoke from PUBLIC, anon, and authenticated
+  assert.match(sql, /REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;/);
+  assert.match(sql, /REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM anon;/);
+  assert.match(sql, /REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM authenticated;/);
+
+  // Verify RPC grants strictly to service_role
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.save_quiz_with_questions\(JSONB, JSONB\) TO service_role;/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.record_quiz_attempt\(JSONB, JSONB\) TO service_role;/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.delete_quiz_atomic\(TEXT\) TO service_role;/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.delete_attempt_atomic\(TEXT, TEXT\) TO service_role;/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.check_pin_rate_limit\(TEXT, INTEGER\) TO service_role;/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.record_pin_rate_limit_outcome\(TEXT, TEXT, INTEGER, INTEGER\) TO service_role;/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.clear_pin_rate_limit\(TEXT\) TO service_role;/);
+
+  // Verify direct table access is revoked from anon and authenticated
+  assert.match(sql, /REVOKE ALL ON TABLE public\.quizzes FROM anon, authenticated, PUBLIC;/);
+  assert.match(sql, /REVOKE ALL ON TABLE public\.creator_auth_rate_limits FROM anon, authenticated, PUBLIC;/);
+
+  // Verify strict insert-only existence check in SQL
+  assert.match(sql, /IF EXISTS \(SELECT 1 FROM public\.quizzes WHERE id = v_quiz_id\) THEN\s+RETURN FALSE;\s+END IF;/);
+});
+

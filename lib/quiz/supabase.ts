@@ -230,6 +230,11 @@ function executeMockRpc<T>(
       const quizId = String(pQuiz.id || "");
       if (!quizId) return { data: null, error: new Error("Missing quiz id") };
 
+      // Prevent unauthorized quiz overwrites: insert-only semantics
+      if (store.quizzes.has(quizId)) {
+        return { data: false as unknown as T, error: null };
+      }
+
       const nowIso = new Date(getNowMs()).toISOString();
       const createdAtMs = Number(pQuiz.createdAt) || getNowMs();
 
