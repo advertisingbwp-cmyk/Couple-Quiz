@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import { createQuizStorage } from "../lib/quiz/storage";
 import { _enableMockSupabase, getSupabaseClient } from "../lib/quiz/supabase";
+import { createClient } from "@supabase/supabase-js";
 import { recordFailedPinAttempt, checkPinRateLimit, clearPinRateLimit } from "../lib/quiz/security";
 import type { QuizData, PlayerAttempt } from "../lib/quiz/types";
 
@@ -18,6 +19,12 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
 
 const testUrl = process.env.QUIZ_TEST_SUPABASE_URL || process.env.SUPABASE_URL;
 const testKey = process.env.QUIZ_TEST_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const testAnonKey =
+  process.env.QUIZ_TEST_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 const enabled =
   process.env.QUIZ_SUPABASE_INTEGRATION?.trim() === "1" &&
@@ -219,3 +226,150 @@ test(
     }
   }
 );
+
+test(
+  "REAL SUPABASE security: valid anonymous / publishable key access to private tables and privileged RPCs is denied",
+  {
+    skip: enabled && Boolean(testAnonKey)
+      ? false
+      : "BLOCKED: Requires a valid Supabase publishable/anon key (set SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_ANON_KEY, or QUIZ_TEST_SUPABASE_ANON_KEY in .env.local). When unset, anonymous role authorization cannot be distinguished from missing credentials.",
+  },
+  async () => {
+    assert.ok(testUrl, "SUPABASE_URL must be configured");
+    assert.ok(testAnonKey, "Valid publishable/anon key must be configured");
+
+    const anonClient = createClient(testUrl, testAnonKey);
+
+    const tables = [
+      "quizzes",
+      "quiz_questions",
+      "quiz_attempts",
+      "quiz_attempt_answers",
+      "creator_auth_rate_limits",
+    ] as const;
+
+    // 1. Verify anonymous client cannot read private quiz tables
+    for (const t of tables) {
+      // Direct REST query with valid anon key
+      const res = await fetch(`${testUrl}/rest/v1/${t}`, {
+        headers: {
+          apikey: testAnonKey,
+          Authorization: `Bearer ${testAnonKey}`,
+        },
+      });
+
+      // Verify the gateway accepted the API key (did NOT return "Invalid API key")
+      const body = await res.json().catch(() => null);
+      if (typeof body === "object" && body !== null && "message" in body) {
+        assert.notEqual(
+          (body as { message: string }).message,
+          "Invalid API key",
+          `Table ${t}: API key was rejected as invalid instead of testing anonymous role permissions`
+        );
+      }
+
+      // Must be denied (401/403) or return empty array if filtered by RLS
+      const isDeniedOrEmpty =
+        res.status === 401 ||
+        res.status === 403 ||
+        (res.status === 200 && Array.isArray(body) && body.length === 0);
+      assert.ok(
+        isDeniedOrEmpty,
+        `Table ${t} read access must be denied or return empty to anonymous client (status: ${res.status})`
+      );
+
+      // Verify client-level select denial / empty return
+      const clientRes = await anonClient.from(t).select("*");
+      if (clientRes.error) {
+        assert.notEqual(
+          clientRes.error.message,
+          "Invalid API key",
+          `Table ${t}: Client error was "Invalid API key" rather than PostgreSQL permission denial`
+        );
+      } else {
+        assert.deepEqual(clientRes.data, [], `Table ${t} returned data to anonymous client`);
+      }
+    }
+
+    // 2. Verify anonymous client cannot write to private quiz tables
+    const insertRes = await anonClient.from("quizzes").insert({
+      id: "anon_forbidden_probe",
+      slug: "anon-probe",
+      creator_name: "Attacker",
+      gender: "male",
+      country: "US",
+      theme: "default",
+      pin_hash: "hash",
+      creator_token_hash: "hash",
+      created_at: new Date().toISOString(),
+      created_at_ms: Date.now(),
+    });
+    assert.ok(insertRes.error, "Anonymous user must NOT be permitted to insert into quizzes");
+    assert.notEqual(
+      insertRes.error?.message,
+      "Invalid API key",
+      "Insert error must be permission denial, not invalid API key"
+    );
+
+    // 3. Verify anonymous client cannot execute the seven privileged quiz RPC functions
+    const rpcs = [
+      { name: "save_quiz_with_questions", args: { p_quiz: {}, p_questions: [] } },
+      { name: "record_quiz_attempt", args: { p_attempt: {}, p_answers: [] } },
+      { name: "delete_quiz_atomic", args: { p_quiz_id: "probe" } },
+      { name: "delete_attempt_atomic", args: { p_quiz_id: "probe", p_attempt_id: "probe" } },
+      { name: "check_pin_rate_limit", args: { p_rate_key: "probe", p_max_attempts: 5 } },
+      {
+        name: "record_pin_rate_limit_outcome",
+        args: { p_rate_key: "probe", p_outcome: "success", p_max_attempts: 5, p_window_seconds: 600 },
+      },
+      { name: "clear_pin_rate_limit", args: { p_rate_key: "probe" } },
+    ] as const;
+
+    for (const { name, args } of rpcs) {
+      // Direct REST RPC call with valid anon key
+      const rpcRes = await fetch(`${testUrl}/rest/v1/rpc/${name}`, {
+        method: "POST",
+        headers: {
+          apikey: testAnonKey,
+          Authorization: `Bearer ${testAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(args),
+      });
+
+      const rpcBody = await rpcRes.json().catch(() => null);
+      if (typeof rpcBody === "object" && rpcBody !== null && "message" in rpcBody) {
+        assert.notEqual(
+          (rpcBody as { message: string }).message,
+          "Invalid API key",
+          `RPC ${name}: API key was rejected as invalid instead of testing anonymous role permissions`
+        );
+      }
+
+      // Unprivileged role must receive 401, 403, or 404 (hidden from PostgREST schema cache for unprivileged role)
+      assert.ok(
+        [401, 403, 404].includes(rpcRes.status),
+        `RPC ${name} execution must be denied to anonymous role (got HTTP ${rpcRes.status})`
+      );
+
+      // Client-level RPC call
+      const clientRpcRes = await anonClient.rpc(name, args as unknown as Record<string, unknown>);
+      assert.ok(clientRpcRes.error, `Anonymous execution of RPC ${name} must return an error`);
+      assert.notEqual(
+        clientRpcRes.error?.message,
+        "Invalid API key",
+        `RPC ${name}: Client error was "Invalid API key" rather than PostgreSQL permission denial`
+      );
+    }
+
+    // 4. Verify service_role access continues to work
+    _enableMockSupabase(false);
+    process.env.SUPABASE_URL = testUrl;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = testKey;
+    const serviceClient = getSupabaseClient();
+    const serviceHealth = await serviceClient.from("quizzes").select("*", { count: "exact", head: true });
+    assert.equal(serviceHealth.status, 200, "service_role client must retain full healthy access to quizzes");
+    assert.equal(serviceHealth.error, null, "service_role client returned unexpected error");
+  }
+);
+
