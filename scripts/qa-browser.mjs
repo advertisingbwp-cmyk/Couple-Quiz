@@ -585,7 +585,7 @@ async function runQA() {
       console.log("CLEANUP: DELETING TEST QUIZ & ATTEMPTS");
       console.log("==========================================");
       try {
-        const deletePayload = creatorToken ? { creatorToken } : { pin: "8899" };
+        const deletePayload = { pin: "8899" };
         const res = await fetch(`${BASE_URL}/api/quiz/${createdQuizId}`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
