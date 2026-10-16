@@ -3,7 +3,7 @@
 import React, { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { ArrowRight, Loader2, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
 import { quizAudio } from "@/lib/quiz/audio";
 import { QuizPublicData } from "@/lib/quiz/types";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
@@ -27,10 +27,15 @@ export default function QuizPlayPage({
   const [isStarted, setIsStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswersMap, setSelectedAnswersMap] = useState<Record<string, number>>({});
+  const [clientAttemptId, setClientAttemptId] = useState("");
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [submissionError, setSubmissionError] = useState("");
 
-  useEffect(() => {
+  const loadQuiz = React.useCallback(() => {
+    setLoading(true);
+    setError("");
     fetch(`/api/quiz/${quizId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -42,25 +47,40 @@ export default function QuizPlayPage({
         setLoading(false);
       })
       .catch(() => {
-        setError("Network error loading quiz.");
+        setError("Network error loading quiz. Please check your connection.");
         setLoading(false);
       });
   }, [quizId]);
 
+  useEffect(() => {
+    loadQuiz();
+  }, [loadQuiz]);
+
   const handleStartPlay = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!playerName.trim()) {
+    const clean = playerName.trim();
+    if (!clean) {
       setError("Please enter your name to play!");
       quizAudio.playWrong();
       return;
     }
+    if (clean.length > 40) {
+      setError("Player name must be 40 characters or less.");
+      quizAudio.playWrong();
+      return;
+    }
+
     setError("");
     quizAudio.playPop();
+
+    // Generate unique client attempt ID for robust server-side idempotency
+    const attemptId = `att_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`;
+    setClientAttemptId(attemptId);
     setIsStarted(true);
   };
 
   const handleSelectOption = (optionId: number) => {
-    if (!quiz || isSubmitting) return;
+    if (!quiz || isSubmitting || isTransitioning) return;
     quizAudio.playPop();
 
     const currentQ = quiz.questions[currentIndex];
@@ -69,17 +89,28 @@ export default function QuizPlayPage({
       [currentQ.questionId]: optionId,
     };
     setSelectedAnswersMap(updatedMap);
+    setIsTransitioning(true);
 
-    if (currentIndex + 1 < quiz.questions.length) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      // All questions completed, submit map
-      submitAttempt(updatedMap);
-    }
+    // Support reduced motion preference
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const transitionDelay = prefersReducedMotion ? 40 : 220;
+
+    setTimeout(() => {
+      if (currentIndex + 1 < quiz.questions.length) {
+        setCurrentIndex((prev) => prev + 1);
+        setIsTransitioning(false);
+      } else {
+        setIsTransitioning(false);
+        submitAttempt(updatedMap, clientAttemptId);
+      }
+    }, transitionDelay);
   };
 
-  const submitAttempt = async (map: Record<string, number>) => {
+  const submitAttempt = async (map: Record<string, number>, attemptId: string) => {
     setIsSubmitting(true);
+    setSubmissionError("");
     quizAudio.playCelebration();
 
     const formattedAnswers = Object.entries(map).map(([questionId, selectedOptionId]) => ({
@@ -90,10 +121,14 @@ export default function QuizPlayPage({
     try {
       const res = await fetch(`/api/quiz/${quizId}/attempt`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": attemptId,
+        },
         body: JSON.stringify({
           playerName: playerName.trim(),
           answers: formattedAnswers,
+          attemptId,
         }),
       });
 
@@ -103,20 +138,22 @@ export default function QuizPlayPage({
         sessionStorage.setItem(`quiz_result_${quizId}`, JSON.stringify(data));
         router.push(`/quiz/result/${quizId}`);
       } else {
-        alert(data.error || "Failed to submit. Try again.");
+        setSubmissionError(data.error || "Failed to submit attempt. Please try again.");
         setIsSubmitting(false);
+        quizAudio.playWrong();
       }
     } catch {
-      alert("Network error submitting quiz.");
+      setSubmissionError("Connection interrupted! We couldn't send your answers. Tap below to retry without losing progress.");
       setIsSubmitting(false);
+      quizAudio.playWrong();
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
-        <div className="text-center font-black text-[#29324c] text-base flex items-center gap-2">
-          <Loader2 className="animate-spin text-[#6650b7]" />
+        <div className="text-center font-black text-[#29324c] text-base flex items-center gap-2.5">
+          <Loader2 className="animate-spin text-[#6650b7]" size={24} />
           <span>Loading challenge... ✦</span>
         </div>
       </div>
@@ -125,19 +162,31 @@ export default function QuizPlayPage({
 
   if (error || !quiz) {
     return (
-      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4 font-sans">
         <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#29324c] shadow-[0_6px_0_#d6ad63] text-center">
-          <AlertCircle size={40} className="text-[#a52938] mx-auto mb-2" />
-          <h2 className="text-xl font-black text-[#29324c] mb-1">Quiz Not Found</h2>
-          <p className="text-xs font-bold text-[#536079] mb-4">
-            {error || "This quiz may have been deleted or expired."}
+          <AlertCircle size={44} className="text-[#a52938] mx-auto mb-3" />
+          <h2 className="text-xl sm:text-2xl font-black text-[#29324c] mb-1.5 tracking-tight">
+            Quiz Unavailable
+          </h2>
+          <p className="text-xs sm:text-sm font-bold text-[#536079] mb-5 leading-relaxed">
+            {error || "This quiz may have been deleted, or could not be reached right now."}
           </p>
-          <Link
-            href="/quiz"
-            className="inline-block py-3 px-6 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black rounded-2xl border-2 border-[#29324c] shadow-[0_3px_0_#d6ad63] text-sm uppercase tracking-wider transition-all"
-          >
-            Create Your Own Quiz
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
+            <button
+              type="button"
+              onClick={loadQuiz}
+              className="py-3 px-5 bg-white hover:bg-[#edf7ff] text-[#29324c] font-black rounded-2xl border-2 border-[#29324c] shadow-[0_2px_0_#d7e1e8] text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <RefreshCw size={15} />
+              <span>Try Again</span>
+            </button>
+            <Link
+              href="/quiz"
+              className="py-3 px-5 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black rounded-2xl border-2 border-[#29324c] shadow-[0_3px_0_#d6ad63] text-xs sm:text-sm uppercase tracking-wider transition-all text-center inline-flex items-center justify-center"
+            >
+              Create Your Own Quiz
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -210,7 +259,7 @@ export default function QuizPlayPage({
                     if (error) setError("");
                   }}
                   placeholder="e.g. Zainab or Hamza"
-                  maxLength={30}
+                  maxLength={40}
                   className="w-full px-4 py-3.5 text-base font-bold bg-[#fffefa] text-[#29324c] rounded-2xl border-2 border-[#29324c] focus:outline-none focus:ring-4 focus:ring-[#6650b7]/20 transition-all shadow-[0_2px_0_#d7e1e8]"
                 />
                 {error && <p className="text-xs font-bold text-[#a52938] mt-1.5 ml-1">{error}</p>}
@@ -227,7 +276,7 @@ export default function QuizPlayPage({
           </div>
         ) : isSubmitting ? (
           <div className="w-full bg-white rounded-3xl p-8 border-2 border-[#29324c] shadow-[0_6px_0_#d6ad63] text-center">
-            <Loader2 size={36} className="animate-spin text-[#6650b7] mx-auto mb-3" />
+            <Loader2 size={40} className="animate-spin text-[#6650b7] mx-auto mb-3" />
             <h2 className="text-xl font-black text-[#29324c]">Calculating your score...</h2>
             <p className="text-xs text-[#536079] mt-1 font-medium">Checking how well you matched {creatorName}! 🎯</p>
           </div>
@@ -245,6 +294,20 @@ export default function QuizPlayPage({
                 aria-label="Quiz progress"
               />
             </div>
+
+            {/* Submission Error Banner */}
+            {submissionError && (
+              <div className="mb-4 bg-[#fff1f2] border-2 border-[#a52938] text-[#a52938] p-4 rounded-2xl shadow-[0_3px_0_#a52938] text-center">
+                <p className="text-xs sm:text-sm font-black mb-2">{submissionError}</p>
+                <button
+                  type="button"
+                  onClick={() => submitAttempt(selectedAnswersMap, clientAttemptId)}
+                  className="py-2.5 px-5 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black text-xs uppercase rounded-xl border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63] transition-all cursor-pointer"
+                >
+                  Retry Submission 🚀
+                </button>
+              </div>
+            )}
 
             {/* Question Card */}
             <article className="w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_6px_0_#d6ad63] border-2 border-[#29324c] relative transition-all">
@@ -275,6 +338,7 @@ export default function QuizPlayPage({
                     option={option}
                     isSelected={selectedAnswersMap[currentQ.questionId] === option.id}
                     onSelect={handleSelectOption}
+                    disabled={isTransitioning || isSubmitting}
                     totalOptions={currentQ.options.length}
                   />
                 ))}

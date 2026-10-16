@@ -321,3 +321,21 @@ export function _resetPinRateLimit(ip?: string): void {
     localPinAttempts.clear();
   }
 }
+
+/**
+ * Computes a canonical SHA-256 fingerprint for a quiz attempt request.
+ * Used to enforce concurrency-safe idempotency and detect conflicting payload reuse (HTTP 409).
+ */
+export function computeAttemptFingerprint(
+  quizId: string,
+  playerName: string,
+  answers: Array<{ questionId: string; selectedOptionId: number }>
+): string {
+  const normalizedAnswers = [...answers]
+    .sort((a, b) => a.questionId.localeCompare(b.questionId))
+    .map((a) => `${a.questionId}:${a.selectedOptionId}`)
+    .join(",");
+  const canonicalString = `${quizId}|${playerName.trim().toLowerCase()}|${normalizedAnswers}`;
+  return crypto.createHash("sha256").update(canonicalString).digest("hex");
+}
+

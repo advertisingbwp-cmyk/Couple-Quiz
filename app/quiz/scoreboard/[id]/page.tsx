@@ -34,6 +34,27 @@ export default function QuizScoreboardPage({
     }
   }, [quizId]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showAuthModal) {
+          setShowAuthModal(false);
+          setEnteredPin("");
+          setAuthError("");
+        }
+        if (selectedEntry) {
+          setSelectedEntry(null);
+        }
+        if (pinPrompt.open) {
+          setPinPrompt({ open: false, attemptId: "", playerName: "" });
+          setEnteredPin("");
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showAuthModal, selectedEntry, pinPrompt.open]);
+
   const fetchPublicScoreboard = React.useCallback(() => {
     setLoading(true);
     fetch(`/api/quiz/${quizId}/scoreboard`)
@@ -271,15 +292,25 @@ export default function QuizScoreboardPage({
             </div>
           ) : scoreboard.length === 0 ? (
             <div className="py-8 text-center text-slate-600">
-              <span className="text-3xl block mb-2">🎯</span>
-              <p className="font-extrabold text-sm text-slate-900">Abhi tak kisi dost ne quiz nahi diya!</p>
-              <p className="text-xs text-slate-500 mt-1">Apne WhatsApp status par link lagayein taake scores yahan show hon!</p>
-              <Link
-                href={`/quiz/share/${quizId}`}
-                className="inline-block mt-4 py-2.5 px-5 bg-sky-400 text-slate-950 font-black text-xs uppercase rounded-xl border-2 border-slate-900"
-              >
-                Share Link Now
-              </Link>
+              <span className="text-4xl block mb-2">🎯</span>
+              <p className="font-extrabold text-sm text-slate-900">No friends have played this quiz yet!</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                Share your challenge link on WhatsApp or play it yourself to see scores here!
+              </p>
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+                <Link
+                  href={`/quiz/play/${quizId}`}
+                  className="w-full sm:w-auto py-2.5 px-5 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black text-xs uppercase rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5"
+                >
+                  Play Challenge Now
+                </Link>
+                <Link
+                  href={`/quiz/share/${quizId}`}
+                  className="w-full sm:w-auto py-2.5 px-5 bg-[#ffce71] hover:bg-[#ffdb92] text-slate-950 font-black text-xs uppercase rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#d6ad63] active:translate-y-0.5"
+                >
+                  Share Link Now
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -308,15 +339,15 @@ export default function QuizScoreboardPage({
                           {entry.playerName}
                         </span>
                         <span
-                          className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded border inline-block mt-0.5 ${
+                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border inline-block mt-0.5 ${
                             isBestie
                               ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                               : isFake
-                              ? "bg-amber-100 text-amber-800 border-amber-300"
-                              : "bg-sky-100 text-sky-800 border-sky-300"
+                              ? "bg-sky-100 text-sky-800 border-sky-300"
+                              : "bg-amber-100 text-amber-800 border-amber-300"
                           }`}
                         >
-                          {isBestie ? "True Bestie ❤️" : isFake ? "Needs Catch-up ☕" : "Clique Friend ✨"}
+                          {isBestie ? "Bestie Alert! ❤️" : isFake ? "Friend in Training 🌱" : "Great Friend 🙂"}
                         </span>
                       </div>
                     </div>
@@ -362,10 +393,10 @@ export default function QuizScoreboardPage({
 
       {/* Creator PIN Unlock Modal for Detailed Answers */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="creator-auth-title" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl text-center">
             <Lock size={32} className="text-amber-500 mx-auto mb-2" />
-            <h3 className="font-black text-lg text-slate-900">Creator Verification</h3>
+            <h3 id="creator-auth-title" className="font-black text-lg text-slate-900">Creator Verification</h3>
             <p className="text-xs text-slate-600 mt-1 mb-4">
               Enter your Creator Secret PIN to view {creatorName}&apos;s friends answers:
             </p>
@@ -408,11 +439,11 @@ export default function QuizScoreboardPage({
 
       {/* View Answers Modal (Authorized) */}
       {selectedEntry && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="answers-modal-title" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b-2 border-slate-100 mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900">
+                <h3 id="answers-modal-title" className="font-black text-base text-slate-900">
                   {selectedEntry.playerName}&apos;s Answers
                 </h3>
                 <span className="text-xs font-bold text-sky-600">
@@ -423,6 +454,7 @@ export default function QuizScoreboardPage({
                 type="button"
                 onClick={() => setSelectedEntry(null)}
                 className="p-1 text-slate-400 hover:text-slate-900 rounded-lg cursor-pointer"
+                aria-label="Close answers modal"
               >
                 <X size={20} />
               </button>
@@ -463,10 +495,10 @@ export default function QuizScoreboardPage({
 
       {/* Delete Confirmation Modal */}
       {pinPrompt.open && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="delete-modal-title" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-xs bg-white rounded-3xl p-5 border-4 border-slate-900 shadow-2xl text-center">
             <AlertCircle size={32} className="text-red-500 mx-auto mb-2" />
-            <h3 className="font-black text-base text-slate-900">Remove Player?</h3>
+            <h3 id="delete-modal-title" className="font-black text-base text-slate-900">Remove Player?</h3>
             <p className="text-xs text-slate-600 mt-1 mb-3">
               {typeof window !== "undefined" && localStorage.getItem(`creator_token_${quizId}`) ? (
                 <>

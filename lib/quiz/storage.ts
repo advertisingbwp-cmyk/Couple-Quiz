@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import type { QuizData, PlayerAttempt, ScoreboardEntry, ScoreboardDetailEntry, QuizPublicData } from "./types";
+import type { QuizData, PlayerAttempt, ScoreboardEntry, ScoreboardDetailEntry, QuizPublicData, RecordAttemptOutcome } from "./types";
 import {
   dbSaveQuiz,
   dbGetQuiz,
   dbGetQuizPublic,
-  dbRecordAttempt,
+  dbRecordAttemptAtomic,
   dbFetchAttempts,
   dbDeleteAttempt,
   dbDeleteQuiz,
@@ -14,6 +14,7 @@ import {
   isProductionServerlessEnvironment,
   StorageUnavailableError,
 } from "./supabase";
+import { computeAttemptFingerprint } from "./security";
 
 export { StorageUnavailableError };
 
@@ -118,20 +119,49 @@ export function createQuizStorage(filePath = path.join(process.cwd(), "data", "q
     };
   }
 
-  async function recordAttempt(attempt: PlayerAttempt): Promise<boolean> {
-    if (forceFailWrite) return false;
+  async function recordAttemptAtomic(attempt: PlayerAttempt): Promise<RecordAttemptOutcome> {
+    if (forceFailWrite) throw new StorageUnavailableError();
     if (isSupabaseConfigured()) {
-      return await dbRecordAttempt(attempt);
+      return await dbRecordAttemptAtomic(attempt);
     }
+    const next = structuredClone(local());
+    if (!next.quizzes[attempt.quizId]) {
+      return { status: "quiz_not_found" };
+    }
+
+    // Check if an attempt with this ID already exists across active quizzes in storage
+    let existingAnywhere: PlayerAttempt | undefined;
+    for (const qId of Object.keys(next.attempts)) {
+      if (!next.quizzes[qId]) continue; // Skip orphaned attempts from deleted quizzes (mirrors ON DELETE CASCADE)
+      const found = next.attempts[qId]?.find((a) => a.id === attempt.id);
+      if (found) {
+        existingAnywhere = found;
+        break;
+      }
+    }
+
+    if (existingAnywhere) {
+      const incomingFp = computeAttemptFingerprint(attempt.quizId, attempt.playerName, attempt.answers);
+      const existingFp = computeAttemptFingerprint(existingAnywhere.quizId, existingAnywhere.playerName, existingAnywhere.answers);
+      if (incomingFp === existingFp) {
+        return { status: "duplicate", attempt: existingAnywhere };
+      } else {
+        return { status: "conflict", existingAttempt: existingAnywhere };
+      }
+    }
+
+    next.attempts[attempt.quizId] = [
+      structuredClone(attempt),
+      ...(next.attempts[attempt.quizId] || []).filter((a) => a.id !== attempt.id),
+    ];
+    persist(next);
+    return { status: "recorded", attempt };
+  }
+
+  async function recordAttempt(attempt: PlayerAttempt): Promise<boolean> {
     try {
-      const next = structuredClone(local());
-      if (!next.quizzes[attempt.quizId]) return false;
-      next.attempts[attempt.quizId] = [
-        structuredClone(attempt),
-        ...(next.attempts[attempt.quizId] || []).filter((a) => a.id !== attempt.id),
-      ];
-      persist(next);
-      return true;
+      const res = await recordAttemptAtomic(attempt);
+      return res.status === "recorded" || res.status === "duplicate";
     } catch {
       return false;
     }
@@ -213,6 +243,7 @@ export function createQuizStorage(filePath = path.join(process.cwd(), "data", "q
     getQuizById,
     getQuizPublicData,
     recordAttempt,
+    recordAttemptAtomic,
     getScoreboard,
     getScoreboardDetails,
     deleteAttempt,
@@ -225,6 +256,7 @@ export const {
   getQuizById,
   getQuizPublicData,
   recordAttempt,
+  recordAttemptAtomic,
   getScoreboard,
   getScoreboardDetails,
   deleteAttempt,

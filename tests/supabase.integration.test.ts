@@ -14,6 +14,8 @@ import {
   verifyCreatorSessionToken,
   verifyCreatorToken,
 } from "../lib/quiz/security";
+import { NextRequest } from "next/server";
+import { POST as submitAttempt } from "../app/api/quiz/[id]/attempt/route";
 import type { QuizData, PlayerAttempt } from "../lib/quiz/types";
 
 import { loadEnvConfig, resetEnv } from "@next/env";
@@ -726,4 +728,209 @@ test(
     }
   }
 );
+
+test(
+  "REAL SUPABASE Phase 6.1: Atomic attempt idempotency, 20 concurrent requests, conflict rejection (HTTP 409), and key protection",
+  {
+    skip: enabled
+      ? false
+      : "Requires explicit opt-in and a disposable Supabase test project (QUIZ_SUPABASE_INTEGRATION=1, SUPABASE_URL / QUIZ_TEST_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY / QUIZ_TEST_SUPABASE_SERVICE_ROLE_KEY)",
+  },
+  async () => {
+    _enableMockSupabase(false);
+    process.env.SUPABASE_URL = testUrl;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = testKey;
+
+    const storage = createQuizStorage();
+    const client = getSupabaseClient();
+    const quizId = `q_real_idemp_${Date.now()}`;
+    const otherQuizId = `q_real_other_${Date.now()}`;
+
+    const tenQuestions = Array.from({ length: 10 }, (_, i) => ({
+      questionId: `q_${i + 1}`,
+      question: `Question ${i + 1}`,
+      options: [
+        { id: 0, text: `Opt A ${i + 1}` },
+        { id: 1, text: `Opt B ${i + 1}` },
+      ],
+      correctOptionId: 0,
+      displayOrder: i,
+    }));
+
+    const quiz: QuizData = {
+      id: quizId,
+      slug: quizId,
+      creatorName: "Idempotency Host",
+      gender: "female",
+      country: "PK",
+      theme: "dont_block_me",
+      pinHash: hashPin("9999"),
+      creatorToken: generateCreatorToken(),
+      createdAt: Date.now(),
+      questions: tenQuestions,
+    };
+
+    const otherQuiz: QuizData = {
+      id: otherQuizId,
+      slug: otherQuizId,
+      creatorName: "Other Host",
+      gender: "male",
+      country: "PK",
+      theme: "dont_block_me",
+      pinHash: hashPin("9999"),
+      creatorToken: generateCreatorToken(),
+      createdAt: Date.now(),
+      questions: tenQuestions,
+    };
+
+    try {
+      await storage.saveQuiz(quiz);
+      await storage.saveQuiz(otherQuiz);
+
+      const attemptId = `att_${Date.now()}_a1b2c3d4e5f6`;
+      const answers = tenQuestions.map((q) => ({
+        questionId: q.questionId,
+        selectedOptionId: q.correctOptionId,
+      }));
+
+      // 1. 20 simultaneous identical submissions using one attempt ID
+      const concurrentCalls = Array.from({ length: 20 }, () =>
+        submitAttempt(
+          new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              attemptId,
+              playerName: "Concurrent Hamza",
+              answers,
+            }),
+          }),
+          { params: Promise.resolve({ id: quizId }) }
+        )
+      );
+
+      const responses = await Promise.all(concurrentCalls);
+
+      // Confirm every response returns HTTP 200 with the exact same score and attemptId
+      let successCount = 0;
+      let alreadyRecordedCount = 0;
+      for (const res of responses) {
+        assert.equal(res.status, 200);
+        const data = await res.json();
+        assert.equal(data.success, true);
+        assert.equal(data.attemptId, attemptId);
+        assert.equal(data.score, 10);
+        assert.equal(data.totalQuestions, 10);
+        successCount++;
+        if (data.alreadyRecorded === true) {
+          alreadyRecordedCount++;
+        }
+      }
+
+      assert.equal(successCount, 20, "All 20 requests must succeed with 200");
+      // Exactly 1 request did the insert, 19 detected conflict and returned alreadyRecorded
+      assert.equal(alreadyRecordedCount, 19, "Exactly 19 responses must be marked alreadyRecorded: true");
+
+      // Confirm exactly one database row in quiz_attempts
+      const { data: attRows, error: attErr } = await client
+        .from("quiz_attempts")
+        .select("*")
+        .eq("id", attemptId);
+      assert.equal(attErr, null);
+      assert.equal(attRows?.length, 1, "Exactly one row must exist in quiz_attempts for attemptId");
+
+      // Confirm exactly 10 answers in quiz_attempt_answers (one answer set)
+      const { data: ansRows, error: ansErr } = await client
+        .from("quiz_attempt_answers")
+        .select("*")
+        .eq("attempt_id", attemptId);
+      assert.equal(ansErr, null);
+      assert.equal(ansRows?.length, 10, "Exactly one answer set (10 rows) must exist in quiz_attempt_answers");
+
+      // 2. Reject conflicting payload reuse with HTTP 409 (different player name)
+      const conflictNameRes = await submitAttempt(
+        new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            attemptId,
+            playerName: "Different Player Name",
+            answers,
+          }),
+        }),
+        { params: Promise.resolve({ id: quizId }) }
+      );
+      assert.equal(conflictNameRes.status, 409, "Conflicting player name reuse must return HTTP 409");
+      const conflictNameData = await conflictNameRes.json();
+      assert.equal(conflictNameData.success, false);
+      assert.match(conflictNameData.error, /conflict/i);
+
+      // 3. Reject conflicting payload reuse with HTTP 409 (different answers)
+      const conflictAnswers = answers.map((a, idx) => ({
+        ...a,
+        selectedOptionId: idx === 0 ? 1 : a.selectedOptionId,
+      }));
+      const conflictAnsRes = await submitAttempt(
+        new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            attemptId,
+            playerName: "Concurrent Hamza",
+            answers: conflictAnswers,
+          }),
+        }),
+        { params: Promise.resolve({ id: quizId }) }
+      );
+      assert.equal(conflictAnsRes.status, 409, "Conflicting answers reuse must return HTTP 409");
+
+      // 4. Verify retry after simulated lost response
+      const retryRes = await submitAttempt(
+        new NextRequest(`http://localhost:3000/api/quiz/${quizId}/attempt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            attemptId,
+            playerName: "Concurrent Hamza",
+            answers,
+          }),
+        }),
+        { params: Promise.resolve({ id: quizId }) }
+      );
+      assert.equal(retryRes.status, 200, "Retry must return 200");
+      const retryData = await retryRes.json();
+      assert.equal(retryData.alreadyRecorded, true);
+      assert.equal(retryData.score, 10);
+
+      // 5. Verify unauthorized or unrelated attempts cannot be read or overwritten via a guessed key on another quiz
+      const guessedKeyRes = await submitAttempt(
+        new NextRequest(`http://localhost:3000/api/quiz/${otherQuizId}/attempt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            attemptId, // Guessed key from quizId
+            playerName: "Attacker",
+            answers,
+          }),
+        }),
+        { params: Promise.resolve({ id: otherQuizId }) }
+      );
+      assert.equal(guessedKeyRes.status, 409, "Guessed key across different quiz must return HTTP 409");
+
+      // Confirm otherQuiz has 0 attempts recorded
+      const otherBoard = await storage.getScoreboard(otherQuizId);
+      assert.equal(otherBoard.length, 0, "Guessed key must not record attempt under other quiz");
+    } finally {
+      try {
+        await storage.deleteQuiz(quizId);
+        await storage.deleteQuiz(otherQuizId);
+      } catch {
+        // ignore
+      }
+      delete process.env.SUPABASE_URL;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    }
+  }
+);
+
 
