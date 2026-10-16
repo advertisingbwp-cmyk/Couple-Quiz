@@ -57,6 +57,19 @@ export async function DELETE(
     const { id } = await params;
     const { pin, creatorToken } = parseResult.data;
 
+    // Phase 9.3 Security Requirement:
+    // Whole-quiz deletion ALWAYS requires the creator PIN.
+    // A valid creator token alone must NOT authorize whole-quiz deletion.
+    if (!pin || typeof pin !== "string" || !/^\d{4,6}$/.test(pin.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Creator Secret PIN is required to delete the quiz.",
+        },
+        { status: creatorToken ? 403 : 400 }
+      );
+    }
+
     const quiz = await getQuizById(id);
     if (!quiz) {
       return NextResponse.json(
@@ -65,8 +78,9 @@ export async function DELETE(
       );
     }
 
-    // Rate limit brute-force attempts with distributed IP tracking
-    const authFailure = await creatorAuthResponse(req, quiz, { pin, creatorToken });
+    // Rate-limited authentication strictly verifying PIN against quiz.pinHash.
+    // Even if creatorToken is present in the payload, authenticate ONLY via PIN.
+    const authFailure = await creatorAuthResponse(req, quiz, { pin: pin.trim() });
     if (authFailure) return authFailure;
     const isDeleted = await deleteQuiz(id);
     if (!isDeleted) {

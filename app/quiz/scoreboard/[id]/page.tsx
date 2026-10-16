@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Trophy, Share2, Trash2, Eye, X, RefreshCw, AlertCircle, MessageCircle, Lock, Copy, Check } from "lucide-react";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { quizAudio } from "@/lib/quiz/audio";
@@ -21,12 +22,14 @@ export default function QuizScoreboardPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const quizId = resolvedParams.id;
 
   const [creatorName, setCreatorName] = useState("Friend");
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quizNotFound, setQuizNotFound] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<ScoreboardDetailEntry | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [targetDetailId, setTargetDetailId] = useState<string | null>(null);
@@ -38,6 +41,12 @@ export default function QuizScoreboardPage({
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [envInfo, setEnvInfo] = useState<EnvironmentInfo>(() => detectEnvironment());
+
+  // Phase 9.3: Delete Quiz state
+  const [showDeleteQuizModal, setShowDeleteQuizModal] = useState(false);
+  const [deleteQuizPin, setDeleteQuizPin] = useState("");
+  const [deleteQuizError, setDeleteQuizError] = useState("");
+  const [deletingQuiz, setDeletingQuiz] = useState(false);
 
   useEffect(() => {
     const origin = typeof window !== "undefined" ? window.location.origin : undefined;
@@ -54,47 +63,9 @@ export default function QuizScoreboardPage({
     }
   }, [quizId]);
 
+  // Consolidated Escape key modal dismiss handler
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (showAuthModal) {
-          setShowAuthModal(false);
-          setEnteredPin("");
-          setAuthError("");
-        }
-        if (selectedEntry) {
-          setSelectedEntry(null);
-        }
-        if (pinPrompt.open) {
-          setPinPrompt({ open: false, attemptId: "", playerName: "" });
-          setEnteredPin("");
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showAuthModal, selectedEntry, pinPrompt.open]);
-
-  const fetchPublicScoreboard = React.useCallback(() => {
-    setLoading(true);
-    fetch(`/api/quiz/${quizId}/scoreboard`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setCreatorName(data.creatorName || "Friend");
-          setScoreboard(data.scoreboard || []);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [quizId]);
-
-  useEffect(() => {
-    fetchPublicScoreboard();
-  }, [fetchPublicScoreboard]);
-
-  useEffect(() => {
-    if (!showAuthModal && !selectedEntry && !pinPrompt.open) return;
+    if (!showAuthModal && !selectedEntry && !pinPrompt.open && !showDeleteQuizModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -110,11 +81,45 @@ export default function QuizScoreboardPage({
           setPinPrompt({ open: false, attemptId: "", playerName: "" });
           setEnteredPin("");
         }
+        if (showDeleteQuizModal) {
+          setShowDeleteQuizModal(false);
+          setDeleteQuizPin("");
+          setDeleteQuizError("");
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showAuthModal, selectedEntry, pinPrompt.open]);
+  }, [showAuthModal, selectedEntry, pinPrompt.open, showDeleteQuizModal]);
+
+  const fetchPublicScoreboard = React.useCallback(() => {
+    setLoading(true);
+    fetch(`/api/quiz/${quizId}/scoreboard`)
+      .then((res) => {
+        if (res.status === 404) {
+          setQuizNotFound(true);
+          setLoading(false);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        if (data.success) {
+          setCreatorName(data.creatorName || "Friend");
+          setScoreboard(data.scoreboard || []);
+          setQuizNotFound(false);
+        } else {
+          setQuizNotFound(true);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [quizId]);
+
+  useEffect(() => {
+    fetchPublicScoreboard();
+  }, [fetchPublicScoreboard]);
 
   // Request detailed answers with authorization (creatorToken or PIN)
   const handleOpenAnswers = async (entry: ScoreboardEntry) => {
@@ -229,6 +234,63 @@ export default function QuizScoreboardPage({
     }
   };
 
+  const handleDeleteQuiz = async () => {
+    const trimmedPin = deleteQuizPin.trim();
+    if (!trimmedPin) {
+      setDeleteQuizError("Please enter your Creator Secret PIN.");
+      return;
+    }
+    if (!/^\d{4,6}$/.test(trimmedPin)) {
+      setDeleteQuizError("PIN must be 4 to 6 digits.");
+      return;
+    }
+
+    setDeletingQuiz(true);
+    setDeleteQuizError("");
+
+    try {
+      const res = await fetch(`/api/quiz/${quizId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: trimmedPin }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(`creator_token_${quizId}`);
+        }
+        setIsCreator(false);
+        setShowDeleteQuizModal(false);
+        setDeleteQuizPin("");
+        quizAudio.playPop();
+        router.push("/");
+        return;
+      }
+
+      if (res.status === 403) {
+        setDeleteQuizError(data.error || "Incorrect Secret PIN.");
+        quizAudio.playWrong();
+      } else if (res.status === 404) {
+        setDeleteQuizError("Quiz not found or has already been deleted.");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(`creator_token_${quizId}`);
+        }
+      } else if (res.status === 429) {
+        setDeleteQuizError("Too many attempts. Please try again in 10 minutes.");
+      } else if (res.status === 503) {
+        setDeleteQuizError("Service temporarily unavailable. Please try again shortly.");
+      } else {
+        setDeleteQuizError(data.error || "Failed to delete quiz. Please try again.");
+      }
+    } catch {
+      setDeleteQuizError("Network error. Please check your connection and try again.");
+    } finally {
+      setDeletingQuiz(false);
+    }
+  };
+
   const safeCreator = sanitizeCreatorName(creatorName);
 
   const handleShareScoreboardWhatsApp = () => {
@@ -270,6 +332,26 @@ export default function QuizScoreboardPage({
       }
     }
   };
+
+  if (quizNotFound) {
+    return (
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-6 border-4 border-slate-900 text-center shadow-xl">
+          <AlertCircle size={40} className="text-red-500 mx-auto mb-2" />
+          <h2 className="text-xl font-black text-slate-900 mb-1">Quiz Not Found</h2>
+          <p className="text-xs text-slate-600 mb-4">
+            This quiz does not exist or may have been permanently deleted by its creator.
+          </p>
+          <Link
+            href="/quiz"
+            className="inline-block py-3 px-6 bg-emerald-400 hover:bg-emerald-500 text-slate-950 font-black rounded-2xl border-2 border-slate-900 text-sm uppercase shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all"
+          >
+            Create New Quiz
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#edf7ff] text-[#29324c] flex flex-col font-sans relative overflow-x-hidden">
@@ -388,9 +470,25 @@ export default function QuizScoreboardPage({
               Ranked Players
             </h2>
             {isCreator ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full">
-                👑 Creator Mode
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                  👑 Creator Mode
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteQuizModal(true);
+                    setDeleteQuizPin("");
+                    setDeleteQuizError("");
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-black bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full transition-colors cursor-pointer"
+                  title="Delete Quiz (Permanent)"
+                  aria-label="Delete Quiz"
+                >
+                  <Trash2 size={12} />
+                  <span>Delete Quiz</span>
+                </button>
+              </div>
             ) : (
               <button
                 type="button"
@@ -430,6 +528,20 @@ export default function QuizScoreboardPage({
                 >
                   Share Link Now
                 </Link>
+                {isCreator && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteQuizModal(true);
+                      setDeleteQuizPin("");
+                      setDeleteQuizError("");
+                    }}
+                    className="w-full sm:w-auto py-2.5 px-5 bg-red-100 hover:bg-red-200 text-red-700 font-black text-xs uppercase rounded-xl border-2 border-red-300 shadow-[0_2px_0_#fca5a5] active:translate-y-0.5 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete Quiz</span>
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -508,6 +620,26 @@ export default function QuizScoreboardPage({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Creator Management Actions (when scoreboard has players) */}
+          {isCreator && scoreboard.length > 0 && (
+            <div className="mt-4 pt-4 border-t-2 border-slate-100 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Creator Management</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteQuizModal(true);
+                  setDeleteQuizPin("");
+                  setDeleteQuizError("");
+                }}
+                className="py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-700 font-black text-xs rounded-xl border border-red-200 flex items-center gap-1.5 cursor-pointer transition-colors"
+                aria-label="Delete Entire Quiz and All Results"
+              >
+                <Trash2 size={13} />
+                <span>Delete Quiz</span>
+              </button>
             </div>
           )}
         </div>
@@ -668,6 +800,86 @@ export default function QuizScoreboardPage({
                 className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase cursor-pointer"
               >
                 {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Quiz Confirmation Modal (Creator PIN Required) */}
+      {showDeleteQuizModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-quiz-modal-title"
+          aria-describedby="delete-quiz-modal-desc"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl text-center">
+            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 border-2 border-red-200">
+              <Trash2 size={24} />
+            </div>
+            <h3 id="delete-quiz-modal-title" className="font-black text-lg text-slate-900">
+              Delete Entire Quiz?
+            </h3>
+            <p id="delete-quiz-modal-desc" className="text-xs text-slate-600 mt-1.5 mb-4 leading-relaxed">
+              This will <strong>permanently delete</strong> this quiz and all associated player scores. This action cannot be undone.
+            </p>
+
+            <p className="text-xs font-bold text-slate-700 mb-2">
+              Enter your Creator Secret PIN to confirm:
+            </p>
+            <label htmlFor="delete-quiz-pin-input" className="sr-only">
+              Creator Secret PIN for quiz deletion
+            </label>
+            <input
+              id="delete-quiz-pin-input"
+              type="password"
+              aria-label="Creator Secret PIN for quiz deletion"
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+              value={deleteQuizPin}
+              onChange={(e) => {
+                setDeleteQuizPin(e.target.value);
+                if (deleteQuizError) setDeleteQuizError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !deletingQuiz) {
+                  e.preventDefault();
+                  handleDeleteQuiz();
+                }
+              }}
+              placeholder="Enter PIN (e.g. 7890)"
+              className="w-full py-3 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-2xl mb-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+            />
+
+            {deleteQuizError && (
+              <p role="alert" className="text-xs font-bold text-red-600 mb-3">
+                {deleteQuizError}
+              </p>
+            )}
+
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteQuizModal(false);
+                  setDeleteQuizPin("");
+                  setDeleteQuizError("");
+                }}
+                disabled={deletingQuiz}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 font-bold text-xs rounded-xl border border-slate-300 text-slate-700 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deletingQuiz}
+                onClick={handleDeleteQuiz}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-700 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase tracking-wider shadow-[0_2px_0_#7f1d1d] active:translate-y-0.5 cursor-pointer disabled:opacity-50 transition-all"
+              >
+                {deletingQuiz ? "Deleting..." : "Delete Quiz"}
               </button>
             </div>
           </div>

@@ -440,16 +440,23 @@ test("API create, answer, scoreboard, private details, deletion and repeat delet
   );
   assert.equal(removeAttemptRes.status, 200);
 
-  // Remove quiz
-  const delRes = await removeQuiz(
+  // Quiz deletion with token-only is rejected with 403 (Phase 9.3)
+  const tokenOnlyDel = await removeQuiz(
     request("DELETE", { creatorToken: created.creatorToken }),
+    params(created.quizId)
+  );
+  assert.equal(tokenOnlyDel.status, 403);
+
+  // Remove quiz with PIN
+  const delRes = await removeQuiz(
+    request("DELETE", { pin }),
     params(created.quizId)
   );
   assert.equal(delRes.status, 200);
 
   // Repeat delete returns 404
   const repeatDel = await removeQuiz(
-    request("DELETE", { creatorToken: created.creatorToken }),
+    request("DELETE", { pin }),
     params(created.quizId)
   );
   assert.equal(repeatDel.status, 404);

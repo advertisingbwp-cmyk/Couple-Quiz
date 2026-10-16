@@ -432,11 +432,20 @@ test("Phase 4.2: Creator authentication returns token on PIN login and allows co
   const getRes = await getQuiz(getReq, { params: Promise.resolve({ id: quizId }) });
   assert.equal(getRes.status, 200);
 
-  // 3. Authorized deletion using creatorToken
-  const deleteReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
+  // 3a. Token-only deletion is rejected (Phase 9.3: PIN is strictly required for whole-quiz deletion)
+  const tokenOnlyReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ creatorToken: pinAuthData.creatorToken }),
+  });
+  const tokenOnlyRes = await deleteQuizRoute(tokenOnlyReq, { params: Promise.resolve({ id: quizId }) });
+  assert.equal(tokenOnlyRes.status, 403, "Token-only submission to quiz DELETE must return 403");
+
+  // 3b. Authorized deletion using secret PIN
+  const deleteReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin: "6789" }),
   });
   const deleteRes = await deleteQuizRoute(deleteReq, { params: Promise.resolve({ id: quizId }) });
   assert.equal(deleteRes.status, 200);

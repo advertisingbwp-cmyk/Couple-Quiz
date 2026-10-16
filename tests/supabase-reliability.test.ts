@@ -246,11 +246,22 @@ test("Phase 5: Server-side creator authorization workflow with session token lif
   });
   assert.equal(pthDeleteRes.status, 403, "Pass-the-hash submission to quiz DELETE must return 403");
 
-  // 7. Authorized quiz deletion using session token
-  const deleteQuizReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
+  // 7. Token-only deletion is rejected (Phase 9.3: PIN is strictly required for whole-quiz deletion)
+  const tokenOnlyDeleteReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
     body: JSON.stringify({ creatorToken: sessionToken }),
+  });
+  const tokenOnlyDeleteRes = await deleteQuiz(tokenOnlyDeleteReq, {
+    params: Promise.resolve({ id: quizId }),
+  });
+  assert.equal(tokenOnlyDeleteRes.status, 403, "Token-only submission to quiz DELETE must return 403");
+
+  // 7b. Authorized quiz deletion strictly using PIN
+  const deleteQuizReq = new NextRequest(`http://localhost:3000/api/quiz/${quizId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
+    body: JSON.stringify({ pin: "7777" }),
   });
   const deleteQuizRes = await deleteQuiz(deleteQuizReq, {
     params: Promise.resolve({ id: quizId }),
