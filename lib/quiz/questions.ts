@@ -3333,9 +3333,9 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "What position am I usually found sleeping in?",
     emoji: "💤",
     options: [
-      { id: 0, text: "Curled on my side 😴" },
-      { id: 1, text: "Flat on my stomach 🛏️" },
-      { id: 2, text: "Hands folded on my back like a statue 😌" },
+      { id: 0, text: "Curled on my side 😴", imageUrl: "/curated/photos/sleep_side.webp" },
+      { id: 1, text: "Flat on my stomach 🛏️", imageUrl: "/curated/photos/sleep_stomach.webp" },
+      { id: 2, text: "Hands folded on my back like a statue 😌", imageUrl: "/curated/photos/sleep_back.webp" },
     ],
   },
   {
@@ -3354,10 +3354,10 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "Which game brings out my most competitive streak?",
     emoji: "🎲",
     options: [
-      { id: 0, text: "Monopoly property empire 🎩" },
-      { id: 1, text: "UNO friendship-destroying +4s 🃏" },
-      { id: 2, text: "Jenga high-stakes tower 🪵" },
-      { id: 3, text: "Connect Four tactical grid 🔴" },
+      { id: 0, text: "Monopoly property empire 🎩", imageUrl: "/curated/photos/game_monopoly.webp" },
+      { id: 1, text: "UNO friendship-destroying +4s 🃏", imageUrl: "/curated/photos/game_uno.webp" },
+      { id: 2, text: "Jenga high-stakes tower 🪵", imageUrl: "/curated/photos/game_jenga.webp" },
+      { id: 3, text: "Connect Four tactical grid 🔴", imageUrl: "/curated/photos/game_connect_four.webp" },
     ],
   },
   {
@@ -3451,10 +3451,10 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "What is my absolute favorite everyday hair vibe?",
     emoji: "💇‍♀️",
     options: [
-      { id: 0, text: "Soft, effortless beach waves 🎀" },
-      { id: 1, text: "Sleek, glossy and pin-straight ✨" },
-      { id: 2, text: "The effortless claw-clip messy bun 🦋" },
-      { id: 3, text: "Fresh braids or high ponytail 🩰" },
+      { id: 0, text: "Soft, effortless beach waves 🎀", imageUrl: "/curated/photos/hair_beach_waves.webp" },
+      { id: 1, text: "Sleek, glossy and pin-straight ✨", imageUrl: "/curated/photos/hair_straight.webp" },
+      { id: 2, text: "The effortless claw-clip messy bun 🦋", imageUrl: "/curated/photos/hair_claw_clip.webp" },
+      { id: 3, text: "Fresh braids or high ponytail 🩰", imageUrl: "/curated/photos/hair_ponytail.webp" },
     ],
   },
   {
@@ -3485,10 +3485,10 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "What denim silhouette do I wear the most?",
     emoji: "👖",
     options: [
-      { id: 0, text: "Relaxed, wide-leg baggy fit 👖" },
-      { id: 1, text: "Classic timeless straight leg 🩵" },
-      { id: 2, text: "Retro 70s flare ✨" },
-      { id: 3, text: "Sleek high-waisted slim 🫧" },
+      { id: 0, text: "Relaxed, wide-leg baggy fit 👖", imageUrl: "/curated/photos/jeans_wide_leg.webp" },
+      { id: 1, text: "Classic timeless straight leg 🩵", imageUrl: "/curated/photos/jeans_straight.webp" },
+      { id: 2, text: "Retro 70s flare ✨", imageUrl: "/curated/photos/jeans_flare.webp" },
+      { id: 3, text: "Sleek high-waisted slim 🫧", imageUrl: "/curated/photos/jeans_slim.webp" },
     ],
   },
 ];

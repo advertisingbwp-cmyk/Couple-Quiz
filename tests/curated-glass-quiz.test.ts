@@ -102,16 +102,16 @@ test("Phase 10.3: Every referenced photographic asset exists on disk in public/"
   }
 });
 
-test("Phase 10.3: Curated questions image integration (8 photographic, 22 authentic text-first pending dedicated assets)", () => {
+test("Phase 10.3: Curated questions image integration (12 photographic, 18 authentic text-first pending dedicated assets)", () => {
   const photoQuestions = CURATED_QUIZ_QUESTIONS.filter((q) =>
     q.options.every((opt) => opt.imageUrl && opt.imageUrl.endsWith(".webp"))
   );
-  assert.equal(photoQuestions.length, 8, "Must have exactly 8 questions with all authentic real photographic options");
+  assert.equal(photoQuestions.length, 12, "Must have exactly 12 questions with all authentic real photographic options");
 
   const textOnlyQuestions = CURATED_QUIZ_QUESTIONS.filter((q) =>
     q.options.every((opt) => !opt.imageUrl)
   );
-  assert.equal(textOnlyQuestions.length, 22, "Must have exactly 22 text-only authentic questions");
+  assert.equal(textOnlyQuestions.length, 18, "Must have exactly 18 text-only authentic questions");
   assert.equal(photoQuestions.length + textOnlyQuestions.length, 30, "All 30 questions must be accounted for");
 });
 
