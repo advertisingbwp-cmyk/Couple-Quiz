@@ -7,8 +7,8 @@ const isDev = process.env.NODE_ENV !== "production";
  */
 export function buildContentSecurityPolicy(dev = isDev) {
   const scriptSrc = dev
-    ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
-    : "script-src 'self' 'unsafe-inline'";
+    ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https: *.profitableratecpmnetwork.com"
+    : "script-src 'self' 'unsafe-inline' https: *.profitableratecpmnetwork.com";
 
   return `
     default-src 'self';
@@ -18,6 +18,7 @@ export function buildContentSecurityPolicy(dev = isDev) {
     font-src 'self' data:;
     connect-src 'self' https:;
     media-src 'self' data: blob:;
+    frame-src 'self' https: *.profitableratecpmnetwork.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';

@@ -280,7 +280,7 @@ test("Phase 7.2: detectEnvironment identifies local, preview, and production env
   assert.equal(previewHash.isPreview, true);
 
   // Production deployments
-  const prodCanonical = detectEnvironment("https://couple-quiz-three.vercel.app");
+  const prodCanonical = detectEnvironment("https://friend-quiz-game.vercel.app");
   assert.equal(prodCanonical.environment, "production");
   assert.equal(prodCanonical.isProduction, true);
   assert.equal(prodCanonical.isPreview, false);
@@ -298,7 +298,7 @@ test("Phase 7.2: Preview-created quizzes are NEVER silently redirected to unveri
   );
   assert.notEqual(
     challengeFromPreview,
-    "https://couple-quiz-three.vercel.app/quiz/play/q_preview_test",
+    "https://friend-quiz-game.vercel.app/quiz/play/q_preview_test",
     "Must NEVER silently redirect a preview quiz to unverified production"
   );
 
@@ -308,7 +308,7 @@ test("Phase 7.2: Preview-created quizzes are NEVER silently redirected to unveri
   });
   assert.equal(
     verifiedProductionUrl,
-    "https://couple-quiz-three.vercel.app/quiz/play/q_preview_test",
+    "https://friend-quiz-game.vercel.app/quiz/play/q_preview_test",
     "Target production ONLY when verifiedOnProduction is explicitly true"
   );
 });
@@ -324,11 +324,11 @@ test("Phase 7.2: Localhost and Production URL preservation", () => {
   );
 
   // Production URL preservation
-  const prodOrigin = "https://couple-quiz-three.vercel.app";
+  const prodOrigin = "https://friend-quiz-game.vercel.app";
   const challengeFromProd = getChallengeUrl("q_prod_test", prodOrigin);
   assert.equal(
     challengeFromProd,
-    "https://couple-quiz-three.vercel.app/quiz/play/q_prod_test",
+    "https://friend-quiz-game.vercel.app/quiz/play/q_prod_test",
     "Production origin uses canonical public domain"
   );
 
@@ -336,7 +336,7 @@ test("Phase 7.2: Localhost and Production URL preservation", () => {
   const defaultChallenge = getChallengeUrl("q_default_test");
   assert.equal(
     defaultChallenge,
-    "https://couple-quiz-three.vercel.app/quiz/play/q_default_test",
+    "https://friend-quiz-game.vercel.app/quiz/play/q_default_test",
     "Fallback without origin uses canonical base domain"
   );
 });
@@ -359,12 +359,12 @@ test("Phase 7.2: WhatsApp formatting adapts safely between preview and productio
     "Preview share must link to the preview deployment"
   );
   assert.ok(
-    !previewWa.includes("couple-quiz-three.vercel.app"),
+    !previewWa.includes("friend-quiz-game.vercel.app"),
     "Preview share must not leak unverified production domain"
   );
 
   // Production WhatsApp message contains clean social invite
-  const prodOrigin = "https://couple-quiz-three.vercel.app";
+  const prodOrigin = "https://friend-quiz-game.vercel.app";
   const prodWa = formatWhatsAppQuizShare("Sara", "q_123", prodOrigin);
   assert.ok(
     !prodWa.includes("Preview / Testing Environment"),
@@ -375,7 +375,7 @@ test("Phase 7.2: WhatsApp formatting adapts safely between preview and productio
     "Production share has standard invite copy"
   );
   assert.ok(
-    prodWa.includes("https://couple-quiz-three.vercel.app/quiz/play/q_123"),
+    prodWa.includes("https://friend-quiz-game.vercel.app/quiz/play/q_123"),
     "Production share links to canonical domain"
   );
 });
@@ -405,7 +405,7 @@ test("Phase 7.3: Custom-domain Preview deployments are NEVER silently classified
   );
   assert.notEqual(
     customPreviewChallenge,
-    "https://couple-quiz-three.vercel.app/quiz/play/q_cust_prev",
+    "https://friend-quiz-game.vercel.app/quiz/play/q_cust_prev",
     "Must NEVER leak production domain for custom preview"
   );
 

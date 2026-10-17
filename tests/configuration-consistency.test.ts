@@ -91,11 +91,11 @@ test("Configuration Consistency: sharing.ts domain defaults and environment dete
   const defaultUrl = getBaseUrl();
   assert.equal(
     defaultUrl,
-    "https://couple-quiz-three.vercel.app",
-    "Source code fallback domain must be couple-quiz-three.vercel.app"
+    "https://friend-quiz-game.vercel.app",
+    "Source code fallback domain must be friend-quiz-game.vercel.app"
   );
 
-  const prodEnv = detectEnvironment("https://couple-quiz-three.vercel.app");
+  const prodEnv = detectEnvironment("https://friend-quiz-game.vercel.app");
   assert.equal(prodEnv.isProduction, true);
   assert.equal(prodEnv.isPreview, false);
 

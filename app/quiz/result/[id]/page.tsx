@@ -15,6 +15,7 @@ import {
   detectEnvironment,
   EnvironmentInfo,
 } from "@/lib/quiz/sharing";
+import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 
 export default function QuizResultPage({
   params,
@@ -354,6 +355,8 @@ export default function QuizResultPage({
                 <Trophy size={16} />
                 <span>See Leaderboard ({safeCreator})</span>
               </Link>
+
+              <AdsterraNativeBanner />
 
               <div className="pt-2">
                 <Link
