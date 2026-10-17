@@ -208,97 +208,19 @@ async function runVisualQA() {
     await client.send("Page.navigate", { url: `${BASE_URL}/design-preview/question` });
     await sleep(1500); // Wait for hydration and image rendering
 
-    // Test 1: 320px Mobile Screen (2 options)
-    console.log("\n[Test 1] 320px Extra-Narrow Mobile (2 Options)...");
-    await client.setViewport(320, 680);
-    await client.screenshot("prototype_01_320px_2opt.png");
-
-    // Test 2: 375px Standard Mobile (2 options)
-    console.log("\n[Test 2] 375px Standard Mobile (2 Options)...");
+    // Test 1: 375px Standard Mobile (2 options, compact game layout)
+    console.log("\n[Test 1] 375px Standard Mobile (2 Options, compact layout)...");
     await client.setViewport(375, 750);
     await client.screenshot("prototype_02_375px_2opt.png");
 
-    // Test 3: Switch to 4 Options
-    console.log("\n[Test 3] 375px Standard Mobile (4 Options)...");
-    await client.eval(`
-      const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '4');
-      if (btn) btn.click();
-    `);
-    await sleep(400);
-    await client.screenshot("prototype_03_375px_4opt.png");
-
-    // Test 4: Switch to 6 Options
-    console.log("\n[Test 4] 375px Standard Mobile (6 Options)...");
-    await client.eval(`
-      const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '6');
-      if (btn) btn.click();
-    `);
-    await sleep(400);
-    await client.screenshot("prototype_04_375px_6opt.png");
-
-    // Test 5: Switch to 9 Options
-    console.log("\n[Test 5] 375px Standard Mobile (9 Options)...");
-    await client.eval(`
-      const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '9');
-      if (btn) btn.click();
-    `);
-    await sleep(400);
-    await client.screenshot("prototype_05_375px_9opt.png");
-
-    // Test 6: 430px Large Mobile (Selected State)
-    console.log("\n[Test 6] 430px Large Mobile with Option Selected...");
-    await client.setViewport(430, 820);
-    // Switch back to 4 options and select burger
-    await client.eval(`
-      const btn4 = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '4');
-      if (btn4) btn4.click();
-      const burgerCard = Array.from(document.querySelectorAll('[role="button"]')).find(el => el.textContent.includes('Burger'));
-      if (burgerCard) burgerCard.click();
-    `);
-    await sleep(400);
-    await client.screenshot("prototype_06_430px_selected.png");
-
-    // Test 7: Correct Feedback Demo
-    console.log("\n[Test 7] 375px Correct Feedback Demo State...");
-    await client.setViewport(375, 750);
-    await client.eval(`
-      const correctBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Correct'));
-      if (correctBtn) correctBtn.click();
-    `);
-    await sleep(400);
-    await client.screenshot("prototype_07_375px_correct_feedback.png");
-
-    // Test 8: Incorrect Feedback Demo
-    console.log("\n[Test 8] 375px Incorrect Feedback Demo State...");
-    await client.eval(`
-      const incorrectBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Incorrect'));
-      if (incorrectBtn) incorrectBtn.click();
-    `);
-    await sleep(400);
-    await client.screenshot("prototype_08_375px_incorrect_feedback.png");
-
-    // Test 9: 768px Tablet View
-    console.log("\n[Test 9] 768px Tablet View (6 Options)...");
-    await client.setViewport(768, 920);
-    await client.eval(`
-      const normalBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'Normal');
-      if (normalBtn) normalBtn.click();
-      const btn6 = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '6');
-      if (btn6) btn6.click();
-    `);
-    await sleep(500);
-    await client.screenshot("prototype_09_768px_tablet.png");
-
-    // Test 10: 1280px Desktop View
-    console.log("\n[Test 10] 1280px Desktop View (Centered Layout with Ambient Light)...");
+    // Test 2: 1280px Desktop View
+    console.log("\n[Test 2] 1280px Desktop View (Centered Layout with Ambient Light)...");
     await client.setViewport(1280, 920);
     await client.eval(`
       const btn4 = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '4');
       if (btn4) btn4.click();
-      const thinkingBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'Thinking');
-      if (thinkingBtn) thinkingBtn.click();
     `);
-    await sleep(500);
+    await sleep(400);
     await client.screenshot("prototype_10_1280px_desktop.png");
 
     console.log("\n==========================================");

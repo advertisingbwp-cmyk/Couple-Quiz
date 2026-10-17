@@ -66,34 +66,32 @@ export function PhotographicOptionCard({
       aria-disabled={disabled}
       onClick={() => !disabled && onSelect(option)}
       onKeyDown={handleKeyDown}
-      className={`group relative flex flex-col items-center justify-between p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border backdrop-blur-md transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-400 ${
+      className={`group relative flex flex-col items-center justify-between p-2 sm:p-2.5 rounded-2xl border backdrop-blur-md transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-purple-400 ${
         disabled ? "opacity-60 cursor-not-allowed pointer-events-none" : ""
       } ${stateClasses}`}
     >
       {/* Selection / Feedback Badge (Top-Right) */}
-      <div className="absolute top-3 right-3 z-10">
+      <div className="absolute top-2 right-2 z-10">
         {isCorrect ? (
-          <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md animate-bounce">
-            <Check size={14} strokeWidth={3.5} />
+          <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md animate-bounce">
+            <Check size={12} strokeWidth={3.5} />
           </div>
         ) : isIncorrect ? (
-          <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md animate-pulse">
-            <X size={14} strokeWidth={3.5} />
+          <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md animate-pulse">
+            <X size={12} strokeWidth={3.5} />
           </div>
         ) : isSelected ? (
-          <div className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center shadow-md">
-            <Check size={14} strokeWidth={3} />
+          <div className="w-5 h-5 rounded-full bg-sky-500 text-white flex items-center justify-center shadow-md">
+            <Check size={12} strokeWidth={3} />
           </div>
         ) : (
-          <div className="w-5 h-5 rounded-full bg-white/70 border border-slate-300 group-hover:border-sky-400 transition-colors" />
+          <div className="w-4 h-4 rounded-full bg-white/70 border border-slate-300 group-hover:border-sky-400 transition-colors" />
         )}
       </div>
 
       {/* Real-photo Image Container */}
       <div
-        className={`w-full relative overflow-hidden rounded-xl sm:rounded-2xl bg-slate-100 shadow-inner ${
-          compact ? "aspect-square sm:aspect-[4/3]" : "aspect-[4/3] sm:aspect-[16/11]"
-        }`}
+        className="w-full relative overflow-hidden rounded-xl bg-slate-100 shadow-inner aspect-[4/3] sm:aspect-[16/11]"
       >
         <Image
           src={option.imageSrc}
@@ -107,10 +105,10 @@ export function PhotographicOptionCard({
       </div>
 
       {/* Option Text Label */}
-      <div className="w-full mt-2 sm:mt-2.5 text-center px-1">
+      <div className="w-full mt-1.5 sm:mt-2 text-center px-0.5">
         <span
-          className={`block font-extrabold tracking-tight leading-snug line-clamp-2 ${
-            compact ? "text-xs sm:text-sm" : "text-sm sm:text-base"
+          className={`block font-extrabold tracking-tight leading-snug line-clamp-1 ${
+            compact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"
           }`}
         >
           {option.label}

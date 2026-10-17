@@ -40,7 +40,7 @@ export function MascotScene({ mood = "happy", className = "" }: MascotSceneProps
       {/* Main Mascot Duo SVG */}
       <svg
         viewBox="0 0 260 160"
-        className="w-48 sm:w-56 h-auto drop-shadow-[0_8px_20px_rgba(102,80,183,0.18)] animate-float-gentle"
+        className="w-28 sm:w-36 h-auto drop-shadow-[0_6px_14px_rgba(102,80,183,0.14)] animate-float-gentle"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >

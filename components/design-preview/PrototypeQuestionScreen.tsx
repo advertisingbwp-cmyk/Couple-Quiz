@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Sparkles, HelpCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { MascotScene } from "./MascotScene";
 import { ProgressPills } from "./ProgressPills";
@@ -202,36 +202,31 @@ export function PrototypeQuestionScreen() {
         ❤
       </div>
 
-      {/* Prototype Banner */}
-      <div className="relative z-20 bg-gradient-to-r from-purple-700 via-indigo-600 to-sky-600 text-white text-[11px] font-black uppercase tracking-wider py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
-        <Sparkles size={12} className="text-yellow-300" />
-        <span>Phase 10.1 — Premium Glassmorphism Question Prototype</span>
-        <span className="hidden sm:inline opacity-75">• Mobile-First Visual Evaluation</span>
-      </div>
-
       {/* Top Header */}
-      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-3.5 pb-2 flex items-center justify-between">
+      <header className="relative z-10 max-w-xl mx-auto w-full px-3.5 sm:px-4 pt-2.5 pb-1 flex items-center justify-between">
         <Link
           href="/quiz"
-          className="inline-flex items-center gap-2 group focus-visible:outline-2 focus-visible:outline-purple-500 rounded-lg"
+          className="inline-flex items-center gap-1.5 group focus-visible:outline-2 focus-visible:outline-purple-500 rounded-lg"
           aria-label="Click & Clique homepage"
         >
-          <BrandMark />
-          <span className="text-lg font-black tracking-tight text-slate-900">
+          <div className="w-5 h-5 flex items-center justify-center">
+            <BrandMark />
+          </div>
+          <span className="text-sm sm:text-base font-black tracking-tight text-slate-900">
             click <span className="text-purple-600 font-medium">&amp;</span> clique
             <span className="text-pink-500">.</span>
           </span>
         </Link>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 backdrop-blur-md rounded-full border border-white/80 shadow-xs text-xs font-bold text-slate-600">
-          <HelpCircle size={13} className="text-purple-500" />
-          <span>Demo Question</span>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white/70 backdrop-blur-md rounded-full border border-white/80 shadow-xs text-[11px] font-bold text-slate-600">
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+          <span>Prototype</span>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-3.5 sm:px-4 py-2 flex flex-col justify-between">
-        <div className="w-full space-y-3 sm:space-y-4">
+      <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-3 sm:px-4 py-1.5 flex flex-col justify-between">
+        <div className="w-full space-y-2 sm:space-y-3">
           {/* 1. Top Progress Tracker (10 Numbered Pills) */}
           <ProgressPills
             total={10}
@@ -239,21 +234,21 @@ export function PrototypeQuestionScreen() {
             onSelectStep={(step) => setCurrentStep(step)}
           />
 
-          {/* 2. Original Mascot Duo Hero */}
-          <div className="w-full flex justify-center py-1">
+          {/* 2. Original Mascot Duo Hero - positioned snug above the question card */}
+          <div className="w-full flex justify-center -mb-2.5 z-10 relative">
             <MascotScene mood={mascotMood} />
           </div>
 
           {/* 3. Glass Question Card */}
           <section
             aria-labelledby="question-heading"
-            className="w-full bg-white/75 backdrop-blur-lg rounded-3xl p-4 sm:p-5 border border-white/90 shadow-[0_10px_30px_rgba(102,80,183,0.1)] text-center relative overflow-hidden transition-all duration-300"
+            className="w-full bg-white/80 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-white/90 shadow-[0_8px_24px_rgba(102,80,183,0.08)] text-center relative overflow-hidden transition-all duration-300"
           >
-            {/* Soft decorative dotted line pattern across top of card */}
+            {/* Soft decorative line across top of card */}
             <div className="absolute top-0 inset-x-8 h-1 bg-gradient-to-r from-transparent via-purple-300/40 to-transparent" />
 
             {/* Question Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300/80 font-black text-xs uppercase tracking-wider mb-2 shadow-xs">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300/80 font-black text-[10px] sm:text-xs uppercase tracking-wider mb-1.5 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               <span>Question {currentStep} of 10</span>
             </div>
@@ -261,22 +256,14 @@ export function PrototypeQuestionScreen() {
             {/* Question Title */}
             <h1
               id="question-heading"
-              className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-snug px-1"
+              className="text-base sm:text-xl font-black text-slate-900 tracking-tight leading-snug px-1"
             >
               {question.title}
             </h1>
-
-            {/* Subtitle / Category Detail */}
-            <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-1 flex items-center justify-center gap-1.5">
-              <span>Category:</span>
-              <span className="text-purple-600 font-bold">{question.category}</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-slate-400">Showing {effectiveOptionCount} options</span>
-            </p>
           </section>
 
           {/* 4. Real Photographic Answer Grid */}
-          <section aria-label="Answer Options" className="w-full">
+          <section aria-label="Answer Options" className="w-full pt-0.5">
             <div className={gridLayoutClass}>
               {currentOptions.map((opt) => (
                 <PhotographicOptionCard
@@ -297,35 +284,35 @@ export function PrototypeQuestionScreen() {
         </div>
 
         {/* 5. Action Buttons & Navigation */}
-        <div className="w-full pt-4 pb-2 space-y-3">
-          <div className="flex items-center justify-between gap-3">
+        <div className="w-full pt-3 pb-2 space-y-2">
+          <div className="flex items-center justify-between gap-2.5">
             <button
               type="button"
               onClick={handlePrev}
               disabled={currentStep === 1}
-              className={`py-2.5 px-4 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-1.5 border backdrop-blur-md transition-all cursor-pointer ${
+              className={`py-2 px-3.5 rounded-xl font-black text-xs sm:text-sm flex items-center gap-1.5 border backdrop-blur-md transition-all cursor-pointer ${
                 currentStep === 1
                   ? "bg-white/40 text-slate-400 border-white/40 cursor-not-allowed opacity-50"
-                  : "bg-white/80 hover:bg-white text-slate-800 border-white/90 shadow-sm hover:scale-[1.02]"
+                  : "bg-white/80 hover:bg-white text-slate-800 border-white/90 shadow-xs hover:scale-[1.02]"
               }`}
               aria-label="Previous question"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={15} />
               <span>Back</span>
             </button>
 
-            <span className="text-xs font-bold text-slate-500">
-              {selectedOptionId ? "1 option selected" : "Tap an option to select"}
+            <span className="text-[11px] sm:text-xs font-bold text-slate-500">
+              {selectedOptionId ? "1 selected" : "Tap an option to select"}
             </span>
 
             <button
               type="button"
               onClick={handleNext}
-              className="py-2.5 px-6 rounded-2xl font-black text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white border border-white/40 shadow-[0_4px_16px_rgba(102,80,183,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
+              className="py-2 px-5 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white border border-white/40 shadow-[0_3px_12px_rgba(102,80,183,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
               aria-label={currentStep === 10 ? "Finish Prototype" : "Next question"}
             >
               <span>{currentStep === 10 ? "Finish" : "Next"}</span>
-              <ArrowRight size={16} />
+              <ArrowRight size={15} />
             </button>
           </div>
 
