@@ -3267,12 +3267,12 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "Where does my discretionary money disappear to the fastest?",
     emoji: "💸",
     options: [
-      { id: 0, text: "Good food & late-night munchies 🍔" },
-      { id: 1, text: "Fresh sneakers & clothes 👟" },
-      { id: 2, text: "Gaming passes & gear 🎮" },
-      { id: 3, text: "Tech gadgets & accessories 🎧" },
-      { id: 4, text: "Fuel & road trips with the crew 🚗" },
-      { id: 5, text: "Secretly disciplined saver 💰" },
+      { id: 0, text: "Good food & late-night munchies 🍔", imageUrl: "/prototype/photos/burger.webp" },
+      { id: 1, text: "Fresh sneakers & clothes 👟", imageUrl: "/curated/photos/spending_sneakers.webp" },
+      { id: 2, text: "Gaming passes & gear 🎮", imageUrl: "/prototype/photos/gaming.webp" },
+      { id: 3, text: "Tech gadgets & accessories 🎧", imageUrl: "/curated/photos/spending_tech_headphones.webp" },
+      { id: 4, text: "Fuel & road trips with the crew 🚗", imageUrl: "/prototype/photos/roadtrip.webp" },
+      { id: 5, text: "Secretly disciplined saver 💰", imageUrl: "/curated/photos/spending_saver.webp" },
     ],
   },
   {
@@ -3281,8 +3281,8 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "How do I actually carry my backpack or gym bag?",
     emoji: "🎒",
     options: [
-      { id: 0, text: "Both straps on, ergonomic and secure 🎒" },
-      { id: 1, text: "Slung over one shoulder, easygoing 😎" },
+      { id: 0, text: "Both straps on, ergonomic and secure 🎒", imageUrl: "/curated/photos/backpack_two_straps.webp" },
+      { id: 1, text: "Slung over one shoulder, easygoing 😎", imageUrl: "/curated/photos/backpack_one_strap.webp" },
     ],
   },
   {
@@ -3403,10 +3403,10 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "Which aesthetic color palette dominates my favorite outfits?",
     emoji: "🎨",
     options: [
-      { id: 0, text: "Minimalist Monochrome (Black & White) 🖤" },
-      { id: 1, text: "Soft Dreamy Pastels (Lavender & Pink) 🎀" },
-      { id: 2, text: "Warm Earth Tones (Sage & Neutral Beige) 🌿" },
-      { id: 3, text: "Bold Statement (Cherry Red & Burgundy) 🍒" },
+      { id: 0, text: "Minimalist Monochrome (Black & White) 🖤", imageUrl: "/curated/photos/palette_monochrome.webp" },
+      { id: 1, text: "Soft Dreamy Pastels (Lavender & Pink) 🎀", imageUrl: "/curated/photos/palette_pastels.webp" },
+      { id: 2, text: "Warm Earth Tones (Sage & Neutral Beige) 🌿", imageUrl: "/curated/photos/palette_earth_tones.webp" },
+      { id: 3, text: "Bold Statement (Cherry Red & Burgundy) 🍒", imageUrl: "/curated/photos/palette_bold_red.webp" },
     ],
   },
   {
@@ -3463,8 +3463,8 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "When we sit down at an aesthetic cafe, what's my go-to order?",
     emoji: "☕",
     options: [
-      { id: 0, text: "Warm Artisan Cappuccino with Latte Art ☕" },
-      { id: 1, text: "Sweet Blended Iced Caramel Beverage 🥤" },
+      { id: 0, text: "Warm Artisan Cappuccino with Latte Art ☕", imageUrl: "/prototype/photos/coffee.webp" },
+      { id: 1, text: "Sweet Blended Iced Caramel Beverage 🥤", imageUrl: "/curated/photos/drink_iced_caramel.webp" },
     ],
   },
   {

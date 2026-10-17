@@ -4,24 +4,38 @@ This manifest documents the exact asset requirements to transition the prioritiz
 
 ---
 
-## 1. Existing Active Photographic Questions (4 Questions, 100% Genuine)
+## 1. Active Photographic Questions (8 Questions, 100% Complete)
 
 | Question ID | Question Text | Option ID | Option Text | Image Subject | Local Path | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`curated_u01`** | Late-night comfort food? | `0` | Fresh Cheesy Pizza 🍕 | Pepperoni pizza slice | `/prototype/photos/pizza.webp` | ✅ Existing |
-| | | `1` | Juicy Burger & Crispy Fries 🍔 | Gourmet cheeseburger & fries | `/prototype/photos/burger.webp` | ✅ Existing |
-| **`curated_u02`** | Unexpected free Saturday? | `0` | Scenic Mountain Road Trip 🚗 | Scenic mountain highway drive | `/prototype/photos/roadtrip.webp` | ✅ Existing |
-| | | `1` | Chilling by the Beach Sunset 🏖️ | Tropical beach ocean sunset | `/prototype/photos/beach.webp` | ✅ Existing |
-| | | `2` | All-Day Gaming Marathon 🎮 | Sleek gaming controller & ambient light | `/prototype/photos/gaming.webp` | ✅ Existing |
-| | | `3` | Live Music Concert & Crowd 🎶 | Vibrant live music concert stage | `/prototype/photos/concert.webp` | ✅ Existing |
-| **`curated_u08`** | Mode on a lazy, rainy Sunday? | `0` | Sleeping in under a cozy duvet 🛌 | Cozy bed, fluffy white duvet | `/prototype/photos/sleeping.webp` | ✅ Existing |
-| | | `1` | Fresh warm cappuccino & quiet morning ☕ | Fresh poured cappuccino with latte art | `/prototype/photos/coffee.webp` | ✅ Existing |
-| **`curated_h10`** | Sudden late-night food run? | `0` | Loaded Smash Burger 🍔 | Loaded smash burger with cheese | `/prototype/photos/burger.webp` | ✅ Existing |
-| | | `1` | Crispy Stone-Baked Pizza 🍕 | Crisp stone-baked pizza slice | `/prototype/photos/pizza.webp` | ✅ Existing |
+| **`curated_u01`** | Late-night comfort food? | `0` | Fresh Cheesy Pizza 🍕 | Pepperoni pizza slice | `/prototype/photos/pizza.webp` | ✅ Active |
+| | | `1` | Juicy Burger & Crispy Fries 🍔 | Gourmet cheeseburger & fries | `/prototype/photos/burger.webp` | ✅ Active |
+| **`curated_u02`** | Unexpected free Saturday? | `0` | Scenic Mountain Road Trip 🚗 | Scenic mountain highway drive | `/prototype/photos/roadtrip.webp` | ✅ Active |
+| | | `1` | Chilling by the Beach Sunset 🏖️ | Tropical beach ocean sunset | `/prototype/photos/beach.webp` | ✅ Active |
+| | | `2` | All-Day Gaming Marathon 🎮 | Sleek gaming controller & ambient light | `/prototype/photos/gaming.webp` | ✅ Active |
+| | | `3` | Live Music Concert & Crowd 🎶 | Vibrant live music concert stage | `/prototype/photos/concert.webp` | ✅ Active |
+| **`curated_u08`** | Mode on a lazy, rainy Sunday? | `0` | Sleeping in under a cozy duvet 🛌 | Cozy bed, fluffy white duvet | `/prototype/photos/sleeping.webp` | ✅ Active |
+| | | `1` | Fresh warm cappuccino & quiet morning ☕ | Fresh poured cappuccino with latte art | `/prototype/photos/coffee.webp` | ✅ Active |
+| **`curated_h01`** | Discretionary money disappears? | `0` | Good food & late-night munchies 🍔 | Gourmet burger & fries | `/prototype/photos/burger.webp` | ✅ Active |
+| | | `1` | Fresh sneakers & clothes 👟 | Designer sneakers | `/curated/photos/spending_sneakers.webp` | ✅ Active |
+| | | `2` | Gaming passes & gear 🎮 | Gaming controller & ambient lights | `/prototype/photos/gaming.webp` | ✅ Active |
+| | | `3` | Tech gadgets & accessories 🎧 | Wireless over-ear headphones on desk | `/curated/photos/spending_tech_headphones.webp` | ✅ Active |
+| | | `4` | Fuel & road trips with the crew 🚗 | Mountain road trip highway | `/prototype/photos/roadtrip.webp` | ✅ Active |
+| | | `5` | Secretly disciplined saver 💰 | Ceramic savings piggy bank | `/curated/photos/spending_saver.webp` | ✅ Active |
+| **`curated_h02`** | Backpack or gym bag carry? | `0` | Both straps on, ergonomic and secure 🎒 | Traveler wearing backpack with both straps | `/curated/photos/backpack_two_straps.webp` | ✅ Active |
+| | | `1` | Slung over one shoulder, easygoing 😎 | Student slinging backpack on single shoulder | `/curated/photos/backpack_one_strap.webp` | ✅ Active |
+| **`curated_h10`** | Sudden late-night food run? | `0` | Loaded Smash Burger 🍔 | Loaded smash burger with cheese | `/prototype/photos/burger.webp` | ✅ Active |
+| | | `1` | Crispy Stone-Baked Pizza 🍕 | Crisp stone-baked pizza slice | `/prototype/photos/pizza.webp` | ✅ Active |
+| **`curated_g03`** | Outfit color palette? | `0` | Minimalist Monochrome (Black & White) 🖤 | Clothing flat lay of black & white pieces | `/curated/photos/palette_monochrome.webp` | ✅ Active |
+| | | `1` | Soft Dreamy Pastels (Lavender & Pink) 🎀 | Flat lay of soft lavender & pink knits | `/curated/photos/palette_pastels.webp` | ✅ Active |
+| | | `2` | Warm Earth Tones (Sage & Neutral Beige) 🌿 | Stack of sage green, beige & cream linen | `/curated/photos/palette_earth_tones.webp` | ✅ Active |
+| | | `3` | Bold Statement (Cherry Red & Burgundy) 🍒 | Statement pieces in cherry red & burgundy | `/curated/photos/palette_bold_red.webp` | ✅ Active |
+| **`curated_g08`** | Go-to cafe order? | `0` | Warm Artisan Cappuccino with Latte Art ☕ | Fresh cappuccino with latte art | `/prototype/photos/coffee.webp` | ✅ Active |
+| | | `1` | Sweet Blended Iced Caramel Beverage 🥤 | Tall iced caramel blended frappe | `/curated/photos/drink_iced_caramel.webp` | ✅ Active |
 
 ---
 
-## 2. Prioritized Real-Photo Target Candidates (8 Questions, 25 Missing Images)
+## 2. Remaining Real-Photo Target Candidates (4 Questions, 15 Missing Images)
 
 ### A. Everyday Hair Vibes (`curated_g07` — 4 Images)
 | Option ID | Option Text | Target Image Subject | Target Path | Status |
@@ -39,44 +53,14 @@ This manifest documents the exact asset requirements to transition the prioritiz
 | `2` | Retro 70s flare ✨ | High-waisted retro flared bell-bottom jeans | `/curated/photos/jeans_flare.webp` | ❌ Missing |
 | `3` | Sleek high-waisted slim 🫧 | Form-fitting sleek high-waisted slim cut denim | `/curated/photos/jeans_slim.webp` | ❌ Missing |
 
-### C. Signature Outfit Color Palette (`curated_g03` — 4 Images)
-| Option ID | Option Text | Target Image Subject | Target Path | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `0` | Minimalist Monochrome (Black & White) 🖤 | Aesthetic clothing flat lay of black and white pieces | `/curated/photos/palette_monochrome.webp` | ❌ Missing |
-| `1` | Soft Dreamy Pastels (Lavender & Pink) 🎀 | Aesthetic flat lay of soft lavender and blush pastel knits | `/curated/photos/palette_pastels.webp` | ❌ Missing |
-| `2` | Warm Earth Tones (Sage & Neutral Beige) 🌿 | Cozy stack of sage green, beige, and warm cream linen | `/curated/photos/palette_earth_tones.webp` | ❌ Missing |
-| `3` | Bold Statement (Cherry Red & Burgundy) 🍒 | Luxury statement pieces in cherry red and deep burgundy | `/curated/photos/palette_bold_red.webp` | ❌ Missing |
-
-### D. Aesthetic Café Order (`curated_g08` — 1 Missing Image)
-| Option ID | Option Text | Target Image Subject | Target Path | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `0` | Warm Artisan Cappuccino with Latte Art ☕ | Fresh cappuccino with latte art | `/prototype/photos/coffee.webp` | ✅ Existing |
-| `1` | Sweet Blended Iced Caramel Beverage 🥤 | Tall iced caramel blended frappe with whipped cream | `/curated/photos/drink_iced_caramel.webp` | ❌ Missing |
-
-### E. Discretionary Spending Habits (`curated_h01` — 3 Missing Images)
-| Option ID | Option Text | Target Image Subject | Target Path | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `0` | Good food & late-night munchies 🍔 | Gourmet burger & fries | `/prototype/photos/burger.webp` | ✅ Existing |
-| `1` | Fresh sneakers & clothes 👟 | Pristine designer sneakers | `/curated/photos/spending_sneakers.webp` | ❌ Missing |
-| `2` | Gaming passes & gear 🎮 | Gaming controller & ambient lights | `/prototype/photos/gaming.webp` | ✅ Existing |
-| `3` | Tech gadgets & accessories 🎧 | Premium wireless over-ear headphones on desk | `/curated/photos/spending_tech_headphones.webp` | ❌ Missing |
-| `4` | Fuel & road trips with the crew 🚗 | Mountain road trip highway | `/prototype/photos/roadtrip.webp` | ✅ Existing |
-| `5` | Secretly disciplined saver 💰 | Minimalist modern ceramic savings piggy bank | `/curated/photos/spending_saver.webp` | ❌ Missing |
-
-### F. Natural Sleeping Posture (`curated_h07` — 3 Images)
+### C. Natural Sleeping Posture (`curated_h07` — 3 Images)
 | Option ID | Option Text | Target Image Subject | Target Path | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | `0` | Curled on my side 😴 | Overhead view of cozy person curled on their side sleeping | `/curated/photos/sleep_side.webp` | ❌ Missing |
 | `1` | Flat on my stomach 🛏️ | Overhead view of person sleeping on their stomach on pillow | `/curated/photos/sleep_stomach.webp` | ❌ Missing |
 | `2` | Hands folded on my back like a statue 😌 | Overhead view of person sleeping flat on their back | `/curated/photos/sleep_back.webp` | ❌ Missing |
 
-### G. Backpack Carry Mode (`curated_h02` — 2 Images)
-| Option ID | Option Text | Target Image Subject | Target Path | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `0` | Both straps on, ergonomic and secure 🎒 | Lifestyle shot of traveler wearing backpack with both straps | `/curated/photos/backpack_two_straps.webp` | ❌ Missing |
-| `1` | Slung over one shoulder, easygoing 😎 | Casual shot of student slinging backpack on single shoulder | `/curated/photos/backpack_one_strap.webp` | ❌ Missing |
-
-### H. Board Game Showdown Rivalry (`curated_h09` — 4 Images)
+### D. Board Game Showdown Rivalry (`curated_h09` — 4 Images)
 | Option ID | Option Text | Target Image Subject | Target Path | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | `0` | Monopoly property empire 🎩 | Classic Monopoly board with cards and properties | `/curated/photos/game_monopoly.webp` | ❌ Missing |
@@ -89,6 +73,6 @@ This manifest documents the exact asset requirements to transition the prioritiz
 ## 3. Summary Count
 
 - **Total Curated Questions**: 30 questions.
-- **Immediate Fully Photographic Questions**: 4 questions (`curated_u01`, `curated_u02`, `curated_u08`, `curated_h10`).
-- **Target Real-Photo Candidate Questions**: 8 questions (requiring 25 missing images).
+- **Active Fully Photographic Questions**: **8 questions** (`curated_u01`, `curated_u02`, `curated_u08`, `curated_h01`, `curated_h02`, `curated_h10`, `curated_g03`, `curated_g08`).
+- **Remaining Target Real-Photo Candidates**: 4 questions (requiring 15 images).
 - **Text-Only Abstract / Situational Questions**: 18 questions (habits, texting styles, spice tolerance, playground memories, icks, sleep sounds).
