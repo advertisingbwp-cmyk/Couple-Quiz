@@ -3178,10 +3178,10 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "How many alarms does it honestly take to get me out of bed?",
     emoji: "⏰",
     options: [
-      { id: 0, text: "Exactly one — up immediately ⏰" },
-      { id: 1, text: "2 to 3 alarms spaced 5 mins apart 📱" },
-      { id: 2, text: "Chronic snooze button survivor 😴" },
-      { id: 3, text: "No alarms needed, natural clock 😎" },
+      { id: 0, text: "Exactly one — up immediately ⏰", imageUrl: "/curated/photos/alarm_single_clock_wakeup.webp" },
+      { id: 1, text: "2 to 3 alarms spaced 5 mins apart 📱", imageUrl: "/curated/photos/alarm_multiple_phone_alarms.webp" },
+      { id: 2, text: "Chronic snooze button survivor 😴", imageUrl: "/curated/photos/alarm_snooze_button_hand.webp" },
+      { id: 3, text: "No alarms needed, natural clock 😎", imageUrl: "/curated/photos/alarm_natural_sunlight_wakeup.webp" },
     ],
   },
   {
@@ -3190,8 +3190,8 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "When I'm excited or telling you a wild story, how do I text?",
     emoji: "💬",
     options: [
-      { id: 0, text: "Rapid-fire 10 short messages in a row 💬⚡" },
-      { id: 1, text: "One giant, well-crafted paragraph essay 📝✨" },
+      { id: 0, text: "Rapid-fire 10 short messages in a row 💬⚡", imageUrl: "/curated/photos/texting_rapid_short_bubbles.webp" },
+      { id: 1, text: "One giant, well-crafted paragraph essay 📝✨", imageUrl: "/curated/photos/texting_long_paragraph_essay.webp" },
     ],
   },
   {
@@ -3200,10 +3200,10 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "When a major deadline or exam is tomorrow, what's my energy?",
     emoji: "📚",
     options: [
-      { id: 0, text: "Prepared days in advance, calm & organized 📚" },
-      { id: 1, text: "High-stakes grind the night before 🌙" },
-      { id: 2, text: "Panic cramming 15 mins before 😭⚡" },
-      { id: 3, text: "Inshallah & pure vibes only 💀✨" },
+      { id: 0, text: "Prepared days in advance, calm & organized 📚", imageUrl: "/curated/photos/deadline_organized_study_desk.webp" },
+      { id: 1, text: "High-stakes grind the night before 🌙", imageUrl: "/curated/photos/deadline_midnight_oil_coffee.webp" },
+      { id: 2, text: "Panic cramming 15 mins before 😭⚡", imageUrl: "/curated/photos/deadline_panic_cramming_hallway.webp" },
+      { id: 3, text: "Inshallah & pure vibes only 💀✨", imageUrl: "/curated/photos/deadline_chill_vibes_relaxed.webp" },
     ],
   },
   {
@@ -3212,8 +3212,8 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "What is my official stance on the pizza crust?",
     emoji: "🍕",
     options: [
-      { id: 0, text: "Eat every single bite — crust is the best part! 😋" },
-      { id: 1, text: "Leave it on the plate like a pizza handle 🙅" },
+      { id: 0, text: "Eat every single bite — crust is the best part! 😋", imageUrl: "/curated/photos/crust_eaten_golden.webp" },
+      { id: 1, text: "Leave it on the plate like a pizza handle 🙅", imageUrl: "/curated/photos/crust_left_behind.webp" },
     ],
   },
   {
@@ -3222,8 +3222,8 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "How much spice can I actually handle before tearing up?",
     emoji: "🌶️",
     options: [
-      { id: 0, text: "Mild only — glass of milk on standby 🥛" },
-      { id: 1, text: "Bring on the extra chili and hot sauce! 🔥🌶️" },
+      { id: 0, text: "Mild only — glass of milk on standby 🥛", imageUrl: "/curated/photos/spice_mild_milk.webp" },
+      { id: 1, text: "Bring on the extra chili and hot sauce! 🔥🌶️", imageUrl: "/curated/photos/spice_extra_chili.webp" },
     ],
   },
   {
@@ -3242,10 +3242,10 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "What was my absolute favorite playground game growing up?",
     emoji: "🛝",
     options: [
-      { id: 0, text: "Hide-and-seek champion 🙈" },
-      { id: 1, text: "Tag & running full speed 🏃" },
-      { id: 2, text: "UNO & card game rivalries 🃏" },
-      { id: 3, text: "Street soccer / kickball ⚽" },
+      { id: 0, text: "Hide-and-seek champion 🙈", imageUrl: "/curated/photos/playground_hide_and_seek.webp" },
+      { id: 1, text: "Tag & running full speed 🏃", imageUrl: "/curated/photos/playground_tag_sprinting.webp" },
+      { id: 2, text: "UNO & card game rivalries 🃏", imageUrl: "/curated/photos/playground_cards_rivalry.webp" },
+      { id: 3, text: "Street soccer / kickball ⚽", imageUrl: "/curated/photos/playground_street_soccer.webp" },
     ],
   },
   {
@@ -3254,8 +3254,8 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "Where did I usually gravitate in any classroom or lecture hall?",
     emoji: "🏫",
     options: [
-      { id: 0, text: "Front row — locked in and observant 🥇" },
-      { id: 1, text: "Back row corner — relaxed and chatting 😎" },
+      { id: 0, text: "Front row — locked in and observant 🥇", imageUrl: "/curated/photos/classroom_front_row_focused.webp" },
+      { id: 1, text: "Back row corner — relaxed and chatting 😎", imageUrl: "/curated/photos/classroom_back_row_relaxed.webp" },
     ],
   },
 ];
@@ -3267,11 +3267,11 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "Where does my discretionary money disappear to the fastest?",
     emoji: "💸",
     options: [
-      { id: 0, text: "Good food & late-night munchies 🍔", imageUrl: "/prototype/photos/burger.webp" },
+      { id: 0, text: "Good food & late-night munchies 🍔", imageUrl: "/curated/photos/spending_munchies.webp" },
       { id: 1, text: "Fresh sneakers & clothes 👟", imageUrl: "/curated/photos/spending_sneakers.webp" },
-      { id: 2, text: "Gaming passes & gear 🎮", imageUrl: "/prototype/photos/gaming.webp" },
+      { id: 2, text: "Gaming passes & gear 🎮", imageUrl: "/curated/photos/spending_gaming_gear.webp" },
       { id: 3, text: "Tech gadgets & accessories 🎧", imageUrl: "/curated/photos/spending_tech_headphones.webp" },
-      { id: 4, text: "Fuel & road trips with the crew 🚗", imageUrl: "/prototype/photos/roadtrip.webp" },
+      { id: 4, text: "Fuel & road trips with the crew 🚗", imageUrl: "/curated/photos/spending_road_trip.webp" },
       { id: 5, text: "Secretly disciplined saver 💰", imageUrl: "/curated/photos/spending_saver.webp" },
     ],
   },
@@ -3291,10 +3291,10 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "Which animated show can I still rewatch without ever getting bored?",
     emoji: "📺",
     options: [
-      { id: 0, text: "Shonen Anime battles ⚔️" },
-      { id: 1, text: "SpongeBob SquarePants classics 🧽" },
-      { id: 2, text: "Avatar: The Last Airbender 🌪️" },
-      { id: 3, text: "Gravity Falls & Cartoon Network gold 🌲" },
+      { id: 0, text: "Shonen Anime battles ⚔️", imageUrl: "/curated/photos/show_anime_battle_action.webp" },
+      { id: 1, text: "SpongeBob SquarePants classics 🧽", imageUrl: "/curated/photos/show_underwater_sponge_burger.webp" },
+      { id: 2, text: "Avatar: The Last Airbender 🌪️", imageUrl: "/curated/photos/show_elemental_air_fire.webp" },
+      { id: 3, text: "Gravity Falls & Cartoon Network gold 🌲", imageUrl: "/curated/photos/show_mystery_cabin_journal.webp" },
     ],
   },
   {
@@ -3303,8 +3303,8 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "When a hot meal arrives, what is my eating speed?",
     emoji: "🍽️",
     options: [
-      { id: 0, text: "Inhaled in 3 minutes flat ⚡🍽️" },
-      { id: 1, text: "Taking my sweet time, conversation pace 🐢🥗" },
+      { id: 0, text: "Inhaled in 3 minutes flat ⚡🍽️", imageUrl: "/curated/photos/eating_speed_fast_empty_plate.webp" },
+      { id: 1, text: "Taking my sweet time, conversation pace 🐢🥗", imageUrl: "/curated/photos/eating_speed_slow_relaxed_dinner.webp" },
     ],
   },
   {
@@ -3313,8 +3313,8 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "Which of these would give me genuine chills?",
     emoji: "😨",
     options: [
-      { id: 0, text: "Medical injections & needles 💉" },
-      { id: 1, text: "Massive vertical drop roller coasters 🎢" },
+      { id: 0, text: "Medical injections & needles 💉", imageUrl: "/curated/photos/fear_medical_needle_syringe.webp" },
+      { id: 1, text: "Massive vertical drop roller coasters 🎢", imageUrl: "/curated/photos/fear_roller_coaster_drop.webp" },
     ],
   },
   {
@@ -3323,8 +3323,8 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "What is my policy on ketchup and hot sauce with fries?",
     emoji: "🥫",
     options: [
-      { id: 0, text: "Minimalist dip — let the food speak 🍟" },
-      { id: 1, text: "Completely drowning the plate in sauce 🥫🍅" },
+      { id: 0, text: "Minimalist dip — let the food speak 🍟", imageUrl: "/curated/photos/sauce_fries_minimalist_dip.webp" },
+      { id: 1, text: "Completely drowning the plate in sauce 🥫🍅", imageUrl: "/curated/photos/sauce_fries_drowned_ketchup.webp" },
     ],
   },
   {
@@ -3344,8 +3344,8 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "When I turn on a video game, what mode am I in?",
     emoji: "🎮",
     options: [
-      { id: 0, text: "Ranked competitive sweat — here to win 🏆" },
-      { id: 1, text: "Casual open-world chill — just exploring 🌿" },
+      { id: 0, text: "Ranked competitive sweat — here to win 🏆", imageUrl: "/curated/photos/gaming_competitive_esports_sweat.webp" },
+      { id: 1, text: "Casual open-world chill — just exploring 🌿", imageUrl: "/curated/photos/gaming_open_world_scenic_explore.webp" },
     ],
   },
   {
@@ -3366,8 +3366,8 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "If we make a sudden late-night food run, what do I pick first?",
     emoji: "🍔",
     options: [
-      { id: 0, text: "Loaded Smash Burger 🍔", imageUrl: "/prototype/photos/burger.webp" },
-      { id: 1, text: "Crispy Stone-Baked Pizza 🍕", imageUrl: "/prototype/photos/pizza.webp" },
+      { id: 0, text: "Loaded Smash Burger 🍔", imageUrl: "/curated/photos/burger_smash_loaded.webp" },
+      { id: 1, text: "Crispy Stone-Baked Pizza 🍕", imageUrl: "/curated/photos/pizza_stone_baked_slice.webp" },
     ],
   },
 ];
@@ -3379,12 +3379,12 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "What is the 100% foolproof way to instantly boost my mood?",
     emoji: "✨",
     options: [
-      { id: 0, text: "Delicious sweet treat or comfort dessert 🍰" },
-      { id: 1, text: "Genuine, heartfelt compliments & hugs 💕" },
-      { id: 2, text: "Spontaneous retail therapy & shopping 🛍️" },
-      { id: 3, text: "Uninterrupted 10-hour beauty sleep 😴" },
-      { id: 4, text: "Juicy gossip & deep talk with besties ☕" },
-      { id: 5, text: "Relaxing quiet cafe date ☕✨" },
+      { id: 0, text: "Delicious sweet treat or comfort dessert 🍰", imageUrl: "/curated/photos/mood_sweet_berry_cheesecake.webp" },
+      { id: 1, text: "Genuine, heartfelt compliments & hugs 💕", imageUrl: "/curated/photos/mood_warm_hug_besties.webp" },
+      { id: 2, text: "Spontaneous retail therapy & shopping 🛍️", imageUrl: "/curated/photos/mood_shopping_luxury_bags.webp" },
+      { id: 3, text: "Uninterrupted 10-hour beauty sleep 😴", imageUrl: "/curated/photos/mood_beauty_sleep_silk_pillow.webp" },
+      { id: 4, text: "Juicy gossip & deep talk with besties ☕", imageUrl: "/curated/photos/mood_besties_tea_talk.webp" },
+      { id: 5, text: "Relaxing quiet cafe date ☕✨", imageUrl: "/curated/photos/mood_quiet_cafe_corner_book.webp" },
     ],
   },
   {
@@ -3393,8 +3393,8 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "How long do I actually get lost scrolling on my phone in the bathroom?",
     emoji: "📱",
     options: [
-      { id: 0, text: "2 minutes flat — quick check ⏱️" },
-      { id: 1, text: "Until my legs are genuinely numb from TikTok 📱🦵" },
+      { id: 0, text: "2 minutes flat — quick check ⏱️", imageUrl: "/curated/photos/scrolling_quick_smartwatch_check.webp" },
+      { id: 1, text: "Until my legs are genuinely numb from TikTok 📱🦵", imageUrl: "/curated/photos/scrolling_infinite_phone_glow.webp" },
     ],
   },
   {
@@ -3415,10 +3415,10 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "What is my most relatable everyday guilty habit?",
     emoji: "😬",
     options: [
-      { id: 0, text: "Overthinking random conversations at 2 AM 🧠🌙" },
-      { id: 1, text: "Forgetting my passwords every single month 🔐😅" },
-      { id: 2, text: "Filling online shopping carts and never buying 🛍️" },
-      { id: 3, text: "Watching TikToks when I should be fast asleep 📱💤" },
+      { id: 0, text: "Overthinking random conversations at 2 AM 🧠🌙", imageUrl: "/curated/photos/habit_late_night_overthinking.webp" },
+      { id: 1, text: "Forgetting my passwords every single month 🔐😅", imageUrl: "/curated/photos/habit_forgot_password_prompt.webp" },
+      { id: 2, text: "Filling online shopping carts and never buying 🛍️", imageUrl: "/curated/photos/habit_online_cart_unbought.webp" },
+      { id: 3, text: "Watching TikToks when I should be fast asleep 📱💤", imageUrl: "/curated/photos/habit_scrolling_in_bed_dark.webp" },
     ],
   },
   {
@@ -3427,10 +3427,10 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "What behavior gives me the quickest instant ick?",
     emoji: "🙅‍♀️",
     options: [
-      { id: 0, text: "Two-faced people & fake energy 🎭" },
-      { id: 1, text: "Broken promises & last-minute cancellations 😕" },
-      { id: 2, text: "Chronic slow texters who stay online 📱🙄" },
-      { id: 3, text: "People who chew loudly 🤐" },
+      { id: 0, text: "Two-faced people & fake energy 🎭", imageUrl: "/curated/photos/ick_two_faced_theater_masks.webp" },
+      { id: 1, text: "Broken promises & last-minute cancellations 😕", imageUrl: "/curated/photos/ick_cancelled_calendar_alert.webp" },
+      { id: 2, text: "Chronic slow texters who stay online 📱🙄", imageUrl: "/curated/photos/ick_seen_unread_active_status.webp" },
+      { id: 3, text: "People who chew loudly 🤐", imageUrl: "/curated/photos/ick_loud_chewing_popcorn.webp" },
     ],
   },
   {
@@ -3439,10 +3439,10 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "What sounds do I make when I'm sound asleep?",
     emoji: "😴",
     options: [
-      { id: 0, text: "Completely silent angel 😇" },
-      { id: 1, text: "Soft gentle breathing 💤" },
-      { id: 2, text: "Full-on sleep talker or giggler 💬😂" },
-      { id: 3, text: "Subtle locomotive snorer 🚂" },
+      { id: 0, text: "Completely silent angel 😇", imageUrl: "/curated/photos/sleep_silent_peaceful_angel.webp" },
+      { id: 1, text: "Soft gentle breathing 💤", imageUrl: "/curated/photos/sleep_gentle_soft_breathing.webp" },
+      { id: 2, text: "Full-on sleep talker or giggler 💬😂", imageUrl: "/curated/photos/sleep_talker_smiling_dream.webp" },
+      { id: 3, text: "Subtle locomotive snorer 🚂", imageUrl: "/curated/photos/sleep_funny_earplugs_snoring.webp" },
     ],
   },
   {
@@ -3463,7 +3463,7 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "When we sit down at an aesthetic cafe, what's my go-to order?",
     emoji: "☕",
     options: [
-      { id: 0, text: "Warm Artisan Cappuccino with Latte Art ☕", imageUrl: "/prototype/photos/coffee.webp" },
+      { id: 0, text: "Warm Artisan Cappuccino with Latte Art ☕", imageUrl: "/curated/photos/cafe_artisan_latte.webp" },
       { id: 1, text: "Sweet Blended Iced Caramel Beverage 🥤", imageUrl: "/curated/photos/drink_iced_caramel.webp" },
     ],
   },
@@ -3473,10 +3473,10 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "Where did my first romance or crush story begin?",
     emoji: "💘",
     options: [
-      { id: 0, text: "Classroom / campus hallway glance 🏫" },
-      { id: 1, text: "Introduced through mutual close friends 🫶" },
-      { id: 2, text: "Slid into the DMs / social media 📱" },
-      { id: 3, text: "Still waiting on my main-character moment 😅✨" },
+      { id: 0, text: "Classroom / campus hallway glance 🏫", imageUrl: "/curated/photos/crush_school_hallway_lockers.webp" },
+      { id: 1, text: "Introduced through mutual close friends 🫶", imageUrl: "/curated/photos/crush_mutual_friends_gathering.webp" },
+      { id: 2, text: "Slid into the DMs / social media 📱", imageUrl: "/curated/photos/crush_social_media_dm_bubble.webp" },
+      { id: 3, text: "Still waiting on my main-character moment 😅✨", imageUrl: "/curated/photos/crush_daydreaming_window_view.webp" },
     ],
   },
   {
