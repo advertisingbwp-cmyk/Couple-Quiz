@@ -13,6 +13,7 @@ import {
   VisualOptionCard,
   getGlassOptionGridClasses,
 } from "@/components/quiz/VisualOptionCard";
+import AdsterraFooter from "@/components/ads/AdsterraFooter";
 
 export default function QuizPlayPage({
   params,
@@ -390,6 +391,7 @@ export default function QuizPlayPage({
           </div>
         )}
       </main>
+      <AdsterraFooter />
     </div>
   );
 }

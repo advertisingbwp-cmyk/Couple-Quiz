@@ -16,6 +16,7 @@ import {
 import {
   CURATED_QUIZ_QUESTIONS,
 } from "@/lib/quiz/questions";
+import AdsterraFooter from "@/components/ads/AdsterraFooter";
 import { quizAudio } from "@/lib/quiz/audio";
 import {
   initQuizDeck,
@@ -491,6 +492,7 @@ function QuizCreateContent() {
           </div>
         </div>
       </main>
+      <AdsterraFooter />
 
       {/* Secret PIN Modal */}
       {showPinModal && (

@@ -27,6 +27,7 @@ import {
   detectEnvironment,
   EnvironmentInfo,
 } from "@/lib/quiz/sharing";
+import AdsterraFooter from "@/components/ads/AdsterraFooter";
 
 export default function QuizSharePage({
   params,
@@ -384,6 +385,7 @@ export default function QuizSharePage({
           )}
         </div>
       </main>
+      <AdsterraFooter />
     </div>
   );
 }

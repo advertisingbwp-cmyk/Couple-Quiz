@@ -15,7 +15,7 @@ import {
   detectEnvironment,
   EnvironmentInfo,
 } from "@/lib/quiz/sharing";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
+import AdsterraFooter from "@/components/ads/AdsterraFooter";
 
 export default function QuizResultPage({
   params,
@@ -356,8 +356,6 @@ export default function QuizResultPage({
                 <span>See Leaderboard ({safeCreator})</span>
               </Link>
 
-              <AdsterraNativeBanner />
-
               <div className="pt-2">
                 <Link
                   href="/quiz"
@@ -374,6 +372,7 @@ export default function QuizResultPage({
           </div>
         )}
       </main>
+      <AdsterraFooter />
     </div>
   );
 }

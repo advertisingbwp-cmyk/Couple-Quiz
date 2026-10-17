@@ -16,6 +16,7 @@ import {
   detectEnvironment,
   EnvironmentInfo,
 } from "@/lib/quiz/sharing";
+import AdsterraFooter from "@/components/ads/AdsterraFooter";
 
 export default function QuizScoreboardPage({
   params,
@@ -644,6 +645,7 @@ export default function QuizScoreboardPage({
           )}
         </div>
       </main>
+      <AdsterraFooter />
 
       {/* Creator PIN Unlock Modal for Detailed Answers */}
       {showAuthModal && (

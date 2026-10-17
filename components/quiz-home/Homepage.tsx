@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandMark, FriendsArt, StepIcon } from "./Illustrations";
 import { saveCreatorSetup } from "./creatorSetup";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
+import AdsterraFooter from "@/components/ads/AdsterraFooter";
 import styles from "./homepage.module.css";
 
 type StartProps = { onStart: () => void };
@@ -280,11 +280,8 @@ export default function Homepage() {
           </section>
           <HowItWorks />
           <CTASection onStart={openCreator} />
-          <div className="max-w-md mx-auto px-4">
-            <AdsterraNativeBanner />
-          </div>
         </main>
-        <Footer />
+        <AdsterraFooter />
       </div>
       <dialog
         ref={dialog}
