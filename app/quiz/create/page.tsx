@@ -15,8 +15,6 @@ import {
 } from "lucide-react";
 import {
   CURATED_QUIZ_QUESTIONS,
-  getCuratedQuestionsByTheme,
-  CuratedTheme,
 } from "@/lib/quiz/questions";
 import { quizAudio } from "@/lib/quiz/audio";
 import {
@@ -38,19 +36,11 @@ import {
 
 const TOTAL_QUESTIONS_TARGET = 10;
 
-const THEME_OPTIONS: Array<{ id: CuratedTheme; label: string; icon: string }> = [
-  { id: "all", label: "All Curated", icon: "✦" },
-  { id: "universal", label: "Universal", icon: "✨" },
-  { id: "him", label: "Guy Vibes", icon: "🧢" },
-  { id: "her", label: "Girl Vibes", icon: "🎀" },
-];
-
 function QuizCreateContent() {
   const router = useRouter();
 
   const [creatorName, setCreatorName] = useState("");
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [selectedTheme, setSelectedTheme] = useState<CuratedTheme>("all");
   const [hasSetup, setHasSetup] = useState<boolean | null>(null);
 
   // Fallback setup form state if sessionStorage is unavailable / blocked
@@ -89,40 +79,12 @@ function QuizCreateContent() {
     if (name) {
       setCreatorName(name);
       setGender(gen);
-      const defaultTheme: CuratedTheme = gen === "female" ? "her" : "him";
-      setSelectedTheme(defaultTheme);
-      setDeck(initQuizDeck(getCuratedQuestionsByTheme(defaultTheme), TOTAL_QUESTIONS_TARGET));
+      setDeck(initQuizDeck(CURATED_QUIZ_QUESTIONS, TOTAL_QUESTIONS_TARGET));
       setHasSetup(true);
     } else {
       setHasSetup(false);
     }
   }, []);
-
-  const handleThemeChange = (newTheme: CuratedTheme) => {
-    setSelectedTheme(newTheme);
-    const themedQuestions = getCuratedQuestionsByTheme(newTheme);
-
-    setDeck((prevDeck) => {
-      // Preserve any questions that have already been answered
-      const answeredIds = new Set(prevDeck.answers.map((a) => a.questionId));
-      const answeredQuestions = prevDeck.availableQuestions.filter((q) =>
-        answeredIds.has(q.id)
-      );
-      const remainingThemed = themedQuestions.filter((q) => !answeredIds.has(q.id));
-
-      const mergedPool = [...answeredQuestions, ...remainingThemed];
-      return {
-        ...prevDeck,
-        availableQuestions: mergedPool.length >= TOTAL_QUESTIONS_TARGET ? mergedPool : CURATED_QUIZ_QUESTIONS,
-        currentPoolIndex: 0,
-      };
-    });
-
-    // Update selected option state for currently active question
-    const currentQ = getCurrentQuestion(deck);
-    const existing = deck.answers.find((a) => a.questionId === currentQ?.id);
-    setSelectedOptionId(existing !== undefined ? existing.correctOptionId : null);
-  };
 
   const currentQuestion =
     getCurrentQuestion(deck) ||
@@ -221,9 +183,7 @@ function QuizCreateContent() {
 
     setCreatorName(clean);
     setGender(fallbackGender);
-    const defaultTheme: CuratedTheme = fallbackGender === "female" ? "her" : "him";
-    setSelectedTheme(defaultTheme);
-    setDeck(initQuizDeck(getCuratedQuestionsByTheme(defaultTheme), TOTAL_QUESTIONS_TARGET));
+    setDeck(initQuizDeck(CURATED_QUIZ_QUESTIONS, TOTAL_QUESTIONS_TARGET));
     setHasSetup(true);
   };
 
@@ -439,25 +399,6 @@ function QuizCreateContent() {
             total={deck.targetCount}
             current={Math.min(answeredCount + 1, deck.targetCount)}
           />
-
-          {/* Optional Theme Selection Filter Tabs */}
-          <div className="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-0.5">
-            {THEME_OPTIONS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => handleThemeChange(t.id)}
-                className={`py-1 px-2 sm:px-2.5 rounded-full text-[10px] sm:text-xs font-black transition-all cursor-pointer border flex items-center gap-1 ${
-                  selectedTheme === t.id
-                    ? "bg-purple-600 text-white border-purple-600 shadow-xs"
-                    : "bg-white/70 hover:bg-white text-slate-600 border-white/80 shadow-xs"
-                }`}
-              >
-                <span>{t.icon}</span>
-                <span>{t.label}</span>
-              </button>
-            ))}
-          </div>
 
           {/* Mascot Duo positioned snug above the card */}
           <div className="w-full flex justify-center -mb-2.5 z-10 relative">
