@@ -47,6 +47,15 @@ export default function QuizResultPage({
   }, []);
 
   useEffect(() => {
+    const isReturning =
+      typeof window !== "undefined" &&
+      (window.location.search.includes("from=returning") ||
+        window.location.search.includes("returning=true"));
+
+    if (isReturning) {
+      setDialogueStep(4);
+    }
+
     // Read scoped session result
     const raw = sessionStorage.getItem(`quiz_result_${quizId}`);
     if (raw) {
@@ -54,6 +63,9 @@ export default function QuizResultPage({
         const parsed = JSON.parse(raw);
         setResult(parsed);
         setHasCheckedSession(true);
+        if (isReturning) {
+          setDialogueStep(4);
+        }
         return;
       } catch {
         // Corrupt session data
@@ -90,6 +102,7 @@ export default function QuizResultPage({
                     gender: data.gender,
                   };
                   setResult(restored);
+                  setDialogueStep(4);
                   sessionStorage.setItem(`quiz_result_${quizId}`, JSON.stringify(restored));
                 }
                 setHasCheckedSession(true);

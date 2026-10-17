@@ -40,6 +40,8 @@ export default function QuizPlayPage({
     playerName: string;
     completedAt?: number;
     playerToken?: string;
+    score?: number;
+    totalQuestions?: number;
   } | null>(null);
   const [isPlayAgain, setIsPlayAgain] = useState(false);
 
@@ -186,6 +188,8 @@ export default function QuizPlayPage({
               playerName: data.playerName || playerName.trim(),
               completedAt: Date.now(),
               playerToken: data.playerToken,
+              score: data.score,
+              totalQuestions: data.totalQuestions,
             })
           );
         } catch {
@@ -279,10 +283,19 @@ export default function QuizPlayPage({
             <span className="text-pink-500">.</span>
           </span>
         </Link>
-        {isStarted && (
+        {isStarted ? (
           <span className="text-[11px] font-black bg-white/80 text-purple-700 px-3 py-1 rounded-full border border-purple-200 shadow-xs">
             {currentIndex + 1} of {quiz.questions.length}
           </span>
+        ) : (
+          <Link
+            href={`/quiz/scoreboard/${quizId}`}
+            className="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-white/85 hover:bg-white px-3 py-1.5 rounded-full border border-purple-200/80 shadow-xs hover:border-purple-300 transition-all cursor-pointer"
+            aria-label="View Leaderboard"
+          >
+            <Trophy size={13} className="text-amber-500" />
+            <span>Leaderboard</span>
+          </Link>
         )}
       </header>
 
@@ -308,13 +321,19 @@ export default function QuizPlayPage({
                 </span>
                 ! ✦
               </h1>
+              {typeof savedAttempt.score === "number" && typeof savedAttempt.totalQuestions === "number" && (
+                <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 border border-purple-200/80 rounded-full text-xs font-black text-purple-800">
+                  <span>Your Previous Score:</span>
+                  <span className="text-purple-700 font-black text-sm">{savedAttempt.score}/{savedAttempt.totalQuestions}</span>
+                </div>
+              )}
               <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">
                 You&apos;ve already completed {creatorName}&apos;s challenge. What would you like to do?
               </p>
 
               <div className="mt-6 space-y-3">
                 <Link
-                  href={`/quiz/result/${quizId}`}
+                  href={`/quiz/result/${quizId}?from=returning`}
                   className="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-black text-sm rounded-xl shadow-[0_4px_16px_rgba(102,80,183,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
                 >
                   <span>View My Result</span>
