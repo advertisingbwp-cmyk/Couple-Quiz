@@ -16,7 +16,7 @@ export function getBaseUrl(): string {
   if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL.replace(/\/+$/, "")}`;
   }
-  return "https://couple-quiz-three.vercel.app";
+  return "https://friend-quiz-game.vercel.app";
 }
 
 /**
@@ -79,7 +79,7 @@ export function detectEnvironment(originOrHost?: string): EnvironmentInfo {
   }
 
   // 2. Canonical production hostname check
-  let prodHost = "couple-quiz-three.vercel.app";
+  let prodHost = "friend-quiz-game.vercel.app";
   try {
     prodHost = new URL(getBaseUrl()).hostname.toLowerCase();
   } catch {
