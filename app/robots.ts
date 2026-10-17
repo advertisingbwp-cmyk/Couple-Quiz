@@ -18,6 +18,7 @@ export default function robots(): MetadataRoute.Robots {
           "/api/",
           "/quiz/share/",
           "/quiz/result/",
+          "/design-preview/",
         ],
       },
     ],
