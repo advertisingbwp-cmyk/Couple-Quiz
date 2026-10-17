@@ -59,6 +59,21 @@ export default function QuizPlayPage({
     loadQuiz();
   }, [loadQuiz]);
 
+  // Preload all quiz option images in background for zero-latency question transitions
+  useEffect(() => {
+    if (!quiz || typeof window === "undefined") return;
+    const urls = new Set<string>();
+    quiz.questions.forEach((q) => {
+      q.options.forEach((opt) => {
+        if (opt.imageUrl) urls.add(opt.imageUrl);
+      });
+    });
+    urls.forEach((url) => {
+      const img = new Image();
+      img.src = url;
+    });
+  }, [quiz]);
+
   const handleStartPlay = (e: React.FormEvent) => {
     e.preventDefault();
     const clean = playerName.trim();

@@ -87,6 +87,22 @@ function QuizCreateContent() {
     }
   }, []);
 
+  // Preload upcoming questions' images in background for instant zero-lag switching
+  useEffect(() => {
+    if (typeof window === "undefined" || !deck.availableQuestions) return;
+    const urls = new Set<string>();
+    const nextQuestions = deck.availableQuestions.slice(0, 6);
+    for (const q of nextQuestions) {
+      for (const opt of q.options) {
+        if (opt.imageUrl) urls.add(opt.imageUrl);
+      }
+    }
+    urls.forEach((url) => {
+      const img = new Image();
+      img.src = url;
+    });
+  }, [deck.availableQuestions, deck.answers.length]);
+
   const currentQuestion =
     getCurrentQuestion(deck) ||
     deck.availableQuestions[0] ||

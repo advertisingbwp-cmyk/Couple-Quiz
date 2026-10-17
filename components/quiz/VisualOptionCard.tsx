@@ -166,7 +166,7 @@ export function VisualOptionCard({
             decoding="async"
             onError={() => setImgError(true)}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 pointer-events-none"
-            loading="lazy"
+            loading="eager"
           />
         </div>
 
@@ -221,7 +221,7 @@ export function VisualOptionCard({
             decoding="async"
             onError={() => setImgError(true)}
             className="w-full h-full object-contain pointer-events-none"
-            loading="lazy"
+            loading="eager"
           />
         </div>
 

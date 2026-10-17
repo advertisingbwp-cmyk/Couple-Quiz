@@ -31,12 +31,15 @@ export function getSupabaseConfig(): SupabaseConfig {
   const url = (
     process.env.QUIZ_TEST_SUPABASE_URL ||
     process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
     ""
   ).trim().replace(/\/+$/, "");
 
   const serviceRoleKey = (
     process.env.QUIZ_TEST_SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
     ""
   ).trim();
 
