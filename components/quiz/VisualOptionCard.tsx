@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import { QuizOption } from "@/lib/quiz/types";
 
 interface VisualOptionCardProps {
@@ -12,10 +12,15 @@ interface VisualOptionCardProps {
   totalOptions?: number;
   role?: string;
   className?: string;
+  optionIndex?: number;
+  forceTextCard?: boolean;
 }
+
+const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
 
 /**
  * Returns grid classes dynamically tailored to option counts (2, 4, 6, 9).
+ * Maintains exact class signatures for backward compatibility.
  */
 export function getVisualOptionGridClasses(optionCount: number): string {
   switch (optionCount) {
@@ -31,6 +36,42 @@ export function getVisualOptionGridClasses(optionCount: number): string {
   }
 }
 
+/**
+ * Enhanced grid layout tailored for compact glass styling:
+ * Photographic tiles vs Text-first horizontal rows.
+ */
+export function getGlassOptionGridClasses(
+  optionCount: number,
+  isPhotographic = false
+): string {
+  if (isPhotographic) {
+    switch (optionCount) {
+      case 2:
+        return "grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto";
+      case 6:
+        return "grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 max-w-lg mx-auto";
+      case 9:
+        return "grid grid-cols-3 gap-1.5 sm:gap-2.5 max-w-xl mx-auto";
+      case 4:
+      default:
+        return "grid grid-cols-2 gap-2.5 sm:gap-3.5 max-w-md mx-auto";
+    }
+  }
+
+  // Text-first glass layout: 1 col on mobile, 2 cols on tablet/desktop for 2/4/6 options
+  switch (optionCount) {
+    case 2:
+      return "grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 max-w-lg mx-auto";
+    case 6:
+      return "grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 max-w-xl mx-auto";
+    case 9:
+      return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 sm:gap-2 max-w-xl mx-auto";
+    case 4:
+    default:
+      return "grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 max-w-xl mx-auto";
+  }
+}
+
 export function VisualOptionCard({
   option,
   isSelected = false,
@@ -39,41 +80,24 @@ export function VisualOptionCard({
   totalOptions = 4,
   role = "radio",
   className = "",
+  optionIndex = 0,
+  forceTextCard = false,
 }: VisualOptionCardProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Responsive sizing tailored to 2, 4, 6, or 9 options
-  const isCompact = totalOptions >= 9;
-  const isMedium = totalOptions === 6;
-  const isLarge = totalOptions <= 2;
+  const hasPhoto = Boolean(
+    option.imageUrl &&
+      (option.imageUrl.endsWith(".webp") ||
+        option.imageUrl.endsWith(".jpg") ||
+        option.imageUrl.endsWith(".png")) &&
+      !imgError
+  );
+  const isPhotographic = hasPhoto && !forceTextCard;
+  const isSvg = Boolean(
+    option.imageUrl && option.imageUrl.endsWith(".svg") && !forceTextCard && !imgError
+  );
 
-  const imageSizeClasses = isCompact
-    ? "w-12 h-12 sm:w-14 sm:h-14"
-    : isMedium
-    ? "w-14 h-14 sm:w-16 sm:h-16"
-    : isLarge
-    ? "w-20 h-20 sm:w-24 sm:h-24"
-    : "w-16 h-16 sm:w-20 sm:h-20";
-
-  const textSizeClasses = isCompact
-    ? "text-[11px] sm:text-xs font-black break-normal hyphens-none leading-snug"
-    : isMedium
-    ? "text-xs sm:text-sm font-black break-normal hyphens-none leading-snug"
-    : isLarge
-    ? "text-sm sm:text-base font-black break-normal hyphens-none leading-snug"
-    : "text-xs sm:text-sm font-black break-normal hyphens-none leading-snug";
-
-  const cardPaddingClasses = isCompact
-    ? "p-2 sm:p-2.5 h-auto min-h-[105px] sm:min-h-[120px]"
-    : isMedium
-    ? "p-2.5 sm:p-3 h-auto min-h-[115px] sm:min-h-[130px]"
-    : isLarge
-    ? "p-4 sm:p-5 h-auto min-h-[145px] sm:min-h-[160px]"
-    : "p-3 sm:p-3.5 h-auto min-h-[125px] sm:min-h-[140px]";
-
-  const badgeSizeClasses = isCompact
-    ? "w-4 h-4 top-1.5 right-1.5"
-    : "w-5 h-5 sm:w-6 sm:h-6 top-2 right-2";
+  const letter = LETTERS[optionIndex] || String(optionIndex + 1);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (role !== "radio") return;
@@ -102,6 +126,113 @@ export function VisualOptionCard({
     }
   };
 
+  // Case 1: Photographic Option Card (Real WebP Photos)
+  if (isPhotographic) {
+    return (
+      <button
+        type="button"
+        role={role}
+        aria-checked={isSelected}
+        aria-label={option.text}
+        disabled={disabled}
+        onClick={() => onSelect(option.id)}
+        onKeyDown={handleKeyDown}
+        className={`group relative w-full flex flex-col items-center justify-between text-center rounded-2xl border-2 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-purple-500 disabled:opacity-40 disabled:cursor-not-allowed select-none p-2 sm:p-2.5 backdrop-blur-md ${
+          isSelected
+            ? "border-purple-600 bg-purple-50/90 shadow-[0_4px_16px_rgba(102,80,183,0.22)] -translate-y-0.5"
+            : "border-white/90 bg-white/80 hover:bg-white text-slate-800 shadow-xs hover:border-purple-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+        } ${className}`}
+      >
+        {/* Checkmark or Letter Badge */}
+        <div
+          className={`absolute top-2.5 right-2.5 z-10 w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] transition-all shadow-xs pointer-events-none ${
+            isSelected
+              ? "bg-purple-600 text-white shadow-[0_2px_8px_rgba(102,80,183,0.4)]"
+              : "bg-white/90 text-slate-700 border border-slate-200"
+          }`}
+          aria-hidden="true"
+        >
+          {isSelected ? <Check size={11} className="stroke-[3]" /> : letter}
+        </div>
+
+        {/* Real Photographic Container */}
+        <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 relative mb-1.5 shadow-xs">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={option.imageUrl}
+            alt={option.text}
+            width={240}
+            height={180}
+            decoding="async"
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 pointer-events-none"
+            loading="lazy"
+          />
+        </div>
+
+        {/* Clean text label */}
+        <span className="w-full text-xs sm:text-sm font-black text-slate-800 px-1 py-0.5 leading-snug line-clamp-1">
+          {option.text}
+        </span>
+      </button>
+    );
+  }
+
+  // Case 2: Legacy Illustrated SVG Card
+  if (isSvg) {
+    const isCompact = totalOptions >= 9;
+    return (
+      <button
+        type="button"
+        role={role}
+        aria-checked={isSelected}
+        aria-label={option.text}
+        disabled={disabled}
+        onClick={() => onSelect(option.id)}
+        onKeyDown={handleKeyDown}
+        className={`group relative w-full flex flex-col items-center justify-between text-center rounded-2xl border-2 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-purple-500 disabled:opacity-40 disabled:cursor-not-allowed select-none p-2 sm:p-2.5 backdrop-blur-md ${
+          isSelected
+            ? "border-purple-600 bg-purple-50/90 shadow-[0_4px_16px_rgba(102,80,183,0.22)] -translate-y-0.5"
+            : "border-white/90 bg-white/80 hover:bg-white text-slate-800 shadow-xs hover:border-purple-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+        } ${className}`}
+      >
+        <div
+          className={`absolute top-2 right-2 z-10 w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] pointer-events-none ${
+            isSelected
+              ? "bg-purple-600 text-white"
+              : "bg-white/80 text-slate-600 border border-slate-200"
+          }`}
+          aria-hidden="true"
+        >
+          {isSelected ? <Check size={11} className="stroke-[3]" /> : letter}
+        </div>
+
+        <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-white/70 rounded-xl p-1 mb-1.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={option.imageUrl}
+            alt={option.text}
+            width={64}
+            height={64}
+            decoding="async"
+            onError={() => setImgError(true)}
+            className="w-full h-full object-contain pointer-events-none"
+            loading="lazy"
+          />
+        </div>
+
+        <span
+          className={`w-full text-slate-800 px-1 leading-snug font-black ${
+            isCompact ? "text-[11px] sm:text-xs line-clamp-1" : "text-xs sm:text-sm"
+          }`}
+        >
+          {option.text}
+        </span>
+      </button>
+    );
+  }
+
+  // Case 3: Consistent Text-First Glass Card (Situational / Behavioral Options)
   return (
     <button
       type="button"
@@ -111,58 +242,41 @@ export function VisualOptionCard({
       disabled={disabled}
       onClick={() => onSelect(option.id)}
       onKeyDown={handleKeyDown}
-      className={`group relative w-full flex flex-col items-center justify-between text-center rounded-2xl border-2 border-[#29324c] transition-all cursor-pointer focus-visible:outline-3 focus-visible:outline-[#6650b7] disabled:opacity-40 disabled:cursor-not-allowed select-none ${cardPaddingClasses} ${
+      className={`group relative w-full flex items-center justify-between text-left rounded-2xl border-2 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-purple-500 disabled:opacity-40 disabled:cursor-not-allowed select-none p-3 sm:p-3.5 backdrop-blur-md gap-2.5 ${
         isSelected
-          ? "bg-[#ffce71] text-[#29324c] shadow-[0_4px_0_#d6ad63] -translate-y-0.5"
-          : "bg-[#fffefa] hover:bg-[#edf7ff] text-[#29324c] shadow-[0_2px_0_#d7e1e8] hover:shadow-[0_4px_0_#d7e1e8] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_1px_0_#d7e1e8]"
+          ? "border-purple-600 bg-purple-50/95 shadow-[0_4px_16px_rgba(102,80,183,0.2)] -translate-y-0.5"
+          : "border-white/90 bg-white/80 hover:bg-white text-slate-800 shadow-xs hover:border-purple-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
       } ${className}`}
     >
-      {/* Selection Checkmark Badge */}
+      {/* Letter Identifier Chip */}
       <div
-        className={`absolute rounded-full border-2 border-[#29324c] flex items-center justify-center shrink-0 transition-colors pointer-events-none ${badgeSizeClasses} ${
+        className={`w-6 h-6 rounded-lg font-black text-xs flex items-center justify-center shrink-0 transition-colors ${
           isSelected
-            ? "bg-[#29324c] text-white"
-            : "bg-white/80 text-transparent opacity-60 group-hover:opacity-100"
+            ? "bg-purple-600 text-white shadow-xs"
+            : "bg-purple-100/90 text-purple-700 border border-purple-200/80"
         }`}
         aria-hidden="true"
       >
-        {isSelected && (
-          <Check
-            size={isCompact ? 10 : 13}
-            className="stroke-[3]"
-          />
-        )}
-      </div>
-
-      {/* Visual Image / Illustration Container */}
-      <div
-        className={`flex items-center justify-center rounded-xl bg-white/70 border border-[#29324c]/10 mb-1.5 sm:mb-2 p-1.5 overflow-hidden transition-transform duration-200 group-hover:scale-105 ${imageSizeClasses}`}
-      >
-        {option.imageUrl && !imgError ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={option.imageUrl}
-            alt={option.text}
-            width={96}
-            height={96}
-            decoding="async"
-            onError={() => setImgError(true)}
-            className="w-full h-full object-contain pointer-events-none"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center text-[#6650b7]">
-            <Sparkles size={isCompact ? 18 : 24} />
-          </div>
-        )}
+        {letter}
       </div>
 
       {/* Readable Answer Text */}
-      <span
-        className={`w-full tracking-tight text-[#29324c] px-1 leading-snug break-normal hyphens-none ${textSizeClasses}`}
-      >
+      <span className="flex-1 text-xs sm:text-sm font-black text-slate-800 leading-snug">
         {option.text}
       </span>
+
+      {/* Radio Selection Indicator */}
+      <div
+        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+          isSelected
+            ? "border-purple-600 bg-purple-600 text-white shadow-xs"
+            : "border-slate-300 bg-white/60 text-transparent group-hover:border-purple-400"
+        }`}
+        aria-hidden="true"
+      >
+        {isSelected && <Check size={11} className="stroke-[3]" />}
+      </div>
     </button>
   );
 }
+

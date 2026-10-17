@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { saveQuiz } from "@/lib/quiz/storage";
 import { QuizData, Gender } from "@/lib/quiz/types";
 import { hashPin, generateCreatorToken, generateQuizId, generateQuizSlug } from "@/lib/quiz/security";
-import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
+import { ALL_AVAILABLE_QUIZ_QUESTIONS, getQuestionById } from "@/lib/quiz/questions";
 import { readJsonWithLimit } from "@/lib/quiz/requestBody";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const validQuestionIds = new Set(DEFAULT_QUIZ_QUESTIONS.map((q) => q.id));
+    const validQuestionIds = new Set(ALL_AVAILABLE_QUIZ_QUESTIONS.map((q) => q.id));
     const seenQuestionIds = new Set<string>();
 
     const validatedQuestions: QuizData["questions"] = [];
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
       }
       seenQuestionIds.add(q.questionId);
 
-      const originalQuestion = DEFAULT_QUIZ_QUESTIONS.find((def) => def.id === q.questionId)!;
+      const originalQuestion = getQuestionById(q.questionId)!;
 
       const correctOptionId = Number(q.correctOptionId);
       if (

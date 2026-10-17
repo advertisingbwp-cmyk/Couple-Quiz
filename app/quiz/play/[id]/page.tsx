@@ -7,9 +7,11 @@ import { ArrowRight, Loader2, Sparkles, AlertCircle, RefreshCw } from "lucide-re
 import { quizAudio } from "@/lib/quiz/audio";
 import { QuizPublicData } from "@/lib/quiz/types";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
+import { MascotScene } from "@/components/design-preview/MascotScene";
+import { ProgressPills } from "@/components/design-preview/ProgressPills";
 import {
   VisualOptionCard,
-  getVisualOptionGridClasses,
+  getGlassOptionGridClasses,
 } from "@/components/quiz/VisualOptionCard";
 
 export default function QuizPlayPage({
@@ -151,9 +153,9 @@ export default function QuizPlayPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
-        <div className="text-center font-black text-[#29324c] text-base flex items-center gap-2.5">
-          <Loader2 className="animate-spin text-[#6650b7]" size={24} />
+      <div className="min-h-screen bg-gradient-to-b from-[#e3f2fd] via-[#f3e8ff] to-[#fce7f3] flex items-center justify-center p-4">
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-white/90 shadow-sm text-center font-black text-slate-800 text-sm flex items-center gap-2.5">
+          <Loader2 className="animate-spin text-purple-600" size={20} />
           <span>Loading challenge... ✦</span>
         </div>
       </div>
@@ -162,27 +164,27 @@ export default function QuizPlayPage({
 
   if (error || !quiz) {
     return (
-      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4 font-sans">
-        <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border-2 border-[#29324c] shadow-[0_6px_0_#d6ad63] text-center">
-          <AlertCircle size={44} className="text-[#a52938] mx-auto mb-3" />
-          <h2 className="text-xl sm:text-2xl font-black text-[#29324c] mb-1.5 tracking-tight">
+      <div className="min-h-screen bg-gradient-to-b from-[#e3f2fd] via-[#f3e8ff] to-[#fce7f3] flex items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/90 shadow-[0_10px_30px_rgba(102,80,183,0.1)] text-center">
+          <AlertCircle size={44} className="text-rose-500 mx-auto mb-3" />
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1.5 tracking-tight">
             Quiz Unavailable
           </h2>
-          <p className="text-xs sm:text-sm font-bold text-[#536079] mb-5 leading-relaxed">
+          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-5 leading-relaxed">
             {error || "This quiz may have been deleted, or could not be reached right now."}
           </p>
           <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
             <button
               type="button"
               onClick={loadQuiz}
-              className="py-3 px-5 bg-white hover:bg-[#edf7ff] text-[#29324c] font-black rounded-2xl border-2 border-[#29324c] shadow-[0_2px_0_#d7e1e8] text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="py-2.5 px-5 bg-white hover:bg-slate-50 text-slate-800 font-black rounded-xl border border-slate-200 shadow-xs text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <RefreshCw size={15} />
+              <RefreshCw size={14} />
               <span>Try Again</span>
             </button>
             <Link
               href="/quiz"
-              className="py-3 px-5 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black rounded-2xl border-2 border-[#29324c] shadow-[0_3px_0_#d6ad63] text-xs sm:text-sm uppercase tracking-wider transition-all text-center inline-flex items-center justify-center"
+              className="py-2.5 px-5 bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-black rounded-xl shadow-[0_3px_12px_rgba(102,80,183,0.25)] text-xs sm:text-sm transition-all text-center inline-flex items-center justify-center"
             >
               Create Your Own Quiz
             </Link>
@@ -194,59 +196,73 @@ export default function QuizPlayPage({
 
   const creatorName = quiz.creatorName;
   const currentQ = quiz.questions[currentIndex];
-  const progressPercent = Math.min(
-    100,
-    Math.round(((currentIndex) / quiz.questions.length) * 100)
+  const isPhotographic = currentQ.options.every(
+    (opt) =>
+      opt.imageUrl &&
+      (opt.imageUrl.endsWith(".webp") ||
+        opt.imageUrl.endsWith(".jpg") ||
+        opt.imageUrl.endsWith(".png"))
   );
 
   return (
-    <div className="min-h-screen bg-[#edf7ff] text-[#29324c] flex flex-col font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#e3f2fd] via-[#f3e8ff] to-[#fce7f3] text-slate-800 flex flex-col font-sans relative overflow-x-hidden selection:bg-purple-200">
+      {/* Ambient background light orbs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-300/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 right-10 w-80 h-80 bg-purple-300/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-80 h-80 bg-pink-300/20 rounded-full blur-3xl pointer-events-none" />
+
       {/* Brand Header */}
-      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-3 flex items-center justify-between">
+      <header className="relative z-10 max-w-xl mx-auto w-full px-3.5 sm:px-4 pt-2.5 pb-1 flex items-center justify-between">
         <Link
           href="/quiz"
-          className="inline-flex items-center gap-2.5 no-underline group focus-visible:outline-3 focus-visible:outline-[#6650b7]"
+          className="inline-flex items-center gap-1.5 group focus-visible:outline-2 focus-visible:outline-purple-500 rounded-lg"
           aria-label="Click & Clique homepage"
         >
-          <BrandMark />
-          <span className="text-xl font-black tracking-tight text-[#29324c]">
-            click <span className="text-[#6650b7] font-medium">&amp;</span> clique
-            <span className="text-[#bd4a66]">.</span>
+          <div className="w-5 h-5 flex items-center justify-center">
+            <BrandMark />
+          </div>
+          <span className="text-sm sm:text-base font-black tracking-tight text-slate-900">
+            click <span className="text-purple-600 font-medium">&amp;</span> clique
+            <span className="text-pink-500">.</span>
           </span>
         </Link>
         {isStarted && (
-          <span className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63]">
+          <span className="text-[11px] font-black bg-white/80 text-purple-700 px-3 py-1 rounded-full border border-purple-200 shadow-xs">
             {currentIndex + 1} of {quiz.questions.length}
           </span>
         )}
       </header>
 
       {/* Main Container */}
-      <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-4 flex flex-col justify-center">
+      <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-3 sm:px-4 py-2 flex flex-col justify-start">
         {!isStarted ? (
           /* Step 1: Friend Name Input Screen */
-          <div className="w-full bg-white rounded-3xl p-6 sm:p-8 shadow-[0_6px_0_#d6ad63] border-2 border-[#29324c] text-center relative">
-            <div className="inline-flex items-center gap-1.5 bg-[#edf7ff] text-[#6650b7] font-black text-xs uppercase px-3 py-1 rounded-full border border-[#d7e6ef] mb-3">
-              <Sparkles size={14} />
-              Friendship Challenge
+          <div className="w-full max-w-md mx-auto bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-[0_12px_36px_rgba(102,80,183,0.12)] border border-white/90 text-center relative mt-2 sm:mt-4">
+            <div className="w-full flex justify-center -mb-2 z-10 relative">
+              <MascotScene mood="happy" />
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-[#29324c] tracking-tight leading-snug">
+            <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 font-black text-xs uppercase px-3 py-1 rounded-full border border-purple-200/80 mb-3 shadow-xs">
+              <Sparkles size={13} className="text-purple-600" />
+              <span>Friendship Challenge</span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
               How well do you know{" "}
-              <span className="text-[#6650b7] underline decoration-[#ffce71] decoration-4 underline-offset-4">
+              <span className="text-purple-600 underline decoration-amber-300 decoration-4 underline-offset-4">
                 {creatorName}
               </span>
               ? ✦
             </h1>
-            <p className="text-xs sm:text-sm text-[#536079] mt-2 font-medium">
-              Answer {quiz.questions.length} questions to reveal your friendship score!
+            <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">
+              Answer {quiz.questions.length} questions to reveal your match score!
             </p>
 
-            <form onSubmit={handleStartPlay} className="mt-6 space-y-4 text-left">
+            <form onSubmit={handleStartPlay} className="mt-5 space-y-3.5 text-left">
               <div>
                 <label
                   htmlFor="player-name-input"
-                  className="block text-xs font-black uppercase text-[#29324c] tracking-wider mb-1.5"
+                  className="block text-xs font-black uppercase text-slate-700 tracking-wider mb-1.5"
                 >
                   Enter Your Name
                 </label>
@@ -260,49 +276,61 @@ export default function QuizPlayPage({
                   }}
                   placeholder="e.g. Zainab or Hamza"
                   maxLength={40}
-                  className="w-full px-4 py-3.5 text-base font-bold bg-[#fffefa] text-[#29324c] rounded-2xl border-2 border-[#29324c] focus:outline-none focus:ring-4 focus:ring-[#6650b7]/20 transition-all shadow-[0_2px_0_#d7e1e8]"
+                  className="w-full px-4 py-3 text-sm sm:text-base font-bold bg-white text-slate-800 rounded-xl border border-slate-300 focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
                 />
-                {error && <p className="text-xs font-bold text-[#a52938] mt-1.5 ml-1" role="alert">{error}</p>}
+                {error && (
+                  <p className="text-xs font-bold text-rose-600 mt-1.5 ml-1" role="alert">
+                    {error}
+                  </p>
+                )}
               </div>
 
               <button
                 type="submit"
-                className="w-full py-4 px-6 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black text-base sm:text-lg rounded-2xl border-2 border-[#29324c] shadow-[0_4px_0_#d6ad63] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                className="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-black text-sm sm:text-base rounded-xl shadow-[0_4px_16px_rgba(102,80,183,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
               >
                 <span>Accept Challenge</span>
-                <ArrowRight size={20} className="stroke-[3]" />
+                <ArrowRight size={18} className="stroke-[3]" />
               </button>
             </form>
           </div>
         ) : isSubmitting ? (
-          <div className="w-full bg-white rounded-3xl p-8 border-2 border-[#29324c] shadow-[0_6px_0_#d6ad63] text-center">
-            <Loader2 size={40} className="animate-spin text-[#6650b7] mx-auto mb-3" />
-            <h2 className="text-xl font-black text-[#29324c]">Calculating your score...</h2>
-            <p className="text-xs text-[#536079] mt-1 font-medium">Checking how well you matched {creatorName}! 🎯</p>
+          <div className="w-full max-w-md mx-auto bg-white/85 backdrop-blur-xl rounded-3xl p-8 border border-white/90 shadow-[0_12px_36px_rgba(102,80,183,0.12)] text-center">
+            <div className="w-full flex justify-center -mb-2 z-10 relative">
+              <MascotScene mood="happy" />
+            </div>
+            <Loader2 size={36} className="animate-spin text-purple-600 mx-auto mb-3" />
+            <h2 className="text-lg sm:text-xl font-black text-slate-900">
+              Calculating your score...
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
+              Checking how well you matched {creatorName}! 🎯
+            </p>
           </div>
         ) : (
-          <div>
-            {/* Progress Bar */}
-            <div className="w-full bg-white h-3.5 rounded-full border-2 border-[#29324c] overflow-hidden mb-4 p-0.5 shadow-[0_2px_0_#d7e1e8]">
-              <div
-                className="bg-gradient-to-r from-[#6650b7] to-[#ffce71] h-full rounded-full transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-                role="progressbar"
-                aria-valuenow={progressPercent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Quiz progress"
-              />
+          <div className="w-full space-y-2 sm:space-y-3">
+            {/* Top Progress Tracker (10 Numbered Pills) */}
+            <ProgressPills
+              total={quiz.questions.length}
+              current={currentIndex + 1}
+            />
+
+            {/* Mascot Duo positioned snug above the card */}
+            <div className="w-full flex justify-center -mb-2.5 z-10 relative">
+              <MascotScene mood={isTransitioning ? "thinking" : "happy"} />
             </div>
 
             {/* Submission Error Banner */}
             {submissionError && (
-              <div className="mb-4 bg-[#fff1f2] border-2 border-[#a52938] text-[#a52938] p-4 rounded-2xl shadow-[0_3px_0_#a52938] text-center" role="alert">
+              <div
+                className="bg-rose-50 border border-rose-300 text-rose-700 p-3.5 rounded-2xl shadow-xs text-center"
+                role="alert"
+              >
                 <p className="text-xs sm:text-sm font-black mb-2">{submissionError}</p>
                 <button
                   type="button"
                   onClick={() => submitAttempt(selectedAnswersMap, clientAttemptId)}
-                  className="py-2.5 px-5 bg-[#ffce71] hover:bg-[#ffdb92] text-[#29324c] font-black text-xs uppercase rounded-xl border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63] transition-all cursor-pointer"
+                  className="py-2 px-4 bg-rose-600 text-white font-black text-xs uppercase rounded-xl shadow-xs hover:bg-rose-500 transition-all cursor-pointer"
                 >
                   Retry Submission 🚀
                 </button>
@@ -310,43 +338,59 @@ export default function QuizPlayPage({
             )}
 
             {/* Question Card */}
-            <article className="w-full bg-white rounded-3xl p-6 sm:p-7 shadow-[0_6px_0_#d6ad63] border-2 border-[#29324c] relative transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black uppercase tracking-wider text-[#6650b7] bg-[#edf7ff] px-3 py-1 rounded-lg border border-[#d7e6ef]">
+            <article className="w-full bg-white/80 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-white/90 shadow-[0_8px_24px_rgba(102,80,183,0.08)] text-center relative overflow-hidden transition-all duration-300">
+              {/* Soft decorative line across top of card */}
+              <div className="absolute top-0 inset-x-8 h-1 bg-gradient-to-r from-transparent via-purple-300/40 to-transparent" />
+
+              {/* Question Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300/80 font-black text-[10px] sm:text-xs uppercase tracking-wider mb-1.5 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span>
                   Question {currentIndex + 1} of {quiz.questions.length}
                 </span>
-                <span className="text-2xl" aria-hidden="true">{currentQ.emoji || "✦"}</span>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-black text-[#29324c] tracking-tight leading-snug mb-3">
+              {/* Question Title */}
+              <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight leading-snug px-1">
                 {currentQ.question}
               </h2>
 
-              <p className="text-xs font-bold text-[#536079] mb-5">
-                What do you think <span className="text-[#6650b7] font-black">{creatorName}</span> picked?
+              <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-1">
+                What do you think{" "}
+                <span className="text-purple-600 font-bold">{creatorName}</span> picked?
               </p>
+            </article>
 
-              {/* Visual Options Grid */}
+            {/* Visual Options Grid */}
+            <section aria-label="Answer Options" className="w-full pt-0.5">
               <div
-                className={getVisualOptionGridClasses(currentQ.options.length)}
+                className={getGlassOptionGridClasses(
+                  currentQ.options.length,
+                  isPhotographic
+                )}
                 role="radiogroup"
                 aria-label={currentQ.question}
               >
-                {currentQ.options.map((option) => (
+                {currentQ.options.map((option, index) => (
                   <VisualOptionCard
                     key={option.id}
                     option={option}
-                    isSelected={selectedAnswersMap[currentQ.questionId] === option.id}
+                    optionIndex={index}
+                    isSelected={
+                      selectedAnswersMap[currentQ.questionId] === option.id
+                    }
                     onSelect={handleSelectOption}
                     disabled={isTransitioning || isSubmitting}
                     totalOptions={currentQ.options.length}
+                    forceTextCard={!isPhotographic && !option.imageUrl?.endsWith(".svg")}
                   />
                 ))}
               </div>
-            </article>
+            </section>
           </div>
         )}
       </main>
     </div>
   );
 }
+

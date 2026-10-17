@@ -3145,6 +3145,385 @@ export function getQuestionsByCategory(category: QuizQuestionCategory): QuizQues
   return DEFAULT_QUIZ_QUESTIONS.filter((q) => q.category === category);
 }
 
-export function getQuestionById(id: string): QuizQuestion | undefined {
-  return DEFAULT_QUIZ_QUESTIONS.find((q) => q.id === id);
+// -------------------------------------------------------------
+// Phase 10.2 / 10.3 Curated 30-Question Bank
+// -------------------------------------------------------------
+
+export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
+  {
+    id: "curated_u01",
+    category: "food",
+    question: "If we're ordering late-night comfort food, what are we getting?",
+    emoji: "🍕",
+    options: [
+      { id: 0, text: "Fresh Cheesy Pizza 🍕", imageUrl: "/prototype/photos/pizza.webp" },
+      { id: 1, text: "Juicy Burger & Crispy Fries 🍔", imageUrl: "/prototype/photos/burger.webp" },
+    ],
+  },
+  {
+    id: "curated_u02",
+    category: "hobbies",
+    question: "What's our dream way to spend an unexpected free Saturday?",
+    emoji: "✨",
+    options: [
+      { id: 0, text: "Scenic Mountain Road Trip 🚗", imageUrl: "/prototype/photos/roadtrip.webp" },
+      { id: 1, text: "Chilling by the Beach Sunset 🏖️", imageUrl: "/prototype/photos/beach.webp" },
+      { id: 2, text: "All-Day Gaming Marathon 🎮", imageUrl: "/prototype/photos/gaming.webp" },
+      { id: 3, text: "Live Music Concert & Crowd 🎶", imageUrl: "/prototype/photos/concert.webp" },
+    ],
+  },
+  {
+    id: "curated_u03",
+    category: "habits",
+    question: "How many alarms does it honestly take to get me out of bed?",
+    emoji: "⏰",
+    options: [
+      { id: 0, text: "Exactly one — up immediately ⏰" },
+      { id: 1, text: "2 to 3 alarms spaced 5 mins apart 📱" },
+      { id: 2, text: "Chronic snooze button survivor 😴" },
+      { id: 3, text: "No alarms needed, natural clock 😎" },
+    ],
+  },
+  {
+    id: "curated_u04",
+    category: "habits",
+    question: "When I'm excited or telling you a wild story, how do I text?",
+    emoji: "💬",
+    options: [
+      { id: 0, text: "Rapid-fire 10 short messages in a row 💬⚡" },
+      { id: 1, text: "One giant, well-crafted paragraph essay 📝✨" },
+    ],
+  },
+  {
+    id: "curated_u05",
+    category: "habits",
+    question: "When a major deadline or exam is tomorrow, what's my energy?",
+    emoji: "📚",
+    options: [
+      { id: 0, text: "Prepared days in advance, calm & organized 📚" },
+      { id: 1, text: "High-stakes grind the night before 🌙" },
+      { id: 2, text: "Panic cramming 15 mins before 😭⚡" },
+      { id: 3, text: "Inshallah & pure vibes only 💀✨" },
+    ],
+  },
+  {
+    id: "curated_u06",
+    category: "food",
+    question: "What is my official stance on the pizza crust?",
+    emoji: "🍕",
+    options: [
+      { id: 0, text: "Eat every single bite — crust is the best part! 😋" },
+      { id: 1, text: "Leave it on the plate like a pizza handle 🙅" },
+    ],
+  },
+  {
+    id: "curated_u07",
+    category: "food",
+    question: "How much spice can I actually handle before tearing up?",
+    emoji: "🌶️",
+    options: [
+      { id: 0, text: "Mild only — glass of milk on standby 🥛" },
+      { id: 1, text: "Bring on the extra chili and hot sauce! 🔥🌶️" },
+    ],
+  },
+  {
+    id: "curated_u08",
+    category: "habits",
+    question: "What is my absolute favorite mode on a lazy, rainy Sunday?",
+    emoji: "🌧️",
+    options: [
+      { id: 0, text: "Sleeping in under a cozy duvet 🛌", imageUrl: "/prototype/photos/sleeping.webp" },
+      { id: 1, text: "Fresh warm cappuccino & quiet morning ☕", imageUrl: "/prototype/photos/coffee.webp" },
+    ],
+  },
+  {
+    id: "curated_u09",
+    category: "childhood",
+    question: "What was my absolute favorite playground game growing up?",
+    emoji: "🛝",
+    options: [
+      { id: 0, text: "Hide-and-seek champion 🙈" },
+      { id: 1, text: "Tag & running full speed 🏃" },
+      { id: 2, text: "UNO & card game rivalries 🃏" },
+      { id: 3, text: "Street soccer / kickball ⚽" },
+    ],
+  },
+  {
+    id: "curated_u10",
+    category: "childhood",
+    question: "Where did I usually gravitate in any classroom or lecture hall?",
+    emoji: "🏫",
+    options: [
+      { id: 0, text: "Front row — locked in and observant 🥇" },
+      { id: 1, text: "Back row corner — relaxed and chatting 😎" },
+    ],
+  },
+];
+
+export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
+  {
+    id: "curated_h01",
+    category: "preferences",
+    question: "Where does my discretionary money disappear to the fastest?",
+    emoji: "💸",
+    options: [
+      { id: 0, text: "Good food & late-night munchies 🍔" },
+      { id: 1, text: "Fresh sneakers & clothes 👟" },
+      { id: 2, text: "Gaming passes & gear 🎮" },
+      { id: 3, text: "Tech gadgets & accessories 🎧" },
+      { id: 4, text: "Fuel & road trips with the crew 🚗" },
+      { id: 5, text: "Secretly disciplined saver 💰" },
+    ],
+  },
+  {
+    id: "curated_h02",
+    category: "habits",
+    question: "How do I actually carry my backpack or gym bag?",
+    emoji: "🎒",
+    options: [
+      { id: 0, text: "Both straps on, ergonomic and secure 🎒" },
+      { id: 1, text: "Slung over one shoulder, easygoing 😎" },
+    ],
+  },
+  {
+    id: "curated_h03",
+    category: "favorites",
+    question: "Which animated show can I still rewatch without ever getting bored?",
+    emoji: "📺",
+    options: [
+      { id: 0, text: "Shonen Anime battles ⚔️" },
+      { id: 1, text: "SpongeBob SquarePants classics 🧽" },
+      { id: 2, text: "Avatar: The Last Airbender 🌪️" },
+      { id: 3, text: "Gravity Falls & Cartoon Network gold 🌲" },
+    ],
+  },
+  {
+    id: "curated_h04",
+    category: "habits",
+    question: "When a hot meal arrives, what is my eating speed?",
+    emoji: "🍽️",
+    options: [
+      { id: 0, text: "Inhaled in 3 minutes flat ⚡🍽️" },
+      { id: 1, text: "Taking my sweet time, conversation pace 🐢🥗" },
+    ],
+  },
+  {
+    id: "curated_h05",
+    category: "funny scenarios",
+    question: "Which of these would give me genuine chills?",
+    emoji: "😨",
+    options: [
+      { id: 0, text: "Medical injections & needles 💉" },
+      { id: 1, text: "Massive vertical drop roller coasters 🎢" },
+    ],
+  },
+  {
+    id: "curated_h06",
+    category: "food",
+    question: "What is my policy on ketchup and hot sauce with fries?",
+    emoji: "🥫",
+    options: [
+      { id: 0, text: "Minimalist dip — let the food speak 🍟" },
+      { id: 1, text: "Completely drowning the plate in sauce 🥫🍅" },
+    ],
+  },
+  {
+    id: "curated_h07",
+    category: "habits",
+    question: "What position am I usually found sleeping in?",
+    emoji: "💤",
+    options: [
+      { id: 0, text: "Curled on my side 😴" },
+      { id: 1, text: "Flat on my stomach 🛏️" },
+      { id: 2, text: "Hands folded on my back like a statue 😌" },
+    ],
+  },
+  {
+    id: "curated_h08",
+    category: "hobbies",
+    question: "When I turn on a video game, what mode am I in?",
+    emoji: "🎮",
+    options: [
+      { id: 0, text: "Ranked competitive sweat — here to win 🏆" },
+      { id: 1, text: "Casual open-world chill — just exploring 🌿" },
+    ],
+  },
+  {
+    id: "curated_h09",
+    category: "childhood",
+    question: "Which game brings out my most competitive streak?",
+    emoji: "🎲",
+    options: [
+      { id: 0, text: "Monopoly property empire 🎩" },
+      { id: 1, text: "UNO friendship-destroying +4s 🃏" },
+      { id: 2, text: "Jenga high-stakes tower 🪵" },
+      { id: 3, text: "Connect Four tactical grid 🔴" },
+    ],
+  },
+  {
+    id: "curated_h10",
+    category: "food",
+    question: "If we make a sudden late-night food run, what do I pick first?",
+    emoji: "🍔",
+    options: [
+      { id: 0, text: "Loaded Smash Burger 🍔", imageUrl: "/prototype/photos/burger.webp" },
+      { id: 1, text: "Crispy Stone-Baked Pizza 🍕", imageUrl: "/prototype/photos/pizza.webp" },
+    ],
+  },
+];
+
+export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
+  {
+    id: "curated_g01",
+    category: "preferences",
+    question: "What is the 100% foolproof way to instantly boost my mood?",
+    emoji: "✨",
+    options: [
+      { id: 0, text: "Delicious sweet treat or comfort dessert 🍰" },
+      { id: 1, text: "Genuine, heartfelt compliments & hugs 💕" },
+      { id: 2, text: "Spontaneous retail therapy & shopping 🛍️" },
+      { id: 3, text: "Uninterrupted 10-hour beauty sleep 😴" },
+      { id: 4, text: "Juicy gossip & deep talk with besties ☕" },
+      { id: 5, text: "Relaxing quiet cafe date ☕✨" },
+    ],
+  },
+  {
+    id: "curated_g02",
+    category: "funny scenarios",
+    question: "How long do I actually get lost scrolling on my phone in the bathroom?",
+    emoji: "📱",
+    options: [
+      { id: 0, text: "2 minutes flat — quick check ⏱️" },
+      { id: 1, text: "Until my legs are genuinely numb from TikTok 📱🦵" },
+    ],
+  },
+  {
+    id: "curated_g03",
+    category: "preferences",
+    question: "Which aesthetic color palette dominates my favorite outfits?",
+    emoji: "🎨",
+    options: [
+      { id: 0, text: "Minimalist Monochrome (Black & White) 🖤" },
+      { id: 1, text: "Soft Dreamy Pastels (Lavender & Pink) 🎀" },
+      { id: 2, text: "Warm Earth Tones (Sage & Neutral Beige) 🌿" },
+      { id: 3, text: "Bold Statement (Cherry Red & Burgundy) 🍒" },
+    ],
+  },
+  {
+    id: "curated_g04",
+    category: "habits",
+    question: "What is my most relatable everyday guilty habit?",
+    emoji: "😬",
+    options: [
+      { id: 0, text: "Overthinking random conversations at 2 AM 🧠🌙" },
+      { id: 1, text: "Forgetting my passwords every single month 🔐😅" },
+      { id: 2, text: "Filling online shopping carts and never buying 🛍️" },
+      { id: 3, text: "Watching TikToks when I should be fast asleep 📱💤" },
+    ],
+  },
+  {
+    id: "curated_g05",
+    category: "preferences",
+    question: "What behavior gives me the quickest instant ick?",
+    emoji: "🙅‍♀️",
+    options: [
+      { id: 0, text: "Two-faced people & fake energy 🎭" },
+      { id: 1, text: "Broken promises & last-minute cancellations 😕" },
+      { id: 2, text: "Chronic slow texters who stay online 📱🙄" },
+      { id: 3, text: "People who chew loudly 🤐" },
+    ],
+  },
+  {
+    id: "curated_g06",
+    category: "habits",
+    question: "What sounds do I make when I'm sound asleep?",
+    emoji: "😴",
+    options: [
+      { id: 0, text: "Completely silent angel 😇" },
+      { id: 1, text: "Soft gentle breathing 💤" },
+      { id: 2, text: "Full-on sleep talker or giggler 💬😂" },
+      { id: 3, text: "Subtle locomotive snorer 🚂" },
+    ],
+  },
+  {
+    id: "curated_g07",
+    category: "preferences",
+    question: "What is my absolute favorite everyday hair vibe?",
+    emoji: "💇‍♀️",
+    options: [
+      { id: 0, text: "Soft, effortless beach waves 🎀" },
+      { id: 1, text: "Sleek, glossy and pin-straight ✨" },
+      { id: 2, text: "The effortless claw-clip messy bun 🦋" },
+      { id: 3, text: "Fresh braids or high ponytail 🩰" },
+    ],
+  },
+  {
+    id: "curated_g08",
+    category: "food",
+    question: "When we sit down at an aesthetic cafe, what's my go-to order?",
+    emoji: "☕",
+    options: [
+      { id: 0, text: "Warm Artisan Cappuccino with Latte Art ☕" },
+      { id: 1, text: "Sweet Blended Iced Caramel Beverage 🥤" },
+    ],
+  },
+  {
+    id: "curated_g09",
+    category: "favorites",
+    question: "Where did my first romance or crush story begin?",
+    emoji: "💘",
+    options: [
+      { id: 0, text: "Classroom / campus hallway glance 🏫" },
+      { id: 1, text: "Introduced through mutual close friends 🫶" },
+      { id: 2, text: "Slid into the DMs / social media 📱" },
+      { id: 3, text: "Still waiting on my main-character moment 😅✨" },
+    ],
+  },
+  {
+    id: "curated_g10",
+    category: "preferences",
+    question: "What denim silhouette do I wear the most?",
+    emoji: "👖",
+    options: [
+      { id: 0, text: "Relaxed, wide-leg baggy fit 👖" },
+      { id: 1, text: "Classic timeless straight leg 🩵" },
+      { id: 2, text: "Retro 70s flare ✨" },
+      { id: 3, text: "Sleek high-waisted slim 🫧" },
+    ],
+  },
+];
+
+export const CURATED_QUIZ_QUESTIONS: QuizQuestion[] = [
+  ...CURATED_UNIVERSAL_QUESTIONS,
+  ...CURATED_HIM_QUESTIONS,
+  ...CURATED_HER_QUESTIONS,
+];
+
+export const ALL_AVAILABLE_QUIZ_QUESTIONS: QuizQuestion[] = [
+  ...CURATED_QUIZ_QUESTIONS,
+  ...DEFAULT_QUIZ_QUESTIONS,
+];
+
+export type CuratedTheme = "universal" | "him" | "her" | "all";
+
+export function getCuratedQuestionsByTheme(theme: CuratedTheme): QuizQuestion[] {
+  switch (theme) {
+    case "universal":
+      return CURATED_UNIVERSAL_QUESTIONS;
+    case "him":
+      return CURATED_HIM_QUESTIONS;
+    case "her":
+      return CURATED_HER_QUESTIONS;
+    case "all":
+    default:
+      return CURATED_QUIZ_QUESTIONS;
+  }
 }
+
+export function getQuestionById(id: string): QuizQuestion | undefined {
+  return (
+    CURATED_QUIZ_QUESTIONS.find((q) => q.id === id) ||
+    DEFAULT_QUIZ_QUESTIONS.find((q) => q.id === id)
+  );
+}
+
