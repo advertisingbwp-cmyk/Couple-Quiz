@@ -107,8 +107,8 @@ export function PhotographicOptionCard({
       {/* Option Text Label */}
       <div className="w-full mt-1.5 sm:mt-2 text-center px-0.5">
         <span
-          className={`block font-extrabold tracking-tight leading-snug line-clamp-1 ${
-            compact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"
+          className={`min-h-[2.25rem] sm:min-h-[2.5rem] flex items-center justify-center font-extrabold tracking-tight leading-tight break-words text-center ${
+            compact ? "text-[10px] sm:text-[11px]" : "text-[11px] sm:text-xs"
           }`}
         >
           {option.label}

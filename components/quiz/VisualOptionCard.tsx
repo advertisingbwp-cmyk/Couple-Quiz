@@ -170,8 +170,12 @@ export function VisualOptionCard({
           />
         </div>
 
-        {/* Clean text label */}
-        <span className="w-full text-xs sm:text-sm font-black text-slate-800 px-1 py-0.5 leading-snug line-clamp-1">
+        {/* Clean text label with auto wrap and responsive compact sizing */}
+        <span
+          className={`w-full min-h-[2.25rem] sm:min-h-[2.5rem] flex items-center justify-center font-black text-slate-800 px-1 py-0.5 leading-tight text-center break-words ${
+            totalOptions >= 6 ? "text-[10px] sm:text-[11px]" : "text-[11px] sm:text-xs"
+          }`}
+        >
           {option.text}
         </span>
       </button>
@@ -222,8 +226,8 @@ export function VisualOptionCard({
         </div>
 
         <span
-          className={`w-full text-slate-800 px-1 leading-snug font-black ${
-            isCompact ? "text-[11px] sm:text-xs line-clamp-1" : "text-xs sm:text-sm"
+          className={`w-full min-h-[2.25rem] sm:min-h-[2.5rem] flex items-center justify-center text-slate-800 px-1 py-0.5 leading-tight font-black text-center break-words ${
+            isCompact ? "text-[10px] sm:text-[11px]" : "text-[11px] sm:text-xs"
           }`}
         >
           {option.text}
