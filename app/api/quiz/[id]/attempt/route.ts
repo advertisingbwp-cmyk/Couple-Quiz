@@ -2,7 +2,7 @@ import { StorageUnavailableError } from "@/lib/quiz/storage";
 import { NextResponse } from "next/server";
 import { getQuizById, recordAttemptAtomic } from "@/lib/quiz/storage";
 import { PlayerAttempt } from "@/lib/quiz/types";
-import { generateAttemptId } from "@/lib/quiz/security";
+import { generateAttemptId, generatePlayerSessionToken } from "@/lib/quiz/security";
 import { readJsonWithLimit } from "@/lib/quiz/requestBody";
 
 export const dynamic = "force-dynamic";
@@ -174,28 +174,54 @@ export async function POST(
       );
     }
 
+    const playerToken = generatePlayerSessionToken(id, result.attempt.id);
+
     if (result.status === "duplicate") {
       // Return the persisted database attempt result
-      return NextResponse.json({
+      const res = NextResponse.json({
         success: true,
         score: result.attempt.score,
         totalQuestions: result.attempt.totalQuestions,
         creatorName: quiz.creatorName,
         gender: quiz.gender,
         attemptId: result.attempt.id,
+        playerName: result.attempt.playerName,
+        playerToken,
         alreadyRecorded: true,
       });
+      res.cookies.set({
+        name: `ply_ses_${id}`,
+        value: playerToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+      });
+      return res;
     }
 
     // result.status === "recorded"
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       score: result.attempt.score,
       totalQuestions: result.attempt.totalQuestions,
       creatorName: quiz.creatorName,
       gender: quiz.gender,
       attemptId: result.attempt.id,
+      playerName: result.attempt.playerName,
+      playerToken,
     });
+    res.cookies.set({
+      name: `ply_ses_${id}`,
+      value: playerToken,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    });
+    return res;
   } catch (err) {
     if (err instanceof StorageUnavailableError)
       return NextResponse.json({ success: false, error: "Storage temporarily unavailable." }, { status: 503 });

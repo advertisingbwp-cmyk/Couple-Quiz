@@ -8,6 +8,7 @@ import {
   dbGetQuizPublic,
   dbRecordAttemptAtomic,
   dbFetchAttempts,
+  dbFetchAttemptById,
   dbDeleteAttempt,
   dbDeleteQuiz,
   isSupabaseConfigured,
@@ -250,10 +251,22 @@ export function createQuizStorage(filePath = path.join(process.cwd(), "data", "q
     return true;
   }
 
+  async function getAttemptById(quizId: string, attemptId: string): Promise<PlayerAttempt | null> {
+    if (isSupabaseConfigured()) {
+      const att = await dbFetchAttemptById(attemptId);
+      if (!att || att.quizId !== quizId) return null;
+      return att;
+    }
+    const atts = local().attempts[quizId] || [];
+    const found = atts.find((a) => a.id === attemptId);
+    return found ? structuredClone(found) : null;
+  }
+
   return {
     saveQuiz,
     getQuizById,
     getQuizPublicData,
+    getAttemptById,
     recordAttempt,
     recordAttemptAtomic,
     getScoreboard,
@@ -267,6 +280,7 @@ export const {
   saveQuiz,
   getQuizById,
   getQuizPublicData,
+  getAttemptById,
   recordAttempt,
   recordAttemptAtomic,
   getScoreboard,

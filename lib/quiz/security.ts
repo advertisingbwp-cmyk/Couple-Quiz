@@ -179,6 +179,62 @@ export function generateAttemptId(): string {
   return `att_${timestamp}_${entropy}`;
 }
 
+export const PLAYER_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+function getPlayerSigningSecret(): string {
+  return (
+    process.env.PLAYER_SESSION_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "click_and_clique_default_player_session_hmac_secret_2026"
+  );
+}
+
+/**
+ * Generates an HMAC-signed, server-verifiable player session credential.
+ * Format: ply_ses_<timestampMs>_<hmacHex>
+ */
+export function generatePlayerSessionToken(quizId: string, attemptId: string): string {
+  const timestamp = Date.now();
+  const secret = getPlayerSigningSecret();
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(`${quizId}:${attemptId}:${timestamp}`)
+    .digest("hex");
+  return `ply_ses_${timestamp}_${signature}`;
+}
+
+/**
+ * Verifies an HMAC-signed player session token against quiz ID and attempt ID.
+ * Constant-time comparison prevents timing analysis attacks.
+ */
+export function verifyPlayerSessionToken(
+  token: string,
+  quizId: string,
+  attemptId: string,
+  maxAgeMs = PLAYER_SESSION_TTL_MS
+): boolean {
+  if (typeof token !== "string" || !token.startsWith("ply_ses_")) return false;
+  const parts = token.slice("ply_ses_".length).split("_");
+  if (parts.length !== 2) return false;
+  const timestamp = Number(parts[0]);
+  const signature = parts[1];
+  if (!Number.isFinite(timestamp) || !signature) return false;
+
+  const now = Date.now();
+  // Reject future tokens (> 60s clock skew) and expired tokens
+  if (timestamp > now + 60_000 || now - timestamp > maxAgeMs) {
+    return false;
+  }
+
+  const secret = getPlayerSigningSecret();
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(`${quizId}:${attemptId}:${timestamp}`)
+    .digest("hex");
+
+  return timingSafeEqualString(signature, expectedSignature);
+}
+
 /**
  * Generates a clean URL slug with secure random entropy.
  */

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Loader2, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import { ArrowRight, Loader2, Sparkles, AlertCircle, RefreshCw, Trophy } from "lucide-react";
 import { quizAudio } from "@/lib/quiz/audio";
 import { QuizPublicData } from "@/lib/quiz/types";
 import { BrandMark } from "@/components/quiz-home/Illustrations";
@@ -35,6 +35,13 @@ export default function QuizPlayPage({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [submissionError, setSubmissionError] = useState("");
+  const [savedAttempt, setSavedAttempt] = useState<{
+    attemptId: string;
+    playerName: string;
+    completedAt?: number;
+    playerToken?: string;
+  } | null>(null);
+  const [isPlayAgain, setIsPlayAgain] = useState(false);
 
   const loadQuiz = React.useCallback(() => {
     setLoading(true);
@@ -58,6 +65,23 @@ export default function QuizPlayPage({
   useEffect(() => {
     loadQuiz();
   }, [loadQuiz]);
+
+  // Check for existing player attempt in this browser (returning player flow)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem(`quiz_player_attempt_${quizId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.attemptId === "string") {
+          setSavedAttempt(parsed);
+          setPlayerName(parsed.playerName || "");
+        }
+      }
+    } catch {
+      // Storage unavailable or disabled
+    }
+  }, [quizId]);
 
   // Preload all quiz option images in background for zero-latency question transitions
   useEffect(() => {
@@ -154,6 +178,19 @@ export default function QuizPlayPage({
       if (data.success) {
         // Scoped key prevents collision with other quizzes
         sessionStorage.setItem(`quiz_result_${quizId}`, JSON.stringify(data));
+        try {
+          localStorage.setItem(
+            `quiz_player_attempt_${quizId}`,
+            JSON.stringify({
+              attemptId: data.attemptId,
+              playerName: data.playerName || playerName.trim(),
+              completedAt: Date.now(),
+              playerToken: data.playerToken,
+            })
+          );
+        } catch {
+          // localStorage disabled / full
+        }
         router.push(`/quiz/result/${quizId}`);
       } else {
         setSubmissionError(data.error || "Failed to submit attempt. Please try again.");
@@ -252,64 +289,129 @@ export default function QuizPlayPage({
       {/* Main Container */}
       <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-3 sm:px-4 py-2 flex flex-col justify-start">
         {!isStarted ? (
-          /* Step 1: Friend Name Input Screen */
-          <div className="w-full max-w-md mx-auto bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-[0_12px_36px_rgba(102,80,183,0.12)] border border-white/90 text-center relative mt-2 sm:mt-4">
-            <div className="w-full flex justify-center -mb-2 z-10 relative">
-              <MascotScene mood="happy" />
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 font-black text-xs uppercase px-3 py-1 rounded-full border border-purple-200/80 mb-3 shadow-xs">
-              <Sparkles size={13} className="text-purple-600" />
-              <span>Friendship Challenge</span>
-            </div>
-
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-              How well do you know{" "}
-              <span className="text-purple-600 underline decoration-amber-300 decoration-4 underline-offset-4">
-                {creatorName}
-              </span>
-              ? ✦
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">
-              Answer {quiz.questions.length} questions to reveal your match score!
-            </p>
-
-            <form onSubmit={handleStartPlay} className="mt-5 space-y-3.5 text-left">
-              <div>
-                <label
-                  htmlFor="player-name-input"
-                  className="block text-xs font-black uppercase text-slate-700 tracking-wider mb-1.5"
-                >
-                  Enter Your Name
-                </label>
-                <input
-                  id="player-name-input"
-                  type="text"
-                  value={playerName}
-                  onChange={(e) => {
-                    setPlayerName(e.target.value);
-                    if (error) setError("");
-                  }}
-                  placeholder="e.g. Zainab or Hamza"
-                  maxLength={40}
-                  className="w-full px-4 py-3 text-sm sm:text-base font-bold bg-white text-slate-800 rounded-xl border border-slate-300 focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
-                />
-                {error && (
-                  <p className="text-xs font-bold text-rose-600 mt-1.5 ml-1" role="alert">
-                    {error}
-                  </p>
-                )}
+          savedAttempt && !isPlayAgain ? (
+            /* Returning Player Screen */
+            <div className="w-full max-w-md mx-auto bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-[0_12px_36px_rgba(102,80,183,0.12)] border border-white/90 text-center relative mt-2 sm:mt-4">
+              <div className="w-full flex justify-center -mb-2 z-10 relative">
+                <MascotScene mood="happy" />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-black text-sm sm:text-base rounded-xl shadow-[0_4px_16px_rgba(102,80,183,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
-              >
-                <span>Accept Challenge</span>
-                <ArrowRight size={18} className="stroke-[3]" />
-              </button>
-            </form>
-          </div>
+              <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 font-black text-xs uppercase px-3 py-1 rounded-full border border-purple-200/80 mb-3 shadow-xs">
+                <Sparkles size={13} className="text-purple-600" />
+                <span>Welcome Back!</span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+                Hey{" "}
+                <span className="text-purple-600 underline decoration-amber-300 decoration-4 underline-offset-4">
+                  {savedAttempt.playerName}
+                </span>
+                ! ✦
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">
+                You&apos;ve already completed {creatorName}&apos;s challenge. What would you like to do?
+              </p>
+
+              <div className="mt-6 space-y-3">
+                <Link
+                  href={`/quiz/result/${quizId}`}
+                  className="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-black text-sm rounded-xl shadow-[0_4px_16px_rgba(102,80,183,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                >
+                  <span>View My Result</span>
+                  <ArrowRight size={18} className="stroke-[3]" />
+                </Link>
+
+                <Link
+                  href={`/quiz/scoreboard/${quizId}`}
+                  className="w-full py-3 px-6 bg-white hover:bg-slate-50 text-slate-800 font-black text-sm rounded-xl border border-slate-200 shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                >
+                  <Trophy size={16} className="text-amber-500" />
+                  <span>View Leaderboard</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    quizAudio.playPop();
+                    setIsPlayAgain(true);
+                  }}
+                  className="w-full py-2.5 px-6 text-purple-700 hover:text-purple-900 hover:bg-purple-50/60 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Play Again (Retake Challenge)
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Step 1: Friend Name Input Screen */
+            <div className="w-full max-w-md mx-auto bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-[0_12px_36px_rgba(102,80,183,0.12)] border border-white/90 text-center relative mt-2 sm:mt-4">
+              <div className="w-full flex justify-center -mb-2 z-10 relative">
+                <MascotScene mood="happy" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 font-black text-xs uppercase px-3 py-1 rounded-full border border-purple-200/80 mb-3 shadow-xs">
+                <Sparkles size={13} className="text-purple-600" />
+                <span>Friendship Challenge</span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+                How well do you know{" "}
+                <span className="text-purple-600 underline decoration-amber-300 decoration-4 underline-offset-4">
+                  {creatorName}
+                </span>
+                ? ✦
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium">
+                Answer {quiz.questions.length} questions to reveal your match score!
+              </p>
+
+              <form onSubmit={handleStartPlay} className="mt-5 space-y-3.5 text-left">
+                <div>
+                  <label
+                    htmlFor="player-name-input"
+                    className="block text-xs font-black uppercase text-slate-700 tracking-wider mb-1.5"
+                  >
+                    Enter Your Name
+                  </label>
+                  <input
+                    id="player-name-input"
+                    type="text"
+                    value={playerName}
+                    onChange={(e) => {
+                      setPlayerName(e.target.value);
+                      if (error) setError("");
+                    }}
+                    placeholder="e.g. Zainab or Hamza"
+                    maxLength={40}
+                    className="w-full px-4 py-3 text-sm sm:text-base font-bold bg-white text-slate-800 rounded-xl border border-slate-300 focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
+                  />
+                  {error && (
+                    <p className="text-xs font-bold text-rose-600 mt-1.5 ml-1" role="alert">
+                      {error}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 px-6 bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-black text-sm sm:text-base rounded-xl shadow-[0_4px_16px_rgba(102,80,183,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                >
+                  <span>Accept Challenge</span>
+                  <ArrowRight size={18} className="stroke-[3]" />
+                </button>
+              </form>
+
+              {/* Requirement 4: Clear View Leaderboard link on challenge landing page, available even without playing */}
+              <div className="mt-4 pt-3.5 border-t border-slate-200/60 text-center">
+                <Link
+                  href={`/quiz/scoreboard/${quizId}`}
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-black text-purple-700 hover:text-purple-800 transition-colors py-1 px-3 rounded-lg hover:bg-purple-50/60"
+                >
+                  <Trophy size={14} className="text-amber-500" />
+                  <span>View Challenge Leaderboard</span>
+                </Link>
+              </div>
+            </div>
+          )
         ) : isSubmitting ? (
           <div className="w-full max-w-md mx-auto bg-white/85 backdrop-blur-xl rounded-3xl p-8 border border-white/90 shadow-[0_12px_36px_rgba(102,80,183,0.12)] text-center">
             <div className="w-full flex justify-center -mb-2 z-10 relative">

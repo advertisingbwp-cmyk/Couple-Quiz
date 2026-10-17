@@ -53,10 +53,58 @@ export default function QuizResultPage({
       try {
         const parsed = JSON.parse(raw);
         setResult(parsed);
+        setHasCheckedSession(true);
+        return;
       } catch {
         // Corrupt session data
       }
     }
+
+    // Returning player recovery: if sessionStorage is empty, recover from server using player credential
+    if (typeof window !== "undefined") {
+      try {
+        const savedAttemptRaw = localStorage.getItem(`quiz_player_attempt_${quizId}`);
+        if (savedAttemptRaw) {
+          const savedAttempt = JSON.parse(savedAttemptRaw);
+          if (savedAttempt && typeof savedAttempt.attemptId === "string") {
+            const headers: Record<string, string> = {};
+            if (savedAttempt.playerToken) {
+              headers["x-player-token"] = savedAttempt.playerToken;
+            }
+            fetch(`/api/quiz/${quizId}/player-result?attemptId=${encodeURIComponent(savedAttempt.attemptId)}`, {
+              headers,
+            })
+              .then((res) => {
+                if (res.status === 401 || res.status === 404) {
+                  // Expired session or deleted attempt: clean up invalid local reference
+                  localStorage.removeItem(`quiz_player_attempt_${quizId}`);
+                }
+                return res.json();
+              })
+              .then((data) => {
+                if (data.success && data.attempt) {
+                  const restored = {
+                    score: data.attempt.score,
+                    totalQuestions: data.attempt.totalQuestions,
+                    creatorName: data.creatorName,
+                    gender: data.gender,
+                  };
+                  setResult(restored);
+                  sessionStorage.setItem(`quiz_result_${quizId}`, JSON.stringify(restored));
+                }
+                setHasCheckedSession(true);
+              })
+              .catch(() => {
+                setHasCheckedSession(true);
+              });
+            return;
+          }
+        }
+      } catch {
+        // Storage access error
+      }
+    }
+
     setHasCheckedSession(true);
 
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -78,6 +126,17 @@ export default function QuizResultPage({
     }
   }, [dialogueStep, result]);
 
+  if (!hasCheckedSession) {
+    return (
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-white/90 shadow-sm text-center font-black text-slate-800 text-sm flex items-center gap-2.5">
+          <RefreshCw className="animate-spin text-purple-600" size={20} />
+          <span>Loading result... ✦</span>
+        </div>
+      </div>
+    );
+  }
+
   if (hasCheckedSession && !result) {
     return (
       <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
@@ -93,6 +152,12 @@ export default function QuizResultPage({
               className="py-3 px-6 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black rounded-2xl border-2 border-slate-900 text-xs sm:text-sm uppercase tracking-wider"
             >
               Play Challenge Now
+            </Link>
+            <Link
+              href={`/quiz/scoreboard/${quizId}`}
+              className="py-3 px-6 bg-white hover:bg-slate-50 text-purple-700 font-black rounded-2xl border-2 border-purple-300 text-xs sm:text-sm uppercase tracking-wider"
+            >
+              View Leaderboard
             </Link>
             <Link
               href="/quiz"
