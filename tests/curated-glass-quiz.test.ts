@@ -102,17 +102,17 @@ test("Phase 10.3: Every referenced photographic asset exists on disk in public/"
   }
 });
 
-test("Phase 10.3: Curated questions maximize real image options (14 photographic, 16 text-only)", () => {
+test("Phase 10.3: Curated questions baseline (4 photographic, 26 authentic text-first pending dedicated assets)", () => {
   const photoQuestions = CURATED_QUIZ_QUESTIONS.filter((q) =>
     q.options.every((opt) => opt.imageUrl && opt.imageUrl.endsWith(".webp"))
   );
-  assert.equal(photoQuestions.length, 14, "Must have exactly 14 questions with all real photographic options");
+  assert.equal(photoQuestions.length, 4, "Must have exactly 4 questions with all authentic real photographic options");
 
   const textOnlyQuestions = CURATED_QUIZ_QUESTIONS.filter((q) =>
     q.options.every((opt) => !opt.imageUrl)
   );
-  assert.equal(textOnlyQuestions.length, 16, "Must have exactly 16 text-only abstract questions");
-  assert.equal(photoQuestions.length + textOnlyQuestions.length, 30, "All 30 questions must be either fully photographic or cleanly text-first");
+  assert.equal(textOnlyQuestions.length, 26, "Must have exactly 26 text-only authentic questions");
+  assert.equal(photoQuestions.length + textOnlyQuestions.length, 30, "All 30 questions must be accounted for");
 });
 
 test("Phase 10.3: Exactly-10 invariant and creator deck state machine with curated questions", () => {

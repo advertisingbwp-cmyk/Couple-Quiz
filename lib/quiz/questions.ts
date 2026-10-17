@@ -3200,10 +3200,10 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     question: "When a major deadline or exam is tomorrow, what's my energy?",
     emoji: "📚",
     options: [
-      { id: 0, text: "Focused study grind in the library 📚", imageUrl: "/prototype/photos/studying.webp" },
-      { id: 1, text: "Sleeping in & trusting pure luck 🛌", imageUrl: "/prototype/photos/sleeping.webp" },
-      { id: 2, text: "Gaming escape to avoid the panic 🎮", imageUrl: "/prototype/photos/gaming.webp" },
-      { id: 3, text: "Downing warm coffee for an all-nighter ☕", imageUrl: "/prototype/photos/coffee.webp" },
+      { id: 0, text: "Prepared days in advance, calm & organized 📚" },
+      { id: 1, text: "High-stakes grind the night before 🌙" },
+      { id: 2, text: "Panic cramming 15 mins before 😭⚡" },
+      { id: 3, text: "Inshallah & pure vibes only 💀✨" },
     ],
   },
   {
@@ -3234,8 +3234,6 @@ export const CURATED_UNIVERSAL_QUESTIONS: QuizQuestion[] = [
     options: [
       { id: 0, text: "Sleeping in under a cozy duvet 🛌", imageUrl: "/prototype/photos/sleeping.webp" },
       { id: 1, text: "Fresh warm cappuccino & quiet morning ☕", imageUrl: "/prototype/photos/coffee.webp" },
-      { id: 2, text: "Cozy gaming session on the couch 🎮", imageUrl: "/prototype/photos/gaming.webp" },
-      { id: 3, text: "Aesthetic study & reading nook 📚", imageUrl: "/prototype/photos/studying.webp" },
     ],
   },
   {
@@ -3269,10 +3267,12 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
     question: "Where does my discretionary money disappear to the fastest?",
     emoji: "💸",
     options: [
-      { id: 0, text: "Gourmet burgers & loaded food 🍔", imageUrl: "/prototype/photos/burger.webp" },
-      { id: 1, text: "Video game gear & passes 🎮", imageUrl: "/prototype/photos/gaming.webp" },
-      { id: 2, text: "Scenic road trips & fuel 🚗", imageUrl: "/prototype/photos/roadtrip.webp" },
-      { id: 3, text: "Daily specialty coffee runs ☕", imageUrl: "/prototype/photos/coffee.webp" },
+      { id: 0, text: "Good food & late-night munchies 🍔" },
+      { id: 1, text: "Fresh sneakers & clothes 👟" },
+      { id: 2, text: "Gaming passes & gear 🎮" },
+      { id: 3, text: "Tech gadgets & accessories 🎧" },
+      { id: 4, text: "Fuel & road trips with the crew 🚗" },
+      { id: 5, text: "Secretly disciplined saver 💰" },
     ],
   },
   {
@@ -3330,21 +3330,22 @@ export const CURATED_HIM_QUESTIONS: QuizQuestion[] = [
   {
     id: "curated_h07",
     category: "habits",
-    question: "What is my ideal wind-down before crashing at night?",
+    question: "What position am I usually found sleeping in?",
     emoji: "💤",
     options: [
-      { id: 0, text: "Late-night gaming session with friends 🎮", imageUrl: "/prototype/photos/gaming.webp" },
-      { id: 1, text: "Crashing straight into deep sleep 🛌", imageUrl: "/prototype/photos/sleeping.webp" },
+      { id: 0, text: "Curled on my side 😴" },
+      { id: 1, text: "Flat on my stomach 🛏️" },
+      { id: 2, text: "Hands folded on my back like a statue 😌" },
     ],
   },
   {
     id: "curated_h08",
     category: "hobbies",
-    question: "When I have a completely free weekend afternoon, what's my go-to?",
+    question: "When I turn on a video game, what mode am I in?",
     emoji: "🎮",
     options: [
-      { id: 0, text: "Competitive gaming marathon 🎮", imageUrl: "/prototype/photos/gaming.webp" },
-      { id: 1, text: "Hitting the road for a scenic drive 🚗", imageUrl: "/prototype/photos/roadtrip.webp" },
+      { id: 0, text: "Ranked competitive sweat — here to win 🏆" },
+      { id: 1, text: "Casual open-world chill — just exploring 🌿" },
     ],
   },
   {
@@ -3378,10 +3379,12 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
     question: "What is the 100% foolproof way to instantly boost my mood?",
     emoji: "✨",
     options: [
-      { id: 0, text: "Comfort pizza & delicious bites 🍕", imageUrl: "/prototype/photos/pizza.webp" },
-      { id: 1, text: "Quiet cafe & artisan coffee date ☕", imageUrl: "/prototype/photos/coffee.webp" },
-      { id: 2, text: "Scenic mountain road trip escape 🚗", imageUrl: "/prototype/photos/roadtrip.webp" },
-      { id: 3, text: "Relaxing golden hour beach sunset 🏖️", imageUrl: "/prototype/photos/beach.webp" },
+      { id: 0, text: "Delicious sweet treat or comfort dessert 🍰" },
+      { id: 1, text: "Genuine, heartfelt compliments & hugs 💕" },
+      { id: 2, text: "Spontaneous retail therapy & shopping 🛍️" },
+      { id: 3, text: "Uninterrupted 10-hour beauty sleep 😴" },
+      { id: 4, text: "Juicy gossip & deep talk with besties ☕" },
+      { id: 5, text: "Relaxing quiet cafe date ☕✨" },
     ],
   },
   {
@@ -3397,13 +3400,13 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
   {
     id: "curated_g03",
     category: "preferences",
-    question: "Which getaway aesthetic sounds most like my dream weekend escape?",
-    emoji: "🏖️",
+    question: "Which aesthetic color palette dominates my favorite outfits?",
+    emoji: "🎨",
     options: [
-      { id: 0, text: "Serene ocean beach & sunset vibes 🏖️", imageUrl: "/prototype/photos/beach.webp" },
-      { id: 1, text: "Scenic mountain road trip adventure 🚗", imageUrl: "/prototype/photos/roadtrip.webp" },
-      { id: 2, text: "Aesthetic corner cafe & quiet coffee ☕", imageUrl: "/prototype/photos/coffee.webp" },
-      { id: 3, text: "Vibrant live music concert & crowd 🎶", imageUrl: "/prototype/photos/concert.webp" },
+      { id: 0, text: "Minimalist Monochrome (Black & White) 🖤" },
+      { id: 1, text: "Soft Dreamy Pastels (Lavender & Pink) 🎀" },
+      { id: 2, text: "Warm Earth Tones (Sage & Neutral Beige) 🌿" },
+      { id: 3, text: "Bold Statement (Cherry Red & Burgundy) 🍒" },
     ],
   },
   {
@@ -3433,31 +3436,35 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
   {
     id: "curated_g06",
     category: "habits",
-    question: "What is my dream low-energy morning vibe?",
+    question: "What sounds do I make when I'm sound asleep?",
     emoji: "😴",
     options: [
-      { id: 0, text: "Sleeping in late with fluffy pillows 🛌", imageUrl: "/prototype/photos/sleeping.webp" },
-      { id: 1, text: "Fresh artisan coffee in morning sunlight ☕", imageUrl: "/prototype/photos/coffee.webp" },
+      { id: 0, text: "Completely silent angel 😇" },
+      { id: 1, text: "Soft gentle breathing 💤" },
+      { id: 2, text: "Full-on sleep talker or giggler 💬😂" },
+      { id: 3, text: "Subtle locomotive snorer 🚂" },
     ],
   },
   {
     id: "curated_g07",
     category: "preferences",
-    question: "What is my favorite aesthetic vibe for memorable moments?",
-    emoji: "✨",
+    question: "What is my absolute favorite everyday hair vibe?",
+    emoji: "💇‍♀️",
     options: [
-      { id: 0, text: "Golden hour beach sunset 🏖️", imageUrl: "/prototype/photos/beach.webp" },
-      { id: 1, text: "Neon concert lights & high energy 🎶", imageUrl: "/prototype/photos/concert.webp" },
+      { id: 0, text: "Soft, effortless beach waves 🎀" },
+      { id: 1, text: "Sleek, glossy and pin-straight ✨" },
+      { id: 2, text: "The effortless claw-clip messy bun 🦋" },
+      { id: 3, text: "Fresh braids or high ponytail 🩰" },
     ],
   },
   {
     id: "curated_g08",
     category: "food",
-    question: "When we sit down at an aesthetic spot, what's my go-to comfort order?",
+    question: "When we sit down at an aesthetic cafe, what's my go-to order?",
     emoji: "☕",
     options: [
-      { id: 0, text: "Warm artisan cappuccino with latte art ☕", imageUrl: "/prototype/photos/coffee.webp" },
-      { id: 1, text: "Fresh cheesy pizza slice 🍕", imageUrl: "/prototype/photos/pizza.webp" },
+      { id: 0, text: "Warm Artisan Cappuccino with Latte Art ☕" },
+      { id: 1, text: "Sweet Blended Iced Caramel Beverage 🥤" },
     ],
   },
   {
@@ -3475,11 +3482,13 @@ export const CURATED_HER_QUESTIONS: QuizQuestion[] = [
   {
     id: "curated_g10",
     category: "preferences",
-    question: "If we have a free Friday evening, what vibe am I picking?",
-    emoji: "🎶",
+    question: "What denim silhouette do I wear the most?",
+    emoji: "👖",
     options: [
-      { id: 0, text: "Live music concert & dancing 🎶", imageUrl: "/prototype/photos/concert.webp" },
-      { id: 1, text: "Cozy hot pizza & relaxed chill 🍕", imageUrl: "/prototype/photos/pizza.webp" },
+      { id: 0, text: "Relaxed, wide-leg baggy fit 👖" },
+      { id: 1, text: "Classic timeless straight leg 🩵" },
+      { id: 2, text: "Retro 70s flare ✨" },
+      { id: 3, text: "Sleek high-waisted slim 🫧" },
     ],
   },
 ];
