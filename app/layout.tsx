@@ -5,18 +5,18 @@ import { getBaseUrl } from "@/lib/quiz/sharing";
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
   title: {
-    default: "Click & Clique — Viral Friendship Challenge & Couple Dare",
+    default: "Friendship Quiz 2026: BFF Test & How Well Do You Know Me? | Click & Clique",
     template: "%s",
   },
   description:
-    "Answer 10 fun questions to test how well your friends know you! Create your quiz, share on WhatsApp, and see who makes the top of your leaderboard.",
+    "Create a free 10-question friendship quiz or BFF test in seconds. Share your friend quiz link on WhatsApp and see who really knows you best on the live leaderboard!",
   icons: {
     icon: "/quiz/assets/img/logo-f.webp",
   },
   openGraph: {
-    title: "Click & Clique — Viral Friendship Challenge & Couple Dare",
+    title: "Friendship Quiz 2026: BFF Test & How Well Do You Know Me? | Click & Clique",
     description:
-      "Answer 10 fun questions to test how well your friends know you! Create your quiz, share on WhatsApp, and see who makes the top of your leaderboard.",
+      "Create a free 10-question friendship quiz or BFF test in seconds. Share your friend quiz link on WhatsApp and see who really knows you best on the live leaderboard!",
     siteName: "Click & Clique",
     type: "website",
     images: [
@@ -30,9 +30,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Click & Clique — Viral Friendship Challenge & Couple Dare",
+    title: "Friendship Quiz 2026: BFF Test & How Well Do You Know Me? | Click & Clique",
     description:
-      "Answer 10 fun questions to test how well your friends know you! Create your quiz, share on WhatsApp, and see who makes the top of your leaderboard.",
+      "Create a free 10-question friendship quiz or BFF test in seconds. Share your friend quiz link on WhatsApp and see who really knows you best on the live leaderboard!",
     images: ["/api/og/quiz/default"],
   },
 };

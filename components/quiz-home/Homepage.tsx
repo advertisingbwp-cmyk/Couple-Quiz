@@ -45,6 +45,7 @@ export function Navbar({ onStart }: StartProps) {
       <nav aria-label="Main navigation">
         <a href="#challenges">The quizzes</a>
         <a href="#how-it-works">How it works</a>
+        <a href="#faq">FAQs</a>
       </nav>
       <button className={styles.navCta} onClick={onStart}>
         Create quiz <span aria-hidden="true">↗</span>
@@ -185,6 +186,106 @@ export function CTASection({ onStart }: StartProps) {
   );
 }
 
+export const FAQ_ITEMS = [
+  {
+    question: "What is Click & Clique and how does this friendship quiz work?",
+    answer:
+      "Click & Clique is a free, interactive friendship test and BFF challenge. You answer 10 photographic, fun multiple-choice questions about your habits, preferences, and personality, get a personalized link, and send it to your friends on WhatsApp or social chats to see how well they actually know you.",
+  },
+  {
+    question: "Do my friends need an account or app to play?",
+    answer:
+      "No sign-up, account, or app installation is required. Anyone with your quiz link can open it instantly in any smartphone or desktop web browser, enter their name or nickname, and answer your 10 questions in under two minutes.",
+  },
+  {
+    question: "How does the scoring and live leaderboard work?",
+    answer:
+      "Each question your friend answers correctly scores points toward their total score out of 10. When they complete the quiz, their score is automatically recorded on your live challenge scoreboard so you can see who took first place in your friend circle.",
+  },
+  {
+    question: "How do I share my friendship quiz on WhatsApp and Instagram?",
+    answer:
+      "Once you finish picking your answers, Click & Clique gives you a one-tap WhatsApp share button, a direct copy-link option, and an Instagram story share option. You can share your link in any group chat, status update, or DM.",
+  },
+  {
+    question: "Is my quiz data private, and can I delete my quiz later?",
+    answer:
+      "Yes. When creating your quiz, you set a private 4 to 6-digit Secret PIN. This PIN allows only you to access the creator controls and permanently delete your quiz and all its player attempts at any time.",
+  },
+  {
+    question: "Is Click & Clique completely free to play?",
+    answer:
+      "Yes, Click & Clique is 100% free to create and play. There are no fees, subscriptions, paywalls, or limits on how many friends can participate in your challenge.",
+  },
+  {
+    question: "Can I play this friend quiz on mobile phones?",
+    answer:
+      "Yes. Click & Clique is designed mobile-first and optimized for iOS and Android smartphones, tablets, and desktop computers with high-speed photographic cards.",
+  },
+];
+
+export function FAQSection() {
+  return (
+    <section id="faq" className={styles.faq} aria-labelledby="faq-title">
+      <div className={styles.faqHeading}>
+        <p className={styles.eyebrow}>GOT QUESTIONS?</p>
+        <h2 id="faq-title">Frequently Asked Questions</h2>
+      </div>
+      <div className={styles.faqList}>
+        {FAQ_ITEMS.map((item, index) => (
+          <details key={index} className={styles.faqItem}>
+            <summary className={styles.faqQuestion}>
+              <span>{item.question}</span>
+              <span className={styles.faqIcon} aria-hidden="true">+</span>
+            </summary>
+            <p className={styles.faqAnswer}>{item.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const HOMEPAGE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://friend-quiz-game.vercel.app/#website",
+      "url": "https://friend-quiz-game.vercel.app",
+      "name": "Click & Clique",
+      "description":
+        "Create a free 10-question friendship quiz or BFF test in seconds. Share your friend quiz link on WhatsApp and see who knows you best on the live leaderboard.",
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://friend-quiz-game.vercel.app/#app",
+      "name": "Click & Clique Friendship Quiz",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "url": "https://friend-quiz-game.vercel.app",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+      },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://friend-quiz-game.vercel.app/#faq",
+      "mainEntity": FAQ_ITEMS.map((item) => ({
+        "@type": "Question",
+        "name": item.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.answer,
+        },
+      })),
+    },
+  ],
+};
+
 export function Footer() {
   return (
     <footer className={styles.footer}>
@@ -199,6 +300,10 @@ export function Footer() {
         </p>
         <a href="#how-it-works">
           How it works <span aria-hidden="true">↗</span>
+        </a>
+        {" • "}
+        <a href="#faq">
+          FAQs <span aria-hidden="true">↗</span>
         </a>
       </div>
       <p className={styles.copyright}>
@@ -278,10 +383,15 @@ export default function Homepage() {
               <CategoryCard couple onStart={openCreator} />
             </div>
           </section>
-          <HowItWorks />
           <CTASection onStart={openCreator} />
+          <HowItWorks />
+          <FAQSection />
         </main>
         <AdsterraFooter />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(HOMEPAGE_JSON_LD) }}
+        />
       </div>
       <dialog
         ref={dialog}
