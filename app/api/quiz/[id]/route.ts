@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
 import { getQuizPublicData, getQuizById, deleteQuiz } from "@/lib/quiz/storage";
-import {
-  verifyPin,
-  checkPinRateLimit,
-  timingSafeEqualString,
-  extractClientIp,
-  recordFailedPinAttempt,
-  clearPinRateLimit,
-} from "@/lib/quiz/security";
+import { creatorAuthResponse } from "@/lib/quiz/authResponse";
+import { RateLimitUnavailableError } from "@/lib/quiz/security";
+import { StorageUnavailableError } from "@/lib/quiz/storage";
+import { readJsonWithLimit } from "@/lib/quiz/requestBody";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +27,8 @@ export async function GET(
       quiz: publicData,
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError || err instanceof RateLimitUnavailableError)
+      return NextResponse.json({ success: false, error: "Service temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz GET Error]:", err);
     return NextResponse.json(
       { success: false, error: "Internal server error." },
@@ -44,9 +42,33 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const parseResult = await readJsonWithLimit<{
+      pin?: unknown;
+      creatorToken?: unknown;
+    }>(req, 32 * 1024);
+
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { success: false, error: parseResult.error },
+        { status: parseResult.status }
+      );
+    }
+
     const { id } = await params;
-    const body = await req.json().catch(() => ({}));
-    const { pin, creatorToken } = body;
+    const { pin, creatorToken } = parseResult.data;
+
+    // Phase 9.3 Security Requirement:
+    // Whole-quiz deletion ALWAYS requires the creator PIN.
+    // A valid creator token alone must NOT authorize whole-quiz deletion.
+    if (!pin || typeof pin !== "string" || !/^\d{4,6}$/.test(pin.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Creator Secret PIN is required to delete the quiz.",
+        },
+        { status: creatorToken ? 403 : 400 }
+      );
+    }
 
     const quiz = await getQuizById(id);
     if (!quiz) {
@@ -56,37 +78,15 @@ export async function DELETE(
       );
     }
 
-    // Rate limit brute-force attempts with distributed IP tracking
-    const clientIp = extractClientIp(req);
-    const isAllowed = await checkPinRateLimit(clientIp);
-    if (!isAllowed) {
-      return NextResponse.json(
-        { success: false, error: "Too many attempts. Please try again in 10 minutes." },
-        { status: 429 }
-      );
-    }
-
-    // Authenticate via constant-time token comparison OR scrypt PIN verification
-    const isTokenMatch =
-      typeof creatorToken === "string" && timingSafeEqualString(creatorToken, quiz.creatorToken);
-    const isPinMatch =
-      typeof pin === "string" && /^\d{4,6}$/.test(pin.trim()) && verifyPin(pin.trim(), quiz.pinHash);
-
-    if (!isTokenMatch && !isPinMatch) {
-      await recordFailedPinAttempt(clientIp);
-      return NextResponse.json(
-        { success: false, error: "Incorrect Secret PIN or authorization token." },
-        { status: 403 }
-      );
-    }
-
-    // Authentication succeeded - clear failed attempts and execute reliable deletion
-    await clearPinRateLimit(clientIp);
+    // Rate-limited authentication strictly verifying PIN against quiz.pinHash.
+    // Even if creatorToken is present in the payload, authenticate ONLY via PIN.
+    const authFailure = await creatorAuthResponse(req, quiz, { pin: pin.trim() });
+    if (authFailure) return authFailure;
     const isDeleted = await deleteQuiz(id);
     if (!isDeleted) {
       return NextResponse.json(
-        { success: false, error: "Failed to delete quiz from storage." },
-        { status: 500 }
+        { success: false, error: "Quiz not found." },
+        { status: 404 }
       );
     }
 
@@ -95,6 +95,8 @@ export async function DELETE(
       message: "Quiz deleted successfully.",
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError || err instanceof RateLimitUnavailableError)
+      return NextResponse.json({ success: false, error: "Service temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz DELETE Error]:", err);
     return NextResponse.json(
       { success: false, error: "Failed to delete quiz." },

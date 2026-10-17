@@ -1,22 +1,31 @@
+import { StorageUnavailableError } from "@/lib/quiz/storage";
 import { NextResponse } from "next/server";
 import { saveQuiz } from "@/lib/quiz/storage";
 import { QuizData, Gender } from "@/lib/quiz/types";
 import { hashPin, generateCreatorToken, generateQuizId, generateQuizSlug } from "@/lib/quiz/security";
-import { DEFAULT_QUIZ_QUESTIONS } from "@/lib/quiz/questions";
+import { ALL_AVAILABLE_QUIZ_QUESTIONS, getQuestionById } from "@/lib/quiz/questions";
+import { readJsonWithLimit } from "@/lib/quiz/requestBody";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => null);
-    if (!body || typeof body !== "object") {
+    const parseResult = await readJsonWithLimit<{
+      creatorName?: unknown;
+      gender?: unknown;
+      country?: unknown;
+      secretPin?: unknown;
+      questions?: unknown;
+    }>(req, 100 * 1024);
+
+    if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: "Invalid request payload." },
-        { status: 400 }
+        { success: false, error: parseResult.error },
+        { status: parseResult.status }
       );
     }
 
-    const { creatorName, gender, country, secretPin, questions } = body;
+    const { creatorName, gender, country, secretPin, questions } = parseResult.data;
 
     // 1. Strict Name Validation
     if (!creatorName || typeof creatorName !== "string" || !creatorName.trim()) {
@@ -34,15 +43,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Strict Questions Validation
-    if (!questions || !Array.isArray(questions) || questions.length < 5 || questions.length > 15) {
+    // 2. Strict Questions Validation (Exactly 10 questions required)
+    if (!questions || !Array.isArray(questions) || questions.length !== 10) {
       return NextResponse.json(
-        { success: false, error: "Quiz must have between 5 and 15 questions." },
+        { success: false, error: "Quiz must have exactly 10 questions." },
         { status: 400 }
       );
     }
 
-    const validQuestionIds = new Set(DEFAULT_QUIZ_QUESTIONS.map((q) => q.id));
+    const validQuestionIds = new Set(ALL_AVAILABLE_QUIZ_QUESTIONS.map((q) => q.id));
     const seenQuestionIds = new Set<string>();
 
     const validatedQuestions: QuizData["questions"] = [];
@@ -61,12 +70,15 @@ export async function POST(req: Request) {
       }
       seenQuestionIds.add(q.questionId);
 
+      const originalQuestion = getQuestionById(q.questionId)!;
+
       const correctOptionId = Number(q.correctOptionId);
-      if (!Number.isInteger(correctOptionId) || correctOptionId < 0 || correctOptionId > 3) {
+      if (
+        !Number.isInteger(correctOptionId) ||
+        !originalQuestion.options.some((opt) => opt.id === correctOptionId)
+      ) {
         return NextResponse.json({ success: false, error: "Invalid option selected." }, { status: 400 });
       }
-
-      const originalQuestion = DEFAULT_QUIZ_QUESTIONS.find((def) => def.id === q.questionId)!;
 
       validatedQuestions.push({
         questionId: q.questionId,
@@ -98,7 +110,7 @@ export async function POST(req: Request) {
       slug,
       creatorName: cleanCreatorName,
       gender: (gender === "female" ? "female" : "male") as Gender,
-      country: country || "PK",
+      country: typeof country === "string" && country.trim() ? country.trim() : "PK",
       theme: "dont_block_me",
       pinHash,
       creatorToken,
@@ -111,7 +123,7 @@ export async function POST(req: Request) {
     if (!isSaved) {
       return NextResponse.json(
         { success: false, error: "Failed to persist quiz to durable storage. Please try again." },
-        { status: 500 }
+        { status: 503 }
       );
     }
 
@@ -124,6 +136,8 @@ export async function POST(req: Request) {
       shareUrl: `/quiz/share/${quiz.id}`,
     });
   } catch (err) {
+    if (err instanceof StorageUnavailableError)
+      return NextResponse.json({ success: false, error: "Storage temporarily unavailable." }, { status: 503 });
     console.error("[API Quiz POST Error]:", err);
     return NextResponse.json(
       { success: false, error: "Failed to create quiz." },

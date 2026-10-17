@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <radialGradient id="grad-maldives" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ecfeff" />
+      <stop offset="100%" stop-color="#cffafe" />
+    </radialGradient>
+  </defs>
+  <rect x="4" y="4" width="112" height="112" rx="24" fill="url(#grad-maldives)" stroke="#29324c" stroke-width="3" />
+  <circle cx="60" cy="60" r="46" fill="none" stroke="#06b6d4" stroke-width="2" stroke-dasharray="4,4" opacity="0.4" />
+  
+  <!-- Tropical Sun -->
+  <circle cx="32" cy="34" r="12" fill="#facc15" stroke="#29324c" stroke-width="2.5" />
+  
+  <!-- Ocean Water Waves -->
+  <path d="M12 76 Q26 70 40 76 T68 76 T96 76" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+  <path d="M14 84 Q28 78 42 84 T70 84 T98 84" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Tropical Sandy Island -->
+  <path d="M46 94 Q76 68 106 84 L106 94 Z" fill="#fde047" stroke="#29324c" stroke-width="3" stroke-linejoin="round" />
+
+  <!-- Palm Tree Trunk -->
+  <path d="M84 86 Q76 60 62 46" fill="none" stroke="#78350f" stroke-width="6" stroke-linecap="round" />
+  <path d="M84 86 Q76 60 62 46" fill="none" stroke="#29324c" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Palm Leaves -->
+  <path d="M62 46 Q40 40 32 50" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round" />
+  <path d="M62 46 Q50 26 52 14" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round" />
+  <path d="M62 46 Q74 28 88 32" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round" />
+  <path d="M62 46 Q84 50 86 64" fill="none" stroke="#15803d" stroke-width="4" stroke-linecap="round" />
+
+  <!-- Coconuts -->
+  <circle cx="61" cy="48" r="3" fill="#78350f" stroke="#29324c" stroke-width="1" />
+  <circle cx="66" cy="46" r="3" fill="#78350f" stroke="#29324c" stroke-width="1" />
+</svg>

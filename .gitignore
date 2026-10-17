@@ -40,3 +40,6 @@ next-env.d.ts
 
 # local persistent json db
 /data/quizzes-store.json
+
+# test screenshots
+/screenshots/

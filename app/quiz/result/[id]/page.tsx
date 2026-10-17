@@ -2,10 +2,19 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Trophy, MessageCircle, RefreshCw, Sparkles, AlertCircle } from "lucide-react";
+import { Trophy, MessageCircle, RefreshCw, Sparkles, AlertCircle, Copy, Check, Share2 } from "lucide-react";
+import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { quizAudio } from "@/lib/quiz/audio";
 import { triggerConfetti } from "@/lib/quiz/confetti";
+import {
+  formatWhatsAppResultShare,
+  getWhatsAppShareUrl,
+  getChallengeUrl,
+  sanitizeCreatorName,
+  copyToClipboard,
+  detectEnvironment,
+  EnvironmentInfo,
+} from "@/lib/quiz/sharing";
 
 export default function QuizResultPage({
   params,
@@ -24,6 +33,17 @@ export default function QuizResultPage({
 
   const [dialogueStep, setDialogueStep] = useState(0);
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  const [envInfo, setEnvInfo] = useState<EnvironmentInfo>(() => detectEnvironment());
+
+  useEffect(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    setEnvInfo(detectEnvironment(origin));
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      setCanNativeShare(true);
+    }
+  }, []);
 
   useEffect(() => {
     // Read scoped session result
@@ -37,6 +57,10 @@ export default function QuizResultPage({
       }
     }
     setHasCheckedSession(true);
+
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDialogueStep(4);
+    }
   }, [quizId]);
 
   useEffect(() => {
@@ -55,12 +79,12 @@ export default function QuizResultPage({
 
   if (hasCheckedSession && !result) {
     return (
-      <div className="min-h-screen bg-sky-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl p-6 border-4 border-slate-900 text-center shadow-xl">
           <AlertCircle size={40} className="text-amber-500 mx-auto mb-2" />
           <h2 className="text-xl font-black text-slate-900 mb-1">No Active Result Found</h2>
           <p className="text-xs text-slate-600 mb-4">
-            Aapne shayad abhi tak yeh quiz complete nahi kiya ya session expire ho chuka hai.
+            You haven&apos;t completed this quiz yet, or your session has expired.
           </p>
           <div className="flex flex-col gap-2">
             <Link
@@ -91,50 +115,79 @@ export default function QuizResultPage({
   let badgeColor = "";
 
   if (ratio >= 0.8) {
-    reactionText = "You made me smile! 😆 I'll never block you!";
-    reactionEmoji = "❤️ True Bestie!";
+    reactionText = "You know me inside out! Pure clique legend! 🌟";
+    reactionEmoji = "Bestie Alert! ❤️";
     badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
   } else if (ratio >= 0.5) {
-    reactionText = "I won't block you... but please leave me alone 😕";
-    reactionEmoji = "🙂 Average Friend";
+    reactionText = "Solid clique energy! You know your stuff! 😎";
+    reactionEmoji = "Great Friend 🙂";
     badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
   } else {
-    reactionText = "BYE! BYE! … I will block you… huh! 🤬";
-    reactionEmoji = "🚨 FAKE FRIEND ALERT!";
-    badgeColor = "bg-red-100 text-red-800 border-red-300";
+    reactionText = "We definitely need to hang out more and build our clique bond! ☕";
+    reactionEmoji = "Friend in Training 🌱";
+    badgeColor = "bg-sky-100 text-sky-800 border-sky-300";
   }
+
+  const safeCreator = sanitizeCreatorName(creatorName);
 
   const handleShareResultWhatsApp = () => {
     quizAudio.playPop();
-    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/quiz/play/${quizId}` : "";
-    const msg = `🎉 I scored ${score}/${total} on ${creatorName}'s Friendship Challenge!\n\nCan you beat my score or will ${creatorName} block you? 😂\n\nTry here 👇\n${shareUrl}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const msg = formatWhatsAppResultShare(safeCreator, score, total, quizId, origin);
+    window.open(getWhatsAppShareUrl(msg), "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyResultLink = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    const success = await copyToClipboard(link);
+    if (success) {
+      setCopyStatus("copied");
+      setTimeout(() => setCopyStatus("idle"), 2500);
+    } else {
+      setCopyStatus("error");
+      setTimeout(() => setCopyStatus("idle"), 3000);
+    }
+  };
+
+  const handleNativeShareResult = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `I scored ${score}/${total} on ${safeCreator}'s Friendship Challenge! 🏆`,
+          text: `Can you beat my score on Click & Clique?`,
+          url: link,
+        });
+      } catch (err) {
+        if ((err as Error)?.name !== "AbortError") {
+          handleCopyResultLink();
+        }
+      }
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#8AC0EF]/30 via-sky-50 to-amber-50/40 text-slate-900 flex flex-col font-sans relative overflow-x-hidden">
-      {/* Background Clouds */}
-      <div className="absolute top-0 left-0 right-0 h-44 bg-[url('/quiz/assets/img/player/clouds-bg.webp')] bg-repeat-x bg-contain opacity-40 pointer-events-none" />
-
+    <div className="min-h-screen bg-[#edf7ff] text-[#29324c] flex flex-col font-sans relative overflow-x-hidden">
       {/* Header */}
-      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-2 flex items-center justify-between">
-        <Link href="/quiz" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 relative rounded-xl bg-white shadow-sm flex items-center justify-center p-1 border-2 border-slate-900">
-            <Image
-              src="/quiz/assets/img/logo-f.webp"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-slate-900">
-            Don&apos;t Block Me!
+      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-3 flex items-center justify-between">
+        <Link
+          href="/quiz"
+          className="inline-flex items-center gap-2.5 no-underline group focus-visible:outline-3 focus-visible:outline-[#6650b7]"
+          aria-label="Click & Clique homepage"
+        >
+          <BrandMark />
+          <span className="text-xl font-black tracking-tight text-[#29324c]">
+            click <span className="text-[#6650b7] font-medium">&amp;</span> clique
+            <span className="text-[#bd4a66]">.</span>
           </span>
         </Link>
         <Link
           href={`/quiz/scoreboard/${quizId}`}
-          className="text-xs font-black bg-amber-300 text-slate-900 px-3 py-1 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a] flex items-center gap-1.5"
+          className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63] flex items-center gap-1.5"
         >
           <Trophy size={14} />
           <span>Scores</span>
@@ -143,6 +196,18 @@ export default function QuizResultPage({
 
       {/* Main Content */}
       <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-5 flex flex-col justify-center">
+        {/* Preview Testing Notice */}
+        {envInfo.isPreview && (
+          <div
+            role="alert"
+            aria-label="Preview Testing Environment"
+            className="mb-4 py-2 px-3.5 bg-amber-50 border-2 border-amber-400 rounded-2xl text-center text-xs font-bold text-amber-950 flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span className="p-0.5 bg-amber-200 rounded text-xs">⚠️</span>
+            <span>Preview / Testing Environment — Internal test link active</span>
+          </div>
+        )}
+
         {/* Comic Dialogue Stage */}
         <div className="w-full bg-slate-900 text-white rounded-3xl p-5 mb-4 shadow-xl border-4 border-slate-900">
           <span className="text-[10px] font-black tracking-widest text-amber-300 uppercase block mb-3">
@@ -154,7 +219,7 @@ export default function QuizResultPage({
               <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                 {creatorName}
               </span>
-              <span>&ldquo;Should I block you? 🤬&rdquo;</span>
+              <span>&ldquo;Let&apos;s see how well you really know me! 😏&rdquo;</span>
             </div>
 
             {dialogueStep >= 1 && (
@@ -162,7 +227,7 @@ export default function QuizResultPage({
                 <span className="bg-sky-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   You
                 </span>
-                <span>&ldquo;Wait... I&apos;m not your fake friend! 🥺&rdquo;</span>
+                <span>&ldquo;I know your clique vibe better than anyone! 😎&rdquo;</span>
               </div>
             )}
 
@@ -171,7 +236,7 @@ export default function QuizResultPage({
                 <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   {creatorName}
                 </span>
-                <span>&ldquo;Then prove you&apos;re a real friend! 😏&rdquo;</span>
+                <span>&ldquo;Big claims! Did you actually pay attention? 🧐&rdquo;</span>
               </div>
             )}
 
@@ -180,7 +245,7 @@ export default function QuizResultPage({
                 <span className="bg-sky-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   You
                 </span>
-                <span>&ldquo;Just look at my score! 🫣&rdquo;</span>
+                <span>&ldquo;Check the leaderboard score! 🚀&rdquo;</span>
               </div>
             )}
 
@@ -189,7 +254,23 @@ export default function QuizResultPage({
                 <span className="bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-black">
                   {creatorName}
                 </span>
-                <span>&ldquo;Okay... let&apos;s see! 👀&rdquo;</span>
+                <span>&ldquo;Moment of truth... reveal results! 🎉&rdquo;</span>
+              </div>
+            )}
+
+            {dialogueStep < 4 && (
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    quizAudio.playPop();
+                    setDialogueStep(4);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase text-amber-300 hover:text-white px-3 py-1 rounded-full border border-amber-400/40 hover:border-amber-300 bg-slate-800/80 cursor-pointer transition-colors"
+                >
+                  <span>Skip to Score</span>
+                  <span>⏭️</span>
+                </button>
               </div>
             )}
           </div>
@@ -215,22 +296,63 @@ export default function QuizResultPage({
             </p>
 
             {/* Action Buttons */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 space-y-2.5">
               <button
                 type="button"
                 onClick={handleShareResultWhatsApp}
-                className="w-full py-3.5 px-6 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-sm sm:text-base rounded-2xl border-2 border-slate-900 shadow-[0_4px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                aria-label="Share score on WhatsApp"
+                className="w-full py-3.5 px-6 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-sm sm:text-base rounded-2xl border-2 border-slate-900 shadow-[0_4px_0_#0f172a] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
               >
                 <MessageCircle size={18} className="fill-white" />
                 <span>Share Score on WhatsApp</span>
               </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                {canNativeShare && (
+                  <button
+                    type="button"
+                    onClick={handleNativeShareResult}
+                    aria-label="Share score via device app"
+                    className="py-2.5 px-3 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase"
+                  >
+                    <Share2 size={15} />
+                    <span>Share App</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleCopyResultLink}
+                  aria-label={copyStatus === "copied" ? "Challenge link copied" : "Copy challenge link"}
+                  className={`py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase ${
+                    !canNativeShare ? "col-span-2" : ""
+                  }`}
+                >
+                  {copyStatus === "copied" ? (
+                    <>
+                      <Check size={14} className="text-emerald-400" />
+                      <span>Copied!</span>
+                    </>
+                  ) : copyStatus === "error" ? (
+                    <span>Failed</span>
+                  ) : (
+                    <>
+                      <Copy size={14} />
+                      <span>Copy Challenge Link</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="sr-only" aria-live="polite">
+                {copyStatus === "copied" ? "Challenge link copied to clipboard!" : ""}
+              </div>
 
               <Link
                 href={`/quiz/scoreboard/${quizId}`}
                 className="w-full py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-900 font-extrabold text-xs sm:text-sm rounded-2xl border-2 border-slate-900 shadow-[0_3px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
               >
                 <Trophy size={16} />
-                <span>See Leaderboard ({creatorName})</span>
+                <span>See Leaderboard ({safeCreator})</span>
               </Link>
 
               <div className="pt-2">

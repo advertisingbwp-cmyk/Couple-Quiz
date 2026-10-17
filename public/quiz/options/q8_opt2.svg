@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <radialGradient id="grad-turkey" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fff7ed" />
+      <stop offset="100%" stop-color="#ffedd5" />
+    </radialGradient>
+  </defs>
+  <rect x="4" y="4" width="112" height="112" rx="24" fill="url(#grad-turkey)" stroke="#29324c" stroke-width="3" />
+  <circle cx="60" cy="60" r="46" fill="none" stroke="#ea580c" stroke-width="2" stroke-dasharray="4,4" opacity="0.4" />
+  
+  <!-- Left Minaret -->
+  <polygon points="18,34 24,18 30,34" fill="#ea580c" stroke="#29324c" stroke-width="2" />
+  <rect x="18" y="48" width="12" height="4" rx="1" fill="#ea580c" stroke="#29324c" stroke-width="1.5" />
+  <rect x="20" y="34" width="8" height="56" fill="#fdba74" stroke="#29324c" stroke-width="2" />
+
+  <!-- Right Minaret -->
+  <polygon points="90,34 96,18 102,34" fill="#ea580c" stroke="#29324c" stroke-width="2" />
+  <rect x="90" y="48" width="12" height="4" rx="1" fill="#ea580c" stroke="#29324c" stroke-width="1.5" />
+  <rect x="92" y="34" width="8" height="56" fill="#fdba74" stroke="#29324c" stroke-width="2" />
+
+  <!-- Central Mosque Base -->
+  <rect x="34" y="62" width="52" height="28" fill="#fb923c" stroke="#29324c" stroke-width="2.5" />
+  
+  <!-- Central Grand Dome -->
+  <path d="M38 62 C38 40 82 40 82 62 Z" fill="#ea580c" stroke="#29324c" stroke-width="2.5" />
+  <line x1="60" y1="40" x2="60" y2="30" stroke="#29324c" stroke-width="2.5" />
+  <circle cx="60" cy="28" r="3" fill="#facc15" stroke="#29324c" stroke-width="1.5" />
+
+  <!-- Arched Gate -->
+  <path d="M52 90 V74 C52 69 68 69 68 74 V90 Z" fill="#29324c" />
+
+  <!-- Turkish Crescent Star Badge -->
+  <path d="M82 20 A 7 7 0 1 0 78 30 A 5.5 5.5 0 1 1 80 22 Z" fill="#dc2626" />
+  <polygon points="84,24 85,26 87,26 85.5,27.5 86,29.5 84,28 82,29.5 82.5,27.5 81,26 83,26" fill="#dc2626" />
+
+  <!-- Ground Line -->
+  <line x1="14" y1="90" x2="106" y2="90" stroke="#29324c" stroke-width="3" stroke-linecap="round" />
+</svg>

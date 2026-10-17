@@ -2,38 +2,115 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Trophy, Share2, Trash2, Eye, X, RefreshCw, AlertCircle, MessageCircle, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Trophy, Share2, Trash2, Eye, X, RefreshCw, AlertCircle, MessageCircle, Lock, Copy, Check } from "lucide-react";
+import { BrandMark } from "@/components/quiz-home/Illustrations";
 import { quizAudio } from "@/lib/quiz/audio";
 import { ScoreboardEntry, ScoreboardDetailEntry } from "@/lib/quiz/types";
+import {
+  formatWhatsAppScoreboardShare,
+  getWhatsAppShareUrl,
+  getChallengeUrl,
+  sanitizeCreatorName,
+  copyToClipboard,
+  detectEnvironment,
+  EnvironmentInfo,
+} from "@/lib/quiz/sharing";
 
 export default function QuizScoreboardPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const quizId = resolvedParams.id;
 
   const [creatorName, setCreatorName] = useState("Friend");
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quizNotFound, setQuizNotFound] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<ScoreboardDetailEntry | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [targetDetailId, setTargetDetailId] = useState<string | null>(null);
   const [enteredPin, setEnteredPin] = useState("");
-  const [pinPrompt, setPinPrompt] = useState<{ open: boolean; attemptId: string }>({ open: false, attemptId: "" });
+  const [pinPrompt, setPinPrompt] = useState<{ open: boolean; attemptId: string; playerName?: string }>({ open: false, attemptId: "", playerName: "" });
   const [deleting, setDeleting] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [isCreator, setIsCreator] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  const [envInfo, setEnvInfo] = useState<EnvironmentInfo>(() => detectEnvironment());
+
+  // Phase 9.3: Delete Quiz state
+  const [showDeleteQuizModal, setShowDeleteQuizModal] = useState(false);
+  const [deleteQuizPin, setDeleteQuizPin] = useState("");
+  const [deleteQuizError, setDeleteQuizError] = useState("");
+  const [deletingQuiz, setDeletingQuiz] = useState(false);
+
+  useEffect(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    setEnvInfo(detectEnvironment(origin));
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      setCanNativeShare(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
+    if (token) {
+      setIsCreator(true);
+    }
+  }, [quizId]);
+
+  // Consolidated Escape key modal dismiss handler
+  useEffect(() => {
+    if (!showAuthModal && !selectedEntry && !pinPrompt.open && !showDeleteQuizModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (showAuthModal) {
+          setShowAuthModal(false);
+          setEnteredPin("");
+          setAuthError("");
+        }
+        if (selectedEntry) {
+          setSelectedEntry(null);
+        }
+        if (pinPrompt.open) {
+          setPinPrompt({ open: false, attemptId: "", playerName: "" });
+          setEnteredPin("");
+        }
+        if (showDeleteQuizModal) {
+          setShowDeleteQuizModal(false);
+          setDeleteQuizPin("");
+          setDeleteQuizError("");
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showAuthModal, selectedEntry, pinPrompt.open, showDeleteQuizModal]);
 
   const fetchPublicScoreboard = React.useCallback(() => {
     setLoading(true);
     fetch(`/api/quiz/${quizId}/scoreboard`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 404) {
+          setQuizNotFound(true);
+          setLoading(false);
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (!data) return;
         if (data.success) {
           setCreatorName(data.creatorName || "Friend");
           setScoreboard(data.scoreboard || []);
+          setQuizNotFound(false);
+        } else {
+          setQuizNotFound(true);
         }
         setLoading(false);
       })
@@ -46,7 +123,7 @@ export default function QuizScoreboardPage({
 
   // Request detailed answers with authorization (creatorToken or PIN)
   const handleOpenAnswers = async (entry: ScoreboardEntry) => {
-    const creatorToken = localStorage.getItem(`creator_token_${quizId}`);
+    const creatorToken = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
 
     // If local creatorToken exists, try automatic unlock
     if (creatorToken) {
@@ -56,6 +133,14 @@ export default function QuizScoreboardPage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ creatorToken }),
         });
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem(`creator_token_${quizId}`);
+          setIsCreator(false);
+          setAuthError("Creator session expired. Please enter your PIN.");
+          setTargetDetailId(entry.id);
+          setShowAuthModal(true);
+          return;
+        }
         const data = await res.json();
         if (data.success && data.scoreboard) {
           const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === entry.id);
@@ -87,15 +172,20 @@ export default function QuizScoreboardPage({
       });
       const data = await res.json();
       if (data.success && data.scoreboard) {
-        const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === targetDetailId);
-        if (detail) {
-          setSelectedEntry(detail);
-          setShowAuthModal(false);
-          setEnteredPin("");
-          quizAudio.playCorrect();
-        } else {
-          setAuthError("Player record not found.");
+        setIsCreator(true);
+        if (data.creatorToken) {
+          localStorage.setItem(`creator_token_${quizId}`, data.creatorToken);
         }
+        if (targetDetailId) {
+          const detail = data.scoreboard.find((s: ScoreboardDetailEntry) => s.id === targetDetailId);
+          if (detail) {
+            setSelectedEntry(detail);
+          }
+        }
+        setShowAuthModal(false);
+        setEnteredPin("");
+        setTargetDetailId(null);
+        quizAudio.playCorrect();
       } else {
         setAuthError(data.error || "Incorrect Secret PIN.");
         quizAudio.playWrong();
@@ -108,7 +198,7 @@ export default function QuizScoreboardPage({
   const handleDeleteAttempt = async () => {
     if (!pinPrompt.attemptId) return;
     setDeleting(true);
-    const creatorToken = localStorage.getItem(`creator_token_${quizId}`);
+    const creatorToken = typeof window !== "undefined" ? localStorage.getItem(`creator_token_${quizId}`) : null;
 
     try {
       const res = await fetch(`/api/quiz/${quizId}/scoreboard`, {
@@ -116,18 +206,26 @@ export default function QuizScoreboardPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           attemptId: pinPrompt.attemptId,
-          pin: enteredPin.trim(),
+          pin: enteredPin.trim() || undefined,
           creatorToken: creatorToken || undefined,
         }),
       });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem(`creator_token_${quizId}`);
+        setIsCreator(false);
+        setPinPrompt({ open: false, attemptId: "", playerName: "" });
+        setAuthError("Creator session expired or invalid PIN. Please log in again.");
+        setShowAuthModal(true);
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setScoreboard((prev) => prev.filter((item) => item.id !== pinPrompt.attemptId));
-        setPinPrompt({ open: false, attemptId: "" });
+        setPinPrompt({ open: false, attemptId: "", playerName: "" });
         setEnteredPin("");
         quizAudio.playPop();
       } else {
-        alert(data.error || "Incorrect PIN.");
+        alert(data.error || "Could not delete player attempt.");
       }
     } catch {
       alert("Network error.");
@@ -136,46 +234,143 @@ export default function QuizScoreboardPage({
     }
   };
 
-  const handleShareScoreboardWhatsApp = () => {
-    quizAudio.playPop();
-    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/quiz/play/${quizId}` : "";
-    let text = `👑 *${creatorName}'s Challenge Leaderboard*\n\n`;
-    if (scoreboard.length > 0) {
-      scoreboard.slice(0, 5).forEach((entry, idx) => {
-        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🔹";
-        text += `${medal} ${entry.playerName}: ${entry.score}/${entry.totalQuestions} points\n`;
-      });
-    } else {
-      text += "No one has played yet. Be the first!\n";
+  const handleDeleteQuiz = async () => {
+    const trimmedPin = deleteQuizPin.trim();
+    if (!trimmedPin) {
+      setDeleteQuizError("Please enter your Creator Secret PIN.");
+      return;
     }
-    text += `\nCan you beat them? Try here 👇\n${shareUrl}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+    if (!/^\d{4,6}$/.test(trimmedPin)) {
+      setDeleteQuizError("PIN must be 4 to 6 digits.");
+      return;
+    }
+
+    setDeletingQuiz(true);
+    setDeleteQuizError("");
+
+    try {
+      const res = await fetch(`/api/quiz/${quizId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: trimmedPin }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(`creator_token_${quizId}`);
+        }
+        setIsCreator(false);
+        setShowDeleteQuizModal(false);
+        setDeleteQuizPin("");
+        quizAudio.playPop();
+        router.push("/");
+        return;
+      }
+
+      if (res.status === 403) {
+        setDeleteQuizError(data.error || "Incorrect Secret PIN.");
+        quizAudio.playWrong();
+      } else if (res.status === 404) {
+        setDeleteQuizError("Quiz not found or has already been deleted.");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(`creator_token_${quizId}`);
+        }
+      } else if (res.status === 429) {
+        setDeleteQuizError("Too many attempts. Please try again in 10 minutes.");
+      } else if (res.status === 503) {
+        setDeleteQuizError("Service temporarily unavailable. Please try again shortly.");
+      } else {
+        setDeleteQuizError(data.error || "Failed to delete quiz. Please try again.");
+      }
+    } catch {
+      setDeleteQuizError("Network error. Please check your connection and try again.");
+    } finally {
+      setDeletingQuiz(false);
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#8AC0EF]/30 via-sky-50 to-amber-50/40 text-slate-900 flex flex-col font-sans relative overflow-x-hidden">
-      {/* Background Clouds */}
-      <div className="absolute top-0 left-0 right-0 h-44 bg-[url('/quiz/assets/img/player/clouds-bg.webp')] bg-repeat-x bg-contain opacity-40 pointer-events-none" />
+  const safeCreator = sanitizeCreatorName(creatorName);
 
+  const handleShareScoreboardWhatsApp = () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const text = formatWhatsAppScoreboardShare(safeCreator, scoreboard, quizId, origin);
+    window.open(getWhatsAppShareUrl(text), "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyScoreboardLink = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    const success = await copyToClipboard(link);
+    if (success) {
+      setCopyStatus("copied");
+      setTimeout(() => setCopyStatus("idle"), 2500);
+    } else {
+      setCopyStatus("error");
+      setTimeout(() => setCopyStatus("idle"), 3000);
+    }
+  };
+
+  const handleNativeShareScoreboard = async () => {
+    quizAudio.playPop();
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
+    const link = getChallengeUrl(quizId, origin);
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${safeCreator}'s Challenge Leaderboard 🏆`,
+          text: `Check out the scores and take ${safeCreator}'s challenge on Click & Clique!`,
+          url: link,
+        });
+      } catch (err) {
+        if ((err as Error)?.name !== "AbortError") {
+          handleCopyScoreboardLink();
+        }
+      }
+    }
+  };
+
+  if (quizNotFound) {
+    return (
+      <div className="min-h-screen bg-[#edf7ff] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-6 border-4 border-slate-900 text-center shadow-xl">
+          <AlertCircle size={40} className="text-red-500 mx-auto mb-2" />
+          <h2 className="text-xl font-black text-slate-900 mb-1">Quiz Not Found</h2>
+          <p className="text-xs text-slate-600 mb-4">
+            This quiz does not exist or may have been permanently deleted by its creator.
+          </p>
+          <Link
+            href="/quiz"
+            className="inline-block py-3 px-6 bg-emerald-400 hover:bg-emerald-500 text-slate-950 font-black rounded-2xl border-2 border-slate-900 text-sm uppercase shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all"
+          >
+            Create New Quiz
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#edf7ff] text-[#29324c] flex flex-col font-sans relative overflow-x-hidden">
       {/* Header */}
-      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-2 flex items-center justify-between">
-        <Link href="/quiz" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 relative rounded-xl bg-white shadow-sm flex items-center justify-center p-1 border-2 border-slate-900">
-            <Image
-              src="/quiz/assets/img/logo-f.webp"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-slate-900">
-            Don&apos;t Block Me!
+      <header className="relative z-10 max-w-xl mx-auto w-full px-4 pt-5 pb-3 flex items-center justify-between">
+        <Link
+          href="/quiz"
+          className="inline-flex items-center gap-2.5 no-underline group focus-visible:outline-3 focus-visible:outline-[#6650b7]"
+          aria-label="Click & Clique homepage"
+        >
+          <BrandMark />
+          <span className="text-xl font-black tracking-tight text-[#29324c]">
+            click <span className="text-[#6650b7] font-medium">&amp;</span> clique
+            <span className="text-[#bd4a66]">.</span>
           </span>
         </Link>
         <Link
           href={`/quiz/share/${quizId}`}
-          className="text-xs font-black bg-emerald-400 text-slate-900 px-3.5 py-1.5 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a] flex items-center gap-1.5"
+          className="text-xs font-black bg-[#ffce71] text-[#29324c] px-3.5 py-1.5 rounded-full border-2 border-[#29324c] shadow-[0_2px_0_#d6ad63] flex items-center gap-1.5 hover:bg-[#ffdb92] transition-all"
         >
           <Share2 size={13} />
           <span>Share Quiz</span>
@@ -184,6 +379,18 @@ export default function QuizScoreboardPage({
 
       {/* Main Container */}
       <main className="relative z-10 flex-1 max-w-xl mx-auto w-full px-4 py-5 flex flex-col">
+        {/* Preview Testing Notice */}
+        {envInfo.isPreview && (
+          <div
+            role="alert"
+            aria-label="Preview Testing Environment"
+            className="mb-4 py-2 px-3.5 bg-amber-50 border-2 border-amber-400 rounded-2xl text-center text-xs font-bold text-amber-950 flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span className="p-0.5 bg-amber-200 rounded text-xs">⚠️</span>
+            <span>Preview / Testing Environment — Internal test link active</span>
+          </div>
+        )}
+
         {/* Title Card */}
         <div className="w-full bg-white rounded-3xl p-6 shadow-[0_12px_30px_rgba(56,189,248,0.18)] border-4 border-slate-900 text-center mb-5">
           <div className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 font-black text-xs uppercase px-3 py-1 rounded-full border border-amber-300 mb-2">
@@ -197,31 +404,105 @@ export default function QuizScoreboardPage({
             Total {scoreboard.length} friend{scoreboard.length === 1 ? "" : "s"} took this challenge!
           </p>
 
-          <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
               onClick={handleShareScoreboardWhatsApp}
-              className="py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+              aria-label="Share leaderboard on WhatsApp"
+              className="py-2.5 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
             >
               <MessageCircle size={15} className="fill-white" />
               <span>Share Leaderboard</span>
             </button>
+
+            {canNativeShare && (
+              <button
+                type="button"
+                onClick={handleNativeShareScoreboard}
+                aria-label="Share leaderboard via device app"
+                className="py-2.5 px-3 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+              >
+                <Share2 size={14} />
+                <span>Share App</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleCopyScoreboardLink}
+              aria-label={copyStatus === "copied" ? "Challenge link copied" : "Copy challenge link"}
+              className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+            >
+              {copyStatus === "copied" ? (
+                <>
+                  <Check size={14} className="text-emerald-400" />
+                  <span>Copied!</span>
+                </>
+              ) : copyStatus === "error" ? (
+                <span>Failed</span>
+              ) : (
+                <>
+                  <Copy size={14} />
+                  <span>Copy Link</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={fetchPublicScoreboard}
               className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5 transition-all cursor-pointer"
-              title="Refresh"
+              title="Refresh Scoreboard"
+              aria-label="Refresh Scoreboard"
             >
               <RefreshCw size={15} />
             </button>
+          </div>
+          <div className="sr-only" aria-live="polite">
+            {copyStatus === "copied" ? "Challenge link copied to clipboard!" : ""}
           </div>
         </div>
 
         {/* Score List (Ranked Highest Score First) */}
         <div className="w-full bg-white rounded-3xl p-5 border-4 border-slate-900 shadow-lg">
-          <h2 className="text-xs font-black uppercase text-slate-500 tracking-wider mb-3">
-            Ranked Players (Highest Score First)
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-black uppercase text-slate-500 tracking-wider">
+              Ranked Players
+            </h2>
+            {isCreator ? (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                  👑 Creator Mode
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteQuizModal(true);
+                    setDeleteQuizPin("");
+                    setDeleteQuizError("");
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-black bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full transition-colors cursor-pointer"
+                  title="Delete Quiz (Permanent)"
+                  aria-label="Delete Quiz"
+                >
+                  <Trash2 size={12} />
+                  <span>Delete Quiz</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetDetailId(null);
+                  setShowAuthModal(true);
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-700 hover:text-sky-900 hover:underline cursor-pointer"
+              >
+                <Lock size={12} />
+                <span>Creator Access</span>
+              </button>
+            )}
+          </div>
 
           {loading ? (
             <div className="py-8 text-center text-xs font-bold text-slate-500 animate-pulse">
@@ -229,15 +510,39 @@ export default function QuizScoreboardPage({
             </div>
           ) : scoreboard.length === 0 ? (
             <div className="py-8 text-center text-slate-600">
-              <span className="text-3xl block mb-2">🎯</span>
-              <p className="font-extrabold text-sm text-slate-900">Abhi tak kisi dost ne quiz nahi diya!</p>
-              <p className="text-xs text-slate-500 mt-1">Apne WhatsApp status par link lagayein taake scores yahan show hon!</p>
-              <Link
-                href={`/quiz/share/${quizId}`}
-                className="inline-block mt-4 py-2.5 px-5 bg-sky-400 text-slate-950 font-black text-xs uppercase rounded-xl border-2 border-slate-900"
-              >
-                Share Link Now
-              </Link>
+              <span className="text-4xl block mb-2">🎯</span>
+              <p className="font-extrabold text-sm text-slate-900">No friends have played this quiz yet!</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                Share your challenge link on WhatsApp or play it yourself to see scores here!
+              </p>
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+                <Link
+                  href={`/quiz/play/${quizId}`}
+                  className="w-full sm:w-auto py-2.5 px-5 bg-sky-400 hover:bg-sky-500 text-slate-950 font-black text-xs uppercase rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#0f172a] active:translate-y-0.5"
+                >
+                  Play Challenge Now
+                </Link>
+                <Link
+                  href={`/quiz/share/${quizId}`}
+                  className="w-full sm:w-auto py-2.5 px-5 bg-[#ffce71] hover:bg-[#ffdb92] text-slate-950 font-black text-xs uppercase rounded-xl border-2 border-slate-900 shadow-[0_2px_0_#d6ad63] active:translate-y-0.5"
+                >
+                  Share Link Now
+                </Link>
+                {isCreator && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteQuizModal(true);
+                      setDeleteQuizPin("");
+                      setDeleteQuizError("");
+                    }}
+                    className="w-full sm:w-auto py-2.5 px-5 bg-red-100 hover:bg-red-200 text-red-700 font-black text-xs uppercase rounded-xl border-2 border-red-300 shadow-[0_2px_0_#fca5a5] active:translate-y-0.5 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete Quiz</span>
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -266,15 +571,15 @@ export default function QuizScoreboardPage({
                           {entry.playerName}
                         </span>
                         <span
-                          className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded border inline-block mt-0.5 ${
+                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border inline-block mt-0.5 ${
                             isBestie
                               ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                               : isFake
-                              ? "bg-red-100 text-red-800 border-red-300"
-                              : "bg-sky-100 text-sky-800 border-sky-300"
+                              ? "bg-sky-100 text-sky-800 border-sky-300"
+                              : "bg-amber-100 text-amber-800 border-amber-300"
                           }`}
                         >
-                          {isBestie ? "True Bestie ❤️" : isFake ? "Fake Friend 🚨 Block" : "Friend ✨"}
+                          {isBestie ? "Bestie Alert! ❤️" : isFake ? "Friend in Training 🌱" : "Great Friend 🙂"}
                         </span>
                       </div>
                     </div>
@@ -287,29 +592,54 @@ export default function QuizScoreboardPage({
                         <span className="text-xs font-bold text-slate-400">/{entry.totalQuestions}</span>
                       </div>
 
-                      {/* View answers button with auth protection */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenAnswers(entry)}
-                        className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-                        title="View Answers (Creator Only)"
-                      >
-                        <Eye size={16} />
-                      </button>
+                      {/* Creator-only controls: view answers or delete attempt */}
+                      {isCreator && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAnswers(entry)}
+                            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                            title="View Answers (Creator Only)"
+                            aria-label={`View detailed answers for ${entry.playerName}`}
+                          >
+                            <Eye size={16} />
+                          </button>
 
-                      {/* Delete attempt button */}
-                      <button
-                        type="button"
-                        onClick={() => setPinPrompt({ open: true, attemptId: entry.id })}
-                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
-                        title="Delete Player"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                          <button
+                            type="button"
+                            onClick={() => setPinPrompt({ open: true, attemptId: entry.id, playerName: entry.playerName })}
+                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Player (Creator Only)"
+                            aria-label={`Delete score attempt for ${entry.playerName}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Creator Management Actions (when scoreboard has players) */}
+          {isCreator && scoreboard.length > 0 && (
+            <div className="mt-4 pt-4 border-t-2 border-slate-100 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Creator Management</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteQuizModal(true);
+                  setDeleteQuizPin("");
+                  setDeleteQuizError("");
+                }}
+                className="py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-700 font-black text-xs rounded-xl border border-red-200 flex items-center gap-1.5 cursor-pointer transition-colors"
+                aria-label="Delete Entire Quiz and All Results"
+              >
+                <Trash2 size={13} />
+                <span>Delete Quiz</span>
+              </button>
             </div>
           )}
         </div>
@@ -317,15 +647,20 @@ export default function QuizScoreboardPage({
 
       {/* Creator PIN Unlock Modal for Detailed Answers */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="creator-auth-title" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-sm bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl text-center">
             <Lock size={32} className="text-amber-500 mx-auto mb-2" />
-            <h3 className="font-black text-lg text-slate-900">Creator Verification</h3>
+            <h3 id="creator-auth-title" className="font-black text-lg text-slate-900">Creator Verification</h3>
             <p className="text-xs text-slate-600 mt-1 mb-4">
               Enter your Creator Secret PIN to view {creatorName}&apos;s friends answers:
             </p>
+            <label htmlFor="creator-pin-unlock-input" className="sr-only">
+              Creator Secret PIN
+            </label>
             <input
+              id="creator-pin-unlock-input"
               type="password"
+              aria-label="Creator Secret PIN"
               inputMode="numeric"
               maxLength={6}
               value={enteredPin}
@@ -363,11 +698,11 @@ export default function QuizScoreboardPage({
 
       {/* View Answers Modal (Authorized) */}
       {selectedEntry && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="answers-modal-title" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b-2 border-slate-100 mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900">
+                <h3 id="answers-modal-title" className="font-black text-base text-slate-900">
                   {selectedEntry.playerName}&apos;s Answers
                 </h3>
                 <span className="text-xs font-bold text-sky-600">
@@ -378,6 +713,7 @@ export default function QuizScoreboardPage({
                 type="button"
                 onClick={() => setSelectedEntry(null)}
                 className="p-1 text-slate-400 hover:text-slate-900 rounded-lg cursor-pointer"
+                aria-label="Close answers modal"
               >
                 <X size={20} />
               </button>
@@ -416,29 +752,44 @@ export default function QuizScoreboardPage({
         </div>
       )}
 
-      {/* Delete Confirmation PIN Modal */}
+      {/* Delete Confirmation Modal */}
       {pinPrompt.open && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="delete-modal-title" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-xs bg-white rounded-3xl p-5 border-4 border-slate-900 shadow-2xl text-center">
             <AlertCircle size={32} className="text-red-500 mx-auto mb-2" />
-            <h3 className="font-black text-base text-slate-900">Delete this player?</h3>
+            <h3 id="delete-modal-title" className="font-black text-base text-slate-900">Remove Player?</h3>
             <p className="text-xs text-slate-600 mt-1 mb-3">
-              Enter Creator PIN to confirm deletion:
+              {typeof window !== "undefined" && localStorage.getItem(`creator_token_${quizId}`) ? (
+                <>
+                  Are you sure you want to remove <strong>{pinPrompt.playerName || "this player"}</strong> from {creatorName}&apos;s leaderboard?
+                </>
+              ) : (
+                <>Enter Creator PIN to confirm deletion of <strong>{pinPrompt.playerName || "this player"}</strong>:</>
+              )}
             </p>
-            <input
-              type="password"
-              inputMode="numeric"
-              maxLength={6}
-              value={enteredPin}
-              onChange={(e) => setEnteredPin(e.target.value)}
-              placeholder="PIN (e.g. 7890)"
-              className="w-full py-2.5 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-xl mb-3 focus:outline-none"
-            />
+            {!(typeof window !== "undefined" && localStorage.getItem(`creator_token_${quizId}`)) && (
+              <>
+                <label htmlFor="creator-pin-delete-input" className="sr-only">
+                  Creator Secret PIN for deletion
+                </label>
+                <input
+                  id="creator-pin-delete-input"
+                  type="password"
+                  aria-label="Creator Secret PIN for deletion"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={enteredPin}
+                  onChange={(e) => setEnteredPin(e.target.value)}
+                  placeholder="PIN (e.g. 7890)"
+                  className="w-full py-2.5 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-xl mb-3 focus:outline-none"
+                />
+              </>
+            )}
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setPinPrompt({ open: false, attemptId: "" })}
-                className="flex-1 py-2.5 bg-slate-100 font-bold text-xs rounded-xl border border-slate-300 text-slate-700"
+                onClick={() => setPinPrompt({ open: false, attemptId: "", playerName: "" })}
+                className="flex-1 py-2.5 bg-slate-100 font-bold text-xs rounded-xl border border-slate-300 text-slate-700 cursor-pointer"
               >
                 Cancel
               </button>
@@ -446,9 +797,89 @@ export default function QuizScoreboardPage({
                 type="button"
                 disabled={deleting}
                 onClick={handleDeleteAttempt}
-                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase"
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase cursor-pointer"
               >
                 {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Quiz Confirmation Modal (Creator PIN Required) */}
+      {showDeleteQuizModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-quiz-modal-title"
+          aria-describedby="delete-quiz-modal-desc"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border-4 border-slate-900 shadow-2xl text-center">
+            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 border-2 border-red-200">
+              <Trash2 size={24} />
+            </div>
+            <h3 id="delete-quiz-modal-title" className="font-black text-lg text-slate-900">
+              Delete Entire Quiz?
+            </h3>
+            <p id="delete-quiz-modal-desc" className="text-xs text-slate-600 mt-1.5 mb-4 leading-relaxed">
+              This will <strong>permanently delete</strong> this quiz and all associated player scores. This action cannot be undone.
+            </p>
+
+            <p className="text-xs font-bold text-slate-700 mb-2">
+              Enter your Creator Secret PIN to confirm:
+            </p>
+            <label htmlFor="delete-quiz-pin-input" className="sr-only">
+              Creator Secret PIN for quiz deletion
+            </label>
+            <input
+              id="delete-quiz-pin-input"
+              type="password"
+              aria-label="Creator Secret PIN for quiz deletion"
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+              value={deleteQuizPin}
+              onChange={(e) => {
+                setDeleteQuizPin(e.target.value);
+                if (deleteQuizError) setDeleteQuizError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !deletingQuiz) {
+                  e.preventDefault();
+                  handleDeleteQuiz();
+                }
+              }}
+              placeholder="Enter PIN (e.g. 7890)"
+              className="w-full py-3 text-center text-xl font-bold bg-slate-50 border-2 border-slate-900 rounded-2xl mb-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+            />
+
+            {deleteQuizError && (
+              <p role="alert" className="text-xs font-bold text-red-600 mb-3">
+                {deleteQuizError}
+              </p>
+            )}
+
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteQuizModal(false);
+                  setDeleteQuizPin("");
+                  setDeleteQuizError("");
+                }}
+                disabled={deletingQuiz}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 font-bold text-xs rounded-xl border border-slate-300 text-slate-700 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deletingQuiz}
+                onClick={handleDeleteQuiz}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-700 font-black text-xs rounded-xl text-white border-2 border-slate-900 uppercase tracking-wider shadow-[0_2px_0_#7f1d1d] active:translate-y-0.5 cursor-pointer disabled:opacity-50 transition-all"
+              >
+                {deletingQuiz ? "Deleting..." : "Delete Quiz"}
               </button>
             </div>
           </div>

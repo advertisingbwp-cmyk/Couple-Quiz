@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  title: "Friendship Challenge Scoreboard | Click & Clique",
   robots: {
     index: false,
-    follow: false,
+    follow: true,
   },
 };
 

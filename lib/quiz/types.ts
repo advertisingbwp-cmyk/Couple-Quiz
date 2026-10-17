@@ -4,12 +4,16 @@ export interface QuizQuestionOption {
   id: number;
   text: string;
   emoji?: string;
+  imageUrl?: string;
 }
+
+export type QuizOption = QuizQuestionOption;
 
 export interface QuizQuestion {
   id: string;
   question: string;
   emoji?: string;
+  category?: string;
   options: QuizQuestionOption[];
 }
 
@@ -81,3 +85,10 @@ export interface ScoreboardDetailEntry extends ScoreboardEntry {
     isCorrect: boolean;
   }>;
 }
+
+export type RecordAttemptOutcome =
+  | { status: "recorded"; attempt: PlayerAttempt }
+  | { status: "duplicate"; attempt: PlayerAttempt }
+  | { status: "conflict"; existingAttempt: PlayerAttempt }
+  | { status: "quiz_not_found" };
+
