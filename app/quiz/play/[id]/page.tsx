@@ -42,6 +42,8 @@ export default function QuizPlayPage({
     playerToken?: string;
     score?: number;
     totalQuestions?: number;
+    creatorName?: string;
+    gender?: "male" | "female";
   } | null>(null);
   const [isPlayAgain, setIsPlayAgain] = useState(false);
 
@@ -78,11 +80,55 @@ export default function QuizPlayPage({
         if (parsed && typeof parsed.attemptId === "string") {
           setSavedAttempt(parsed);
           setPlayerName(parsed.playerName || "");
+          setIsStarted(false);
+          return;
+        }
+      }
+      // Fallback: check sessionStorage in case localStorage was cleared
+      const sessionRaw = sessionStorage.getItem(`quiz_result_${quizId}`);
+      if (sessionRaw) {
+        const sessionParsed = JSON.parse(sessionRaw);
+        if (sessionParsed && (sessionParsed.attemptId || sessionParsed.score !== undefined)) {
+          const attempt = {
+            attemptId: sessionParsed.attemptId || "session_attempt",
+            playerName: sessionParsed.playerName || "",
+            score: sessionParsed.score,
+            totalQuestions: sessionParsed.totalQuestions,
+            playerToken: sessionParsed.playerToken,
+            creatorName: sessionParsed.creatorName,
+            gender: sessionParsed.gender,
+            completedAt: Date.now(),
+          };
+          setSavedAttempt(attempt);
+          if (attempt.playerName) {
+            setPlayerName(attempt.playerName);
+          }
+          setIsStarted(false);
         }
       }
     } catch {
       // Storage unavailable or disabled
     }
+  }, [quizId]);
+
+  // Handle Chrome bfcache (Back/Forward Cache) when user presses back from result page
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      try {
+        const raw = localStorage.getItem(`quiz_player_attempt_${quizId}`);
+        const sessionRaw = sessionStorage.getItem(`quiz_result_${quizId}`);
+        if (raw || sessionRaw) {
+          const parsed = raw ? JSON.parse(raw) : JSON.parse(sessionRaw!);
+          setSavedAttempt(parsed);
+          setIsStarted(false);
+          setIsSubmitting(false);
+          setIsTransitioning(false);
+        }
+      } catch {}
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
   }, [quizId]);
 
   // Preload all quiz option images in background for zero-latency question transitions
@@ -190,6 +236,8 @@ export default function QuizPlayPage({
               playerToken: data.playerToken,
               score: data.score,
               totalQuestions: data.totalQuestions,
+              creatorName: data.creatorName || quiz?.creatorName || "",
+              gender: data.gender || quiz?.gender || "male",
             })
           );
         } catch {

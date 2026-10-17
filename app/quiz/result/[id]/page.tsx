@@ -79,17 +79,32 @@ export default function QuizResultPage({
         if (savedAttemptRaw) {
           const savedAttempt = JSON.parse(savedAttemptRaw);
           if (savedAttempt && typeof savedAttempt.attemptId === "string") {
+            // Optimistic zero-latency display: show saved score immediately
+            if (typeof savedAttempt.score === "number") {
+              const localRestored = {
+                score: savedAttempt.score,
+                totalQuestions: savedAttempt.totalQuestions || 10,
+                creatorName: savedAttempt.creatorName || "Your Friend",
+                gender: (savedAttempt.gender as "male" | "female") || "male",
+              };
+              setResult(localRestored);
+              setDialogueStep(4);
+              setHasCheckedSession(true);
+            }
+
             const headers: Record<string, string> = {};
             if (savedAttempt.playerToken) {
               headers["x-player-token"] = savedAttempt.playerToken;
             }
             fetch(`/api/quiz/${quizId}/player-result?attemptId=${encodeURIComponent(savedAttempt.attemptId)}`, {
               headers,
+              credentials: "include",
             })
               .then((res) => {
                 if (res.status === 401 || res.status === 404) {
                   // Expired session or deleted attempt: clean up invalid local reference
                   localStorage.removeItem(`quiz_player_attempt_${quizId}`);
+                  setResult(null);
                 }
                 return res.json();
               })
